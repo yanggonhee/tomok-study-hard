@@ -1,13 +1,17 @@
-# 단어분류 학습
+# 서술형 작성 445문항
 
-토목기사 실기 단어분류 학습용 웹앱입니다.
+`14-26-2(1).txt`의 문항 시작표시를 기준으로 정확히 445개 원문 블록을 변환한 GitHub Pages용 웹앱입니다.
 
-## GitHub Pages 업로드 방법
+## 배포
+1. 압축을 풉니다.
+2. 내부 파일 전체를 GitHub 저장소 최상위에 올립니다.
+3. Settings → Pages → Deploy from a branch
+4. main / (root)를 선택합니다.
 
-1. 이 폴더 안의 `index.html` 파일을 GitHub 저장소 최상위 폴더에 업로드합니다.
-2. GitHub 저장소의 **Settings → Pages**로 이동합니다.
-3. **Deploy from a branch**를 선택합니다.
-4. Branch는 `main`, 폴더는 `/ (root)`를 선택한 뒤 저장합니다.
-5. 잠시 후 생성된 GitHub Pages 주소로 접속합니다.
+## 구조
+- index.html
+- css/style.css
+- js/data.js: 445문항
+- js/app.js: 표시·저장·채점 기능
 
-별도의 서버나 설치 없이 `index.html` 하나만으로 실행됩니다.
+각 원문 블록을 한 카드로 유지하기 때문에 앞뒤 문항이나 다른 해설이 섞이지 않습니다.
