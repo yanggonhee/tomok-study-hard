@@ -1,25 +1,13 @@
-# 토목기사 실기 말따먹기 PWA
+# 단어분류 학습
 
-GitHub Pages에 올리면 모바일 홈 화면에 설치할 수 있고, 인터넷이 끊겨도 실행됩니다.
+토목기사 실기 단어분류 학습용 웹앱입니다.
 
-## 업로드
+## GitHub Pages 업로드 방법
 
-이 폴더 안의 파일과 `icons` 폴더를 저장소 최상단에 모두 업로드하세요.
+1. 이 폴더 안의 `index.html` 파일을 GitHub 저장소 최상위 폴더에 업로드합니다.
+2. GitHub 저장소의 **Settings → Pages**로 이동합니다.
+3. **Deploy from a branch**를 선택합니다.
+4. Branch는 `main`, 폴더는 `/ (root)`를 선택한 뒤 저장합니다.
+5. 잠시 후 생성된 GitHub Pages 주소로 접속합니다.
 
-- `index.html`
-- `manifest.webmanifest`
-- `sw.js`
-- `icons/icon-192.png`
-- `icons/icon-512.png`
-
-GitHub에서 **Settings → Pages → Deploy from a branch → main / (root)**로 설정합니다.
-
-## 업데이트
-
-새 파일을 같은 이름으로 덮어쓰고 Commit하면 됩니다. 접속 중인 앱에는 “새 버전이 준비됐습니다”가 표시되고, 업데이트 버튼을 누르면 새 버전이 적용됩니다.
-
-## 저장되는 항목
-
-마지막 문제, 작성 중인 답안, 랜덤 순서, 오답, 즐겨찾기, 풀이 기록이 브라우저에 자동 저장됩니다. 문제를 추가해도 기존 문제의 기록과 마지막 위치를 최대한 유지합니다.
-
-저장기록은 같은 GitHub Pages 주소와 같은 브라우저에서 유지됩니다. 브라우저 데이터 삭제·시크릿 모드·주소 변경 시 초기화될 수 있습니다.
+별도의 서버나 설치 없이 `index.html` 하나만으로 실행됩니다.
