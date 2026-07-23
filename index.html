@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>서술형 작성</title>
-<meta name="theme-color" content="#1769d2">
+<meta name="theme-color" content="#333333">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="서술형 작성">
 <link rel="manifest" href="./manifest.webmanifest">
@@ -55,6 +55,12 @@
     <div id="answers"></div>
   </section>
 
+  <div class="status-row">
+    <button id="markMastered">숙지</button>
+    <button id="markUncertain">애매</button>
+    <button id="markUnmastered">미숙지</button>
+  </div>
+
   <nav class="answer-actions" aria-label="문제 조작">
     <button id="prev">이전</button>
     <button id="fav">☆ 즐겨찾기</button>
@@ -68,12 +74,6 @@
     <h2>모범답안·해설</h2>
     <div id="officialContent"></div>
   </section>
-
-  <div class="status-row">
-    <button id="markMastered">숙지</button>
-    <button id="markUncertain">애매</button>
-    <button id="markUnmastered">미숙지</button>
-  </div>
 </main>
 </div>
 <script src="./js/data.js"></script>
