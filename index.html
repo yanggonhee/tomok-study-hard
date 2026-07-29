@@ -399,6 +399,12 @@ button.good,
 .exam-running #check{grid-column:span 2}
 .exam-running .answer-actions{grid-template-columns:1fr 2fr 1fr!important}
 @media(max-width:560px){.toolbar .study-tool{flex:1;min-width:48px}.confidence-row button{height:31px;min-height:31px;font-size:11px}}
+
+#frequency{font-weight:850;color:#333!important;letter-spacing:0!important}
+.meta-tools{display:flex;align-items:center;gap:8px;white-space:nowrap}
+#favoriteToggle{width:32px;height:32px;min-width:32px;padding:0;border-radius:8px;background:#fff!important;color:#222!important;border:1px solid #bcbcbc!important;font-size:20px;line-height:1;font-weight:800}
+#favoriteToggle.active{background:#dedede!important;border-color:#777!important;color:#111!important}
+@media(max-width:560px){.meta-tools{gap:5px}#favoriteToggle{width:29px;height:29px;min-width:29px;font-size:18px}}
 </style>
 </head>
 <body>
@@ -420,25 +426,22 @@ button.good,
     <div class="toolbar">
       <select id="mode" aria-label="문제 필터">
         <option value="all">전체 445문항</option>
-        <option value="review">오늘 복습</option>
-        <option value="wrong">오답만</option>
-        <option value="frequentWrong">자주 틀린 문제</option>
-        <option value="recentWrong">최근 틀린 문제</option>
-        <option value="unanswered">미답안 문제</option>
-        <option value="favorite">즐겨찾기</option>
-        <option value="mastered">숙지</option>
-        <option value="uncertain">애매</option>
-        <option value="unmastered">미숙지</option>
-        <option value="confidence1">확신도 ★</option>
-        <option value="confidence2">확신도 ★★</option>
-        <option value="confidence3">확신도 ★★★</option>
-        <option value="confidence4">확신도 ★★★★</option>
-        <option value="confidence5">확신도 ★★★★★</option>
+        <optgroup label="복습">
+          <option value="review">오늘 복습</option>
+          <option value="wrong">오답만</option>
+          <option value="frequentWrong">자주 틀린 문제</option>
+          <option value="recentWrong">최근 틀린 문제</option>
+          <option value="unanswered">미답안 문제</option>
+          <option value="favorite">즐겨찾기</option>
+        </optgroup>
+        <optgroup label="숙지 상태">
+          <option value="mastered">숙지</option>
+          <option value="uncertain">애매</option>
+          <option value="unmastered">미숙지</option>
+        </optgroup>
       </select>
       <input id="search" type="search" placeholder="문제번호·연도·내용 검색">
       <button id="shuffle">랜덤</button>
-      <button id="memoryMode" class="study-tool">연속 암기</button>
-      <button id="examMode" class="study-tool">시험</button>
       <button id="reset">기록 초기화</button>
     </div>
   </section>
@@ -446,7 +449,7 @@ button.good,
 <main class="card">
   <div class="meta">
     <div class="number-wrap"><strong id="number"></strong><span id="label" class="tag"></span></div>
-    <span id="frequency" class="stars"></span>
+    <div class="meta-tools"><span id="frequency" class="stars"></span><button id="favoriteToggle" type="button" aria-label="즐겨찾기 추가" title="즐겨찾기 추가">☆</button></div>
   </div>
   <div id="question" class="question"></div>
   <section class="answer-section">
@@ -457,9 +460,6 @@ button.good,
     <button id="markMastered">숙지</button>
     <button id="markUncertain">애매</button>
     <button id="markUnmastered">미숙지</button>
-  </div>
-  <div class="confidence-row" aria-label="암기 확신도">
-    <button data-confidence="1">★</button><button data-confidence="2">★★</button><button data-confidence="3">★★★</button><button data-confidence="4">★★★★</button><button data-confidence="5">★★★★★</button>
   </div>
   <nav class="answer-actions inline-actions" aria-label="문제 조작">
     <button id="prev">이전</button>
@@ -481,7 +481,7 @@ const BANK = [{"id":1,"number":"001","label":"14-1","question":"연약지반상�
 <script>
 const $=s=>document.querySelector(s);
 const STORAGE_KEY='essay445-v1';
-let state;try{state=JSON.parse(localStorage.getItem(STORAGE_KEY)||'null')}catch(e){state=null}if(!state||typeof state!=='object')state={answers:{},fav:{},wrong:{},status:{},corrections:{},index:0};state.answers||={};state.fav||={};state.wrong||={};state.status||={};state.corrections||={};state.attempts||={};state.review||={};state.wrongMeta||={};state.confidence||={};state.fav||={};
+let state;try{state=JSON.parse(localStorage.getItem(STORAGE_KEY)||'null')}catch(e){state=null}if(!state||typeof state!=='object')state={answers:{},fav:{},wrong:{},status:{},corrections:{},index:0};state.answers||={};state.fav||={};state.wrong||={};state.status||={};state.corrections||={};state.attempts||={};state.review||={};state.wrongMeta||={};state.fav||={};
 const savedView=Array.isArray(state.view)&&state.view.length&&state.view.every(i=>Number.isInteger(i)&&i>=0&&i<BANK.length)?state.view:null;
 let view=savedView?[...savedView]:[...BANK.keys()];let pos=Math.min(state.index||0,Math.max(0,view.length-1));
 const ALIASES={'rockbolt':['록볼트','락볼트'],'rock bolt':['록볼트','락볼트'],'shotcrete':['숏크리트','쇼트크리트'],'sandmat':['샌드매트','샌드매트공법','부사'],'sand mat':['샌드매트','샌드매트공법','부사'],'wellpoint':['웰포인트'],'well point':['웰포인트'],'deepwell':['딥웰'],'deep well':['딥웰'],'pulling':['풀링'],'pushing':['푸싱'],'rcd':['역순환공법','알씨디'],'muck':['버력','먹'],'heaving':['히빙'],'boiling':['보일링','퀵샌드'],'quick sand':['보일링','퀵샌드'],'forepoling':['훠폴링','포어폴링'],'fore poling':['훠폴링','포어폴링'],'pipe roof':['파이프루프'],'mass curve':['토적곡선','매스커브'],'seal coat':['실코트'],'overlay':['오버레이'],'over lay':['오버레이'],'spalling':['스폴링']};
@@ -644,12 +644,91 @@ function current(){return BANK[view[pos]]}function qkey(q){return String(q.id)}
 function localDateKey(date=new Date()){const y=date.getFullYear(),m=String(date.getMonth()+1).padStart(2,'0'),d=String(date.getDate()).padStart(2,'0');return `${y}-${m}-${d}`}
 function addDaysKey(days){const d=new Date();d.setHours(12,0,0,0);d.setDate(d.getDate()+days);return localDateKey(d)}
 function isDueToday(key){const due=state.review[key]?.due;return !!due&&due<=localDateKey()}
-function scheduleReview(key,status){const prev=state.review[key]||{};if(status==='mastered'){const streak=(prev.streak||0)+1;const intervals=[3,7,14,30];const days=intervals[Math.min(streak-1,intervals.length-1)];state.review[key]={streak,due:addDaysKey(days),last:localDateKey()}}else if(status==='uncertain'){state.review[key]={streak:0,due:addDaysKey(1),last:localDateKey()}}else if(status==='unmastered'){state.review[key]={streak:0,due:localDateKey(),last:localDateKey()}}else delete state.review[key]}
+function scheduleReview(key,status){const prev=state.review[key]||{};if(status==='mastered'){const streak=(prev.streak||0)+1;const intervals=[1,3,7,14,30];const days=intervals[Math.min(streak-1,intervals.length-1)];state.review[key]={streak,due:addDaysKey(days),last:localDateKey()}}else if(status==='uncertain'||status==='unmastered'){state.review[key]={streak:0,due:addDaysKey(1),last:localDateKey()}}else delete state.review[key]}
+function scheduleFromGrade(key,isPerfect){const prev=state.review[key]||{};if(isPerfect){const streak=(prev.streak||0)+1;const intervals=[1,3,7,14,30];const days=intervals[Math.min(streak-1,intervals.length-1)];state.review[key]={streak,due:addDaysKey(days),last:localDateKey()}}else{state.review[key]={streak:0,due:addDaysKey(1),last:localDateKey()}}}
 function todayReviewCount(){return BANK.reduce((n,q)=>n+(isDueToday(qkey(q))?1:0),0)}
 function autoGrow(el){el.style.height='36px';el.style.height=Math.min(180,Math.max(36,el.scrollHeight))+'px';el.style.overflowY=el.scrollHeight>180?'auto':'hidden'}
-function render(){const q=current(),key=qkey(q),saved=state.status[key]==='mastered'?(state.answers[key]||[]):[];const reviewOption=$('#mode')?.querySelector('option[value="review"]');if(reviewOption)reviewOption.textContent=`오늘 복습 (${todayReviewCount()})`;$('#number').textContent=q.number;$('#label').textContent=q.label;$('#frequency').textContent='★'.repeat(Math.min(5,q.frequency))+(q.frequency>1?` (${q.frequency}회)`:'');$('#question').textContent=q.question;$('#answers').innerHTML='';q.inputLabels.forEach((label,i)=>{const wrap=document.createElement('div');wrap.className='answer-item';const lab=document.createElement('label');lab.className='answer-label';lab.textContent=label||`${i+1}.`;const ta=document.createElement('textarea');ta.className='answer-input';ta.value=saved[i]||'';ta.placeholder=`${i+1}번 답 입력`;ta.setAttribute('aria-label',`${i+1}번 답안`);if(state.corrections[key]?.[i])ta.classList.add('auto-corrected');ta.addEventListener('input',()=>{autoGrow(ta);ta.classList.remove('auto-corrected');if(state.corrections[key]){state.corrections[key][i]=false;if(!state.corrections[key].some(Boolean))delete state.corrections[key]}const currentVals=[...document.querySelectorAll('.answer-input')].map(x=>x.value);state.answers[key]=currentVals;state.attempts[key]=[...currentVals];save()});wrap.append(lab,ta);$('#answers').append(wrap);requestAnimationFrame(()=>autoGrow(ta))});$('#result').className='result';$('#result').innerHTML='';$('#official').className='official';$('#officialContent').innerHTML='';$('#reveal').textContent='정답';$('#reveal').setAttribute('aria-expanded','false');document.querySelectorAll('.status-row button').forEach(b=>b.classList.remove('active'));const st=state.status[key];if(st)$('#mark'+st[0].toUpperCase()+st.slice(1))?.classList.add('active');document.querySelectorAll('[data-confidence]').forEach(b=>b.classList.toggle('active',Number(b.dataset.confidence)===(state.confidence[key]||0)));$('#frequency').title='클릭하면 즐겨찾기';$('#frequency').style.cursor='pointer';$('#frequency').textContent=(state.fav[key]?'★ ':'')+'★'.repeat(Math.min(5,q.frequency))+(q.frequency>1?` (${q.frequency}회)`:'');const pct=view.length?((pos+1)/view.length*100):0;$('#progress').textContent=`${pos+1} / ${view.length}`;$('#score').textContent=`진행 ${pct.toFixed(1)}%`;$('#wrongCount').textContent=`오답 ${Object.keys(state.wrong).length}`;$('#progressBar').style.width=`${pct}%`;save();window.scrollTo(0,0)}
+function render(){const q=current(),key=qkey(q),saved=state.status[key]==='mastered'?(state.answers[key]||[]):[];const reviewOption=$('#mode')?.querySelector('option[value="review"]');if(reviewOption)reviewOption.textContent=`오늘 복습 (${todayReviewCount()})`;$('#number').textContent=q.number;$('#label').textContent=q.label;const freq=Math.max(1,Number(q.frequency)||1);$('#frequency').textContent='★'.repeat(Math.min(5,freq))+` (${freq}회)`;const favBtn=$('#favoriteToggle');favBtn.textContent=state.fav[key]?'★':'☆';favBtn.classList.toggle('active',!!state.fav[key]);favBtn.title=state.fav[key]?'즐겨찾기 해제':'즐겨찾기 추가';favBtn.setAttribute('aria-label',favBtn.title);$('#question').textContent=q.question;$('#answers').innerHTML='';q.inputLabels.forEach((label,i)=>{const wrap=document.createElement('div');wrap.className='answer-item';const lab=document.createElement('label');lab.className='answer-label';lab.textContent=label||`${i+1}.`;const ta=document.createElement('textarea');ta.className='answer-input';ta.value=saved[i]||'';ta.placeholder=`${i+1}번 답 입력`;ta.setAttribute('aria-label',`${i+1}번 답안`);if(state.corrections[key]?.[i])ta.classList.add('auto-corrected');ta.addEventListener('input',()=>{autoGrow(ta);ta.classList.remove('auto-corrected');if(state.corrections[key]){state.corrections[key][i]=false;if(!state.corrections[key].some(Boolean))delete state.corrections[key]}const currentVals=[...document.querySelectorAll('.answer-input')].map(x=>x.value);state.answers[key]=currentVals;state.attempts[key]=[...currentVals];save()});wrap.append(lab,ta);$('#answers').append(wrap);requestAnimationFrame(()=>autoGrow(ta))});$('#result').className='result';$('#result').innerHTML='';$('#official').className='official';$('#officialContent').innerHTML='';$('#reveal').textContent='정답';$('#reveal').setAttribute('aria-expanded','false');document.querySelectorAll('.status-row button').forEach(b=>b.classList.remove('active'));const st=state.status[key];if(st)$('#mark'+st[0].toUpperCase()+st.slice(1))?.classList.add('active');const pct=view.length?((pos+1)/view.length*100):0;$('#progress').textContent=`${pos+1} / ${view.length}`;$('#score').textContent=`진행 ${pct.toFixed(1)}%`;$('#wrongCount').textContent=`오답 ${Object.keys(state.wrong).length}`;$('#progressBar').style.width=`${pct}%`;save();window.scrollTo(0,0)}
 function showOfficial(){const q=current(),box=$('#officialContent');box.innerHTML='';q.allAnswers.forEach((group,i)=>{const div=document.createElement('div');div.className='official-group';const label=q.mode==='grouped'?(q.inputLabels[i]||`${i+1}.`):`${i+1}.`;const b=document.createElement('b');b.textContent=label+' ';const span=document.createElement('span');span.textContent=group.join(' / ');div.append(b,span);box.append(div)});const memo=mnemonicFor(q);if(memo){const div=document.createElement('div');div.className='mnemonic';div.innerHTML=`<div class="mnemonic-title">연상 암기</div><div class="mnemonic-code">${memo.code}</div>${memo.scene?`<div class="mnemonic-scene">“${memo.scene}”</div>`:''}<div class="mnemonic-note">${memo.note}</div>`;box.append(div)}$('#official').classList.add('show');$('#reveal').textContent='닫기';$('#reveal').setAttribute('aria-expanded','true')}
-$('#check').addEventListener('click',()=>{const q=current(),key=qkey(q),inputs=[...document.querySelectorAll('.answer-input')],displayVals=inputs.map(x=>x.value),priorFlags=state.corrections[key]||[],priorAttempts=state.attempts[key]||[],vals=displayVals.map((v,i)=>priorFlags[i]?(priorAttempts[i]||''):v);state.attempts[key]=[...vals];const results=vals.map((v,i)=>assess(v,q.answerGroups[i]||[]));let total=0,rows=[],used=new Set();results.forEach((r,i)=>{if(r.score===1){for(const candidate of (q.answerGroups[i]||[])){if(assess(vals[i],[candidate]).score===1){used.add(norm(candidate));break}}}});const corrected=[...displayVals],flags=Array(displayVals.length).fill(false);results.forEach((r,i)=>{total+=r.score;const isCorrect=r.score===1,name=isCorrect?'정답':(r.score>0?'키워드 부족':'오답');if(!isCorrect){let answer='';if(q.mode==='list'){for(const group of (q.allAnswers||[])){const candidate=(group||[])[0]||'';if(candidate&&!used.has(norm(candidate))){answer=candidate;used.add(norm(candidate));break}}}else answer=(q.answerGroups[i]||[])[0]||((q.allAnswers[i]||[])[0]||'');if(!answer)answer=(q.answerGroups[i]||[])[0]||'';corrected[i]=answer;flags[i]=true;inputs[i].value=answer;inputs[i].classList.add('auto-corrected');autoGrow(inputs[i])}else{corrected[i]=vals[i];inputs[i].value=vals[i];inputs[i].classList.remove('auto-corrected')}const missing=!isCorrect?`<div class="grade-detail">중요 키워드가 부족하여 모범답안으로 자동 교정했습니다.${r.missing.length?' 부족 키워드: '+r.missing.join(', '):''}</div>`:'';rows.push(`<div class="grade-row"><span class="grade-symbol">${isCorrect?'○':'×'}</span><div><strong>${i+1}. ${name}</strong>${missing}</div><strong>${isCorrect?'정답':'수정'}</strong></div>`)});state.answers[key]=corrected;state.corrections[key]=flags;if(!flags.some(Boolean))delete state.corrections[key];const pct=Math.round(total/Math.max(1,vals.length)*100);if(pct<100){state.wrong[key]=true;const m=state.wrongMeta[key]||{count:0};m.count=(m.count||0)+1;m.last=localDateKey();state.wrongMeta[key]=m}else delete state.wrong[key];$('#result').innerHTML=`<div class="result-summary">채점 결과 ${pct}점 · ${results.filter(r=>r.score===1).length}/${vals.length} 정답</div>${rows.join('')}`;$('#result').classList.add('show');save();$('#wrongCount').textContent=`오답 ${Object.keys(state.wrong).length}`});
+$('#check').addEventListener('click',()=>{
+  const q=current();
+  const key=qkey(q);
+  const inputs=[...document.querySelectorAll('.answer-input')];
+  const displayVals=inputs.map(x=>x.value);
+  const priorFlags=state.corrections[key]||[];
+  const priorAttempts=state.attempts[key]||[];
+  const vals=displayVals.map((v,i)=>priorFlags[i]?(priorAttempts[i]||''):v);
+  state.attempts[key]=[...vals];
+
+  const results=vals.map((v,i)=>assess(v,q.answerGroups[i]||[]));
+  const used=new Set();
+  results.forEach((r,i)=>{
+    if(r.score!==1)return;
+    for(const candidate of (q.answerGroups[i]||[])){
+      if(assess(vals[i],[candidate]).score===1){
+        used.add(norm(candidate));
+        break;
+      }
+    }
+  });
+
+  const corrected=[...displayVals];
+  const flags=Array(displayVals.length).fill(false);
+  results.forEach((r,i)=>{
+    const isCorrect=r.score===1;
+    if(isCorrect){
+      corrected[i]=vals[i];
+      inputs[i].value=vals[i];
+      inputs[i].classList.remove('auto-corrected');
+      return;
+    }
+
+    let answer='';
+    if(q.mode==='list'){
+      for(const group of (q.allAnswers||[])){
+        const candidate=(group||[])[0]||'';
+        if(candidate&&!used.has(norm(candidate))){
+          answer=candidate;
+          used.add(norm(candidate));
+          break;
+        }
+      }
+    }else{
+      answer=(q.answerGroups[i]||[])[0]||((q.allAnswers[i]||[])[0]||'');
+    }
+    if(!answer)answer=(q.answerGroups[i]||[])[0]||'';
+    corrected[i]=answer;
+    flags[i]=true;
+    inputs[i].value=answer;
+    inputs[i].classList.add('auto-corrected');
+    autoGrow(inputs[i]);
+  });
+
+  state.answers[key]=corrected;
+  state.corrections[key]=flags;
+  if(!flags.some(Boolean))delete state.corrections[key];
+
+  const perfect=results.every(r=>r.score===1);
+  if(!perfect){
+    state.wrong[key]=true;
+    const m=state.wrongMeta[key]||{count:0};
+    m.count=(m.count||0)+1;
+    m.last=localDateKey();
+    state.wrongMeta[key]=m;
+  }else{
+    delete state.wrong[key];
+  }
+  scheduleFromGrade(key,perfect);
+
+  $('#result').className='result';
+  $('#result').innerHTML='';
+  const btn=$('#check');
+  const original=btn.textContent;
+  btn.textContent='채점완료';
+  setTimeout(()=>{btn.textContent=original},700);
+  save();
+  $('#wrongCount').textContent=`오답 ${Object.keys(state.wrong).length}`;
+});
 $('#reveal').addEventListener('click',()=>{$('#official').classList.contains('show')?($('#official').classList.remove('show'),$('#reveal').textContent='정답',$('#reveal').setAttribute('aria-expanded','false')):showOfficial()});
 function clearCurrentUnlessMastered(){const k=qkey(current());if(state.status[k]!=='mastered'){delete state.answers[k];delete state.corrections[k];delete state.attempts[k];save()}}
 $('#prev').addEventListener('click',()=>{if(pos>0){clearCurrentUnlessMastered();pos--;render()}});$('#next').addEventListener('click',()=>{if(pos<view.length-1){clearCurrentUnlessMastered();pos++;render()}});
@@ -657,18 +736,12 @@ function setStatus(name){const k=qkey(current());const next=state.status[k]===na
 $('#markMastered').onclick=()=>setStatus('mastered');$('#markUncertain').onclick=()=>setStatus('uncertain');$('#markUnmastered').onclick=()=>setStatus('unmastered');$('#manageToggle').onclick=()=>{const p=$('#managePanel');p.classList.toggle('open');$('#manageToggle').setAttribute('aria-expanded',p.classList.contains('open'))};
 function daysBetween(a,b){const A=new Date(a+'T12:00:00'),B=new Date(b+'T12:00:00');return Math.round((B-A)/86400000)}
 function hasAttempt(k){return Array.isArray(state.attempts[k])&&state.attempts[k].some(v=>String(v||'').trim())}
-function applyView(){const mode=$('#mode').value,term=norm($('#search').value);view=BANK.map((q,i)=>({q,i})).filter(({q})=>{const k=qkey(q),wm=state.wrongMeta[k]||{};if(mode==='wrong'&&!state.wrong[k])return false;if(mode==='frequentWrong'&&!(wm.count>=2))return false;if(mode==='recentWrong'&&!(wm.last&&daysBetween(wm.last,localDateKey())<=7))return false;if(mode==='unanswered'&&hasAttempt(k))return false;if(mode==='favorite'&&!state.fav[k])return false;if(['mastered','uncertain','unmastered'].includes(mode)&&state.status[k]!==mode)return false;if(/^confidence[1-5]$/.test(mode)&&state.confidence[k]!==Number(mode.slice(-1)))return false;if(mode==='review'&&!isDueToday(k))return false;if(term&&!norm(`${q.number} ${q.label} ${q.question}`).includes(term))return false;return true}).map(x=>x.i);if(!view.length){alert(mode==='review'?'오늘 복습할 문제가 없습니다.':'조건에 맞는 문제가 없습니다.');$('#mode').value='all';view=[...BANK.keys()]}pos=0;state.mode=$('#mode').value;save();render()}
+function applyView(){const mode=$('#mode').value,term=norm($('#search').value);view=BANK.map((q,i)=>({q,i})).filter(({q})=>{const k=qkey(q),wm=state.wrongMeta[k]||{};if(mode==='wrong'&&!state.wrong[k])return false;if(mode==='frequentWrong'&&!(wm.count>=2))return false;if(mode==='recentWrong'&&!(wm.last&&daysBetween(wm.last,localDateKey())<=7))return false;if(mode==='unanswered'&&hasAttempt(k))return false;if(mode==='favorite'&&!state.fav[k])return false;if(['mastered','uncertain','unmastered'].includes(mode)&&state.status[k]!==mode)return false;if(mode==='review'&&!isDueToday(k))return false;if(term&&!norm(`${q.number} ${q.label} ${q.question}`).includes(term))return false;return true}).map(x=>x.i);if(!view.length){alert(mode==='review'?'오늘 복습할 문제가 없습니다.':'조건에 맞는 문제가 없습니다.');$('#mode').value='all';view=[...BANK.keys()]}pos=0;state.mode=$('#mode').value;save();render()}
 $('#mode').onchange=applyView;$('#search').oninput=applyView;$('#shuffle').onclick=()=>{for(let i=view.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[view[i],view[j]]=[view[j],view[i]]}pos=0;save();render()};$('#reset').onclick=()=>{if(confirm('답안, 오답, 숙지 기록을 모두 초기화할까요?')){localStorage.removeItem(STORAGE_KEY);location.reload()}};
 
-$('#frequency').onclick=()=>{const k=qkey(current());state.fav[k]=!state.fav[k];if(!state.fav[k])delete state.fav[k];save();render()};
-document.querySelectorAll('[data-confidence]').forEach(btn=>btn.onclick=()=>{const k=qkey(current()),n=Number(btn.dataset.confidence);state.confidence[k]=state.confidence[k]===n?0:n;if(!state.confidence[k])delete state.confidence[k];save();render()});
-function stopMemoryMode(){memoryActive=false;clearTimeout(memoryTimer);clearTimeout(memoryNextTimer);$('#memoryMode').classList.remove('active');$('#memoryMode').textContent='연속 암기'}
-function runMemoryStep(){if(!memoryActive)return;clearTimeout(memoryTimer);clearTimeout(memoryNextTimer);memoryTimer=setTimeout(()=>{if(!memoryActive)return;showOfficial();memoryNextTimer=setTimeout(()=>{if(!memoryActive)return;if(pos<view.length-1){pos++;render();runMemoryStep()}else stopMemoryMode()},3000)},5000)}
-$('#memoryMode').onclick=()=>{if(memoryActive){stopMemoryMode();return}if(examActive)endExam();memoryActive=true;$('#memoryMode').classList.add('active');$('#memoryMode').textContent='암기 중지';$('#managePanel').classList.remove('open');render();runMemoryStep()};
-function endExam(){if(!examActive)return;examActive=false;document.body.classList.remove('exam-running');$('#examMode').classList.remove('active');$('#examMode').textContent='시험';const elapsed=Math.max(1,Math.round((Date.now()-examStartedAt)/60000));const total=view.length,wrong=view.filter(i=>state.wrong[qkey(BANK[i])]).length;alert(`시험 종료\n문항: ${total}개\n현재 오답: ${wrong}개\n경과: ${elapsed}분`);if(examOriginalView){view=examOriginalView;examOriginalView=null;pos=0;render()}}
-$('#examMode').onclick=()=>{if(examActive){endExam();return}stopMemoryMode();const raw=prompt('시험 문항 수를 입력하세요.\n20, 30, 50, 100 또는 전체','30');if(raw===null)return;const n=raw.trim()==='전체'?BANK.length:Math.max(1,Math.min(BANK.length,parseInt(raw,10)||30));examOriginalView=[...view];view=[...BANK.keys()];for(let i=view.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[view[i],view[j]]=[view[j],view[i]]}view=view.slice(0,n);pos=0;examActive=true;examStartedAt=Date.now();document.body.classList.add('exam-running');$('#examMode').classList.add('active');$('#examMode').textContent='시험 종료';$('#managePanel').classList.remove('open');render()};
+$('#favoriteToggle').onclick=()=>{const k=qkey(current());state.fav[k]=!state.fav[k];if(!state.fav[k])delete state.fav[k];save();render()};
 document.addEventListener('keydown',e=>{if(e.target.matches('textarea,input,select'))return;if(e.key==='ArrowLeft')$('#prev').click();if(e.key==='ArrowRight')$('#next').click();if(e.key==='Enter')$('#check').click()});
-if(['all','review','wrong','frequentWrong','recentWrong','unanswered','favorite','mastered','uncertain','unmastered','confidence1','confidence2','confidence3','confidence4','confidence5'].includes(state.mode))$('#mode').value=state.mode;
+if(['all','review','wrong','frequentWrong','recentWrong','unanswered','favorite','mastered','uncertain','unmastered'].includes(state.mode))$('#mode').value=state.mode;
 render();
 
 </script>
