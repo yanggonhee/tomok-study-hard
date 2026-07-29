@@ -745,6 +745,76 @@ if(['all','review','wrong','frequentWrong','recentWrong','unanswered','favorite'
 render();
 
 </script>
+
+<style id="flashcard-mode-addon">
+.flashcard-panel{display:none;margin-top:7px}
+body.flashcard-mode .answer-section,body.flashcard-mode .inline-status,body.flashcard-mode .inline-actions,body.flashcard-mode #result,body.flashcard-mode #official{display:none!important}
+body.flashcard-mode .flashcard-panel{display:block}
+.flash-card{min-height:230px;border:1px solid #bcbcbc;border-radius:10px;background:#fafafa;padding:14px;display:flex;flex-direction:column;justify-content:center;text-align:center}
+.flash-card .flash-side{font-size:11px;font-weight:900;color:#666!important;margin-bottom:9px;letter-spacing:.5px}
+.flash-card .flash-question{white-space:pre-wrap;word-break:keep-all;font-size:17px;line-height:1.65;font-weight:850}
+.flash-card .flash-answer{display:none;text-align:left;white-space:pre-wrap;font-size:14px;line-height:1.65}
+.flash-card.flipped .flash-question{display:none}.flash-card.flipped .flash-answer{display:block}
+.flash-flip{width:100%;height:42px;margin-top:6px;font-weight:900;background:#dedede!important;border-color:#888!important}
+.flash-ratings{display:none;grid-template-columns:repeat(4,1fr);gap:4px;margin-top:5px}
+.flash-card.flipped+.flash-flip{display:none}.flash-card.flipped~.flash-ratings{display:grid}
+.flash-ratings button{height:40px;padding:2px;font-size:12px;font-weight:900}
+.flash-due{margin-top:6px;text-align:center;font-size:11px;color:#666!important;font-weight:750}
+#flashToggle.active{background:#dedede!important;border-color:#666!important;font-weight:950}
+@media(max-width:560px){.flash-card{min-height:205px;padding:11px}.flash-card .flash-question{font-size:15px}.flash-card .flash-answer{font-size:13px}.flash-ratings button{height:38px;font-size:11px}}
+</style>
+<script id="flashcard-mode-addon-script">
+(()=>{
+  state.flashMode=!!state.flashMode;
+  state.flashStats||={};
+  const flashToggle=document.createElement('button');
+  flashToggle.id='flashToggle';flashToggle.className='study-tool';flashToggle.type='button';flashToggle.textContent='앱카드';
+  document.querySelector('#manageToggle').insertAdjacentElement('beforebegin',flashToggle);
+
+  const panel=document.createElement('section');panel.id='flashcardPanel';panel.className='flashcard-panel';
+  panel.innerHTML=`<div id="flashCard" class="flash-card" role="button" tabindex="0" aria-label="카드 뒤집기">
+    <div class="flash-side">앞면 · 문제</div><div id="flashQuestion" class="flash-question"></div><div id="flashAnswer" class="flash-answer"></div>
+  </div><button id="flashFlip" class="flash-flip" type="button">뒤집기</button>
+  <div class="flash-ratings" aria-label="기억 정도"><button data-rate="again">모름</button><button data-rate="hard">어려움</button><button data-rate="good">보통</button><button data-rate="easy">쉬움</button></div>
+  <div id="flashDue" class="flash-due"></div>`;
+  document.querySelector('.inline-actions').insertAdjacentElement('afterend',panel);
+
+  function answerText(q){return (q.allAnswers||[]).map((g,i)=>`${q.mode==='grouped'?(q.inputLabels[i]||`${i+1}.`):`${i+1}.`} ${(g||[]).join(' / ')}`).join('\n');}
+  function renderFlash(){
+    document.body.classList.toggle('flashcard-mode',state.flashMode);
+    flashToggle.classList.toggle('active',state.flashMode);
+    flashToggle.textContent=state.flashMode?'문제풀이':'앱카드';
+    if(!state.flashMode)return;
+    const q=current(),k=qkey(q),card=document.querySelector('#flashCard');
+    card.classList.remove('flipped');
+    document.querySelector('#flashQuestion').textContent=q.question;
+    document.querySelector('#flashAnswer').innerHTML=`<div class="flash-side">뒷면 · 정답</div>${answerText(q).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}`;
+    const due=state.review[k]?.due;
+    document.querySelector('#flashDue').textContent=due?`다음 복습 예정: ${due}`:'아직 복습 일정 없음';
+  }
+  function flip(){document.querySelector('#flashCard').classList.add('flipped')}
+  function rate(kind){
+    const k=qkey(current()),prev=state.review[k]||{},streak=prev.streak||0;
+    let days=0,nextStreak=streak;
+    if(kind==='again'){days=0;nextStreak=0;state.status[k]='unmastered'}
+    if(kind==='hard'){days=1;nextStreak=Math.max(0,streak);state.status[k]='uncertain'}
+    if(kind==='good'){nextStreak=streak+1;days=[1,3,7,14,30][Math.min(nextStreak-1,4)];state.status[k]='mastered'}
+    if(kind==='easy'){nextStreak=streak+1;days=[3,7,14,30,60][Math.min(nextStreak-1,4)];state.status[k]='mastered'}
+    state.review[k]={streak:nextStreak,due:addDaysKey(days),last:localDateKey(),rating:kind};
+    const fs=state.flashStats[k]||{count:0};fs.count++;fs.last=localDateKey();fs.rating=kind;state.flashStats[k]=fs;
+    save();
+    if(pos<view.length-1){pos++;render()}else{render();alert('현재 앱카드 학습을 모두 마쳤습니다.')}
+  }
+  const originalRender=render;
+  render=function(){originalRender();renderFlash()};
+  flashToggle.onclick=()=>{state.flashMode=!state.flashMode;save();render()};
+  document.querySelector('#flashFlip').onclick=flip;
+  document.querySelector('#flashCard').onclick=flip;
+  document.querySelector('#flashCard').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();flip()}};
+  panel.querySelectorAll('[data-rate]').forEach(b=>b.onclick=()=>rate(b.dataset.rate));
+  render();
+})();
+</script>
 </body>
 </html>
 
