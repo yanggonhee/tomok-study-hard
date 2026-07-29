@@ -2,14 +2,14 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
 <title>서술형 작성</title>
 <meta name="theme-color" content="#333333">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="서술형 작성">
 <style>
 :root{--black:#111;--text:#222;--dark:#444;--mid:#777;--line:#d8d8d8;--line-dark:#b8b8b8;--soft:#f3f3f3;--soft-2:#fafafa;--white:#fff;--danger:#555}
-*{box-sizing:border-box}html,body{margin:0;min-height:100%;overflow-x:hidden}body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans KR",sans-serif;background:var(--soft);color:var(--text)}button,input,select,textarea{font:inherit;color:inherit}button{cursor:pointer;border:1px solid var(--line-dark);background:#fff;border-radius:11px;font-weight:750}button:hover{background:#f1f1f1}button:active{transform:translateY(1px)}button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--dark);outline-offset:2px}.app{width:min(100%,920px);margin:auto;padding:10px}header{margin-bottom:10px}.title-row{display:flex;align-items:center;justify-content:space-between;gap:14px}.title-row>div{flex:1}h1{font-size:24px;margin:7px 0 8px;color:var(--black)}h2{font-size:16px;margin:0;color:var(--black)}.ghost{padding:10px 13px;background:var(--soft-2)}.progress-track{height:7px;background:#ddd;border-radius:999px;overflow:hidden}.progress-bar{height:100%;width:0;background:#555;transition:width .2s ease}.manage-panel{display:none;background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px;margin-top:9px}.manage-panel.open{display:block}.stats,.toolbar{display:flex;gap:7px;flex-wrap:wrap}.stats{margin-bottom:8px}.pill,.tag{display:inline-flex;align-items:center;padding:5px 9px;border-radius:999px;background:var(--soft);border:1px solid var(--line);color:var(--dark);font-size:13px;font-weight:750}.toolbar select,.toolbar input,.toolbar button{min-height:40px;padding:7px 9px;background:#fff;border:1px solid var(--line-dark);border-radius:10px}.toolbar input{flex:1;min-width:180px}.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:0 4px 14px rgba(0,0,0,.05)}.meta{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:13px}.number-wrap{display:flex;align-items:center;gap:8px}#number{font-size:34px;line-height:1;color:var(--black);letter-spacing:-1px}.stars{font-size:14px;color:var(--mid);white-space:nowrap}.question{white-space:pre-wrap;overflow-wrap:anywhere;word-break:keep-all;line-height:1.75;font-size:18px;background:var(--soft-2);border:1px solid var(--line);border-radius:13px;padding:16px}.question img{display:block;max-width:100%;height:auto;object-fit:contain;margin:10px auto;filter:grayscale(100%)}.answer-section{margin-top:17px}.section-title-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px}.autosave{font-size:12px;color:var(--mid)}.answer-item{margin-bottom:9px}.answer-label{display:block;font-weight:850;margin:0 0 5px;line-height:1.4;color:var(--black)}textarea.answer-input{width:100%;min-height:48px;height:48px;max-height:220px;padding:11px;border:1px solid var(--line-dark);border-radius:10px;resize:none;font-size:16px;line-height:1.55;background:#fff;overflow-y:hidden}textarea.answer-input:focus{outline:2px solid var(--dark);outline-offset:0;border-color:var(--dark)}.status-row{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:8px 0 5px}.status-row button{height:44px;background:#fff;color:#111}.status-row button.active{border:2px solid #444;background:#ededed;font-weight:900}.answer-actions{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:0}.answer-actions button{height:46px}.favorite-wide{width:100%;height:40px;margin-top:5px}.answer-input.auto-corrected{color:#444;font-weight:850;border-color:#777;background:#f1f1f1;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px}.result{display:none;margin-top:13px;padding:13px;border:1px solid var(--line);border-radius:11px;background:var(--soft-2);line-height:1.65}.result.show{display:block}.result-summary{font-weight:900;margin-bottom:7px}.grade-row{display:grid;grid-template-columns:28px 1fr auto;gap:8px;align-items:start;padding:6px 0;border-top:1px dashed var(--line)}.grade-symbol{font-size:19px;font-weight:900}.grade-detail{font-size:14px;color:var(--mid)}.missing{color:#555;font-weight:850;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:2px}.official{display:none;margin-top:13px;padding:14px;border:1px solid var(--line-dark);border-radius:12px;background:var(--soft-2);color:#4a4a4a;font-weight:650}.official.show{display:block}.official-group{padding:9px 0;border-bottom:1px dashed var(--line-dark);line-height:1.65;color:#444;font-weight:700}.official-group:last-child{border-bottom:0}.mnemonic{margin-top:10px;padding:11px 12px;border:1px solid var(--line-dark);border-radius:10px;background:#f1f1f1}.mnemonic-title{font-weight:900;margin-bottom:5px}.mnemonic-code{font-size:18px;font-weight:900;letter-spacing:1px;color:#111}.mnemonic-note{margin-top:4px;font-size:13px;color:var(--mid);line-height:1.55}.kbd-help{font-size:12px;color:var(--mid);margin-top:8px;text-align:center}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;overflow-x:hidden}body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans KR",sans-serif;background:var(--soft);color:var(--text)}button,input,select,textarea{font:inherit;color:inherit}button{cursor:pointer;border:1px solid var(--line-dark);background:#fff;border-radius:11px;font-weight:750}button:hover{background:#f1f1f1}button:active{transform:translateY(1px)}button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--dark);outline-offset:2px}.app{width:min(100%,920px);margin:auto;padding:10px}header{margin-bottom:10px}.title-row{display:flex;align-items:center;justify-content:space-between;gap:14px}.title-row>div{flex:1}h1{font-size:24px;margin:7px 0 8px;color:var(--black)}h2{font-size:16px;margin:0;color:var(--black)}.ghost{padding:10px 13px;background:var(--soft-2)}.progress-track{height:7px;background:#ddd;border-radius:999px;overflow:hidden}.progress-bar{height:100%;width:0;background:#555;transition:width .2s ease}.manage-panel{display:none;background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px;margin-top:9px}.manage-panel.open{display:block}.stats,.toolbar{display:flex;gap:7px;flex-wrap:wrap}.stats{margin-bottom:8px}.pill,.tag{display:inline-flex;align-items:center;padding:5px 9px;border-radius:999px;background:var(--soft);border:1px solid var(--line);color:var(--dark);font-size:13px;font-weight:750}.toolbar select,.toolbar input,.toolbar button{min-height:40px;padding:7px 9px;background:#fff;border:1px solid var(--line-dark);border-radius:10px}.toolbar input{flex:1;min-width:180px}.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:0 4px 14px rgba(0,0,0,.05)}.meta{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:13px}.number-wrap{display:flex;align-items:center;gap:8px}#number{font-size:34px;line-height:1;color:var(--black);letter-spacing:-1px}.stars{font-size:14px;color:var(--mid);white-space:nowrap}.question{white-space:pre-wrap;overflow-wrap:anywhere;word-break:keep-all;line-height:1.75;font-size:18px;background:var(--soft-2);border:1px solid var(--line);border-radius:13px;padding:16px}.question img{display:block;max-width:100%;height:auto;object-fit:contain;margin:10px auto;filter:grayscale(100%)}.answer-section{margin-top:17px}.section-title-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px}.autosave{font-size:12px;color:var(--mid)}.answer-item{margin-bottom:9px}.answer-label{display:block;font-weight:850;margin:0 0 5px;line-height:1.4;color:var(--black)}textarea.answer-input{width:100%;min-height:48px;height:48px;max-height:220px;padding:11px;border:1px solid var(--line-dark);border-radius:10px;resize:none;font-size:16px;line-height:1.55;background:#fff;overflow-y:hidden}textarea.answer-input:focus{outline:2px solid var(--dark);outline-offset:0;border-color:var(--dark)}.status-row{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:8px 0 5px}.status-row button{height:44px;background:#fff;color:#111}.status-row button.active{border:2px solid #444;background:#ededed;font-weight:900}.answer-actions{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:0}.answer-actions button{height:46px}.favorite-wide{width:100%;height:40px;margin-top:5px}.answer-input.auto-corrected{color:#444;font-weight:850;border-color:#777;background:#f1f1f1;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px}.result{display:none;margin-top:13px;padding:13px;border:1px solid var(--line);border-radius:11px;background:var(--soft-2);line-height:1.65}.result.show{display:block}.result-summary{font-weight:900;margin-bottom:7px}.grade-row{display:grid;grid-template-columns:28px 1fr auto;gap:8px;align-items:start;padding:6px 0;border-top:1px dashed var(--line)}.grade-symbol{font-size:19px;font-weight:900}.grade-detail{font-size:14px;color:var(--mid)}.correct-answer-after-mine{margin-top:4px;color:#222;font-weight:900;line-height:1.5}.missing{color:#555;font-weight:850;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:2px}.official{display:none;margin-top:13px;padding:14px;border:1px solid var(--line-dark);border-radius:12px;background:var(--soft-2);color:#4a4a4a;font-weight:650}.official.show{display:block}.official-group{padding:9px 0;border-bottom:1px dashed var(--line-dark);line-height:1.65;color:#444;font-weight:700}.official-group:last-child{border-bottom:0}.mnemonic{margin-top:10px;padding:11px 12px;border:1px solid var(--line-dark);border-radius:10px;background:#f1f1f1}.mnemonic-title{font-weight:900;margin-bottom:5px}.mnemonic-code{font-size:18px;font-weight:900;letter-spacing:1px;color:#111}.mnemonic-note{margin-top:4px;font-size:13px;color:var(--mid);line-height:1.55}.kbd-help{font-size:12px;color:var(--mid);margin-top:8px;text-align:center}
 @media(max-width:560px){.app{padding:7px}.card{padding:11px;border-radius:13px}h1{font-size:22px}.question{font-size:16px;padding:12px}#number{font-size:30px}.tag{font-size:11px}.toolbar select,.toolbar button{flex:1}.toolbar input{order:3;flex-basis:100%}.status-row,.answer-actions{gap:4px}.status-row{margin:6px 0 4px}.status-row button{height:42px;font-size:14px}.answer-actions button{height:44px;font-size:13px;padding:4px 2px}.favorite-wide{height:38px;margin-top:4px}.grade-row{grid-template-columns:24px 1fr}.grade-row>strong{grid-column:2}}
 
 /* 한손 조작용 초밀도 UI */
@@ -406,6 +406,18 @@ button.good,
 #favoriteToggle.active{background:#dedede!important;border-color:#777!important;color:#111!important}
 @media(max-width:560px){.meta-tools{gap:5px}#favoriteToggle{width:29px;height:29px;min-width:29px;font-size:18px}}
 </style>
+
+<style id="mobile-input-zoom-prevention">
+/* 모바일 입력 시 브라우저 자동 확대 방지: 입력 기능과 수동 확대는 유지 */
+@media (max-width: 768px){
+  input, textarea, select,
+  textarea.answer-input,
+  .answer-item textarea,
+  .answer-item input{
+    font-size:16px!important;
+  }
+}
+</style>
 </head>
 <body>
 <div class="app">
@@ -654,11 +666,10 @@ $('#check').addEventListener('click',()=>{
   const q=current();
   const key=qkey(q);
   const inputs=[...document.querySelectorAll('.answer-input')];
-  const displayVals=inputs.map(x=>x.value);
-  const priorFlags=state.corrections[key]||[];
-  const priorAttempts=state.attempts[key]||[];
-  const vals=displayVals.map((v,i)=>priorFlags[i]?(priorAttempts[i]||''):v);
+  const vals=inputs.map(x=>x.value);
   state.attempts[key]=[...vals];
+  state.answers[key]=[...vals];
+  delete state.corrections[key];
 
   const results=vals.map((v,i)=>assess(v,q.answerGroups[i]||[]));
   const used=new Set();
@@ -672,17 +683,8 @@ $('#check').addEventListener('click',()=>{
     }
   });
 
-  const corrected=[...displayVals];
-  const flags=Array(displayVals.length).fill(false);
-  results.forEach((r,i)=>{
-    const isCorrect=r.score===1;
-    if(isCorrect){
-      corrected[i]=vals[i];
-      inputs[i].value=vals[i];
-      inputs[i].classList.remove('auto-corrected');
-      return;
-    }
-
+  const shownAnswers=results.map((r,i)=>{
+    if(r.score===1)return '';
     let answer='';
     if(q.mode==='list'){
       for(const group of (q.allAnswers||[])){
@@ -696,17 +698,8 @@ $('#check').addEventListener('click',()=>{
     }else{
       answer=(q.answerGroups[i]||[])[0]||((q.allAnswers[i]||[])[0]||'');
     }
-    if(!answer)answer=(q.answerGroups[i]||[])[0]||'';
-    corrected[i]=answer;
-    flags[i]=true;
-    inputs[i].value=answer;
-    inputs[i].classList.add('auto-corrected');
-    autoGrow(inputs[i]);
+    return answer||(q.answerGroups[i]||[])[0]||'';
   });
-
-  state.answers[key]=corrected;
-  state.corrections[key]=flags;
-  if(!flags.some(Boolean))delete state.corrections[key];
 
   const perfect=results.every(r=>r.score===1);
   if(!perfect){
@@ -720,8 +713,47 @@ $('#check').addEventListener('click',()=>{
   }
   scheduleFromGrade(key,perfect);
 
-  $('#result').className='result';
-  $('#result').innerHTML='';
+  const resultBox=$('#result');
+  resultBox.className='result show';
+  resultBox.innerHTML='';
+
+  const correctCount=results.filter(r=>r.score===1).length;
+  const partialCount=results.filter(r=>r.score>0&&r.score<1).length;
+  const wrongCount=results.length-correctCount-partialCount;
+  const summary=document.createElement('div');
+  summary.className='result-summary';
+  summary.textContent=perfect
+    ? `정답입니다. (${correctCount}/${results.length})`
+    : `채점 결과: 정답 ${correctCount}개${partialCount?`, 부분정답 ${partialCount}개`:''}, 오답 ${wrongCount}개`;
+  resultBox.append(summary);
+
+  results.forEach((r,i)=>{
+    const row=document.createElement('div');
+    row.className='grade-row';
+    const symbol=document.createElement('span');
+    symbol.className='grade-symbol';
+    symbol.textContent=r.score===1?'○':(r.score>0?'△':'×');
+
+    const detail=document.createElement('div');
+    detail.className='grade-detail';
+    const entered=String(vals[i]||'').trim();
+    const mine=document.createElement('div');
+    mine.textContent=entered?`내 답: ${entered}`:'내 답: 미작성';
+    detail.append(mine);
+
+    if(r.score!==1){
+      const correct=document.createElement('div');
+      correct.className='correct-answer-after-mine';
+      correct.textContent=`정답: ${shownAnswers[i]||'정답 정보 없음'}`;
+      detail.append(correct);
+    }
+
+    const status=document.createElement('strong');
+    status.textContent=r.score===1?'정답':(r.score>0?'부분정답':'오답');
+    row.append(symbol,detail,status);
+    resultBox.append(row);
+  });
+
   const btn=$('#check');
   const original=btn.textContent;
   btn.textContent='채점완료';
@@ -748,6 +780,9 @@ render();
 
 <style id="flashcard-mode-addon">
 .flashcard-panel{display:none;margin-top:7px}
+.flash-tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:5px}
+.flash-tabs button{height:34px;border-radius:7px;font-size:12px;font-weight:900;background:#fff!important;border:1px solid #bcbcbc!important}
+.flash-tabs button.active{background:#dedede!important;border-color:#666!important;color:#111!important}
 body.flashcard-mode .answer-section,body.flashcard-mode .inline-status,body.flashcard-mode .inline-actions,body.flashcard-mode #result,body.flashcard-mode #official{display:none!important}
 body.flashcard-mode .flashcard-panel{display:block}
 .flash-card{min-height:230px;border:1px solid #bcbcbc;border-radius:10px;background:#fafafa;padding:14px;display:flex;flex-direction:column;justify-content:center;text-align:center}
@@ -772,7 +807,7 @@ body.flashcard-mode .flashcard-panel{display:block}
   document.querySelector('#manageToggle').insertAdjacentElement('beforebegin',flashToggle);
 
   const panel=document.createElement('section');panel.id='flashcardPanel';panel.className='flashcard-panel';
-  panel.innerHTML=`<div id="flashCard" class="flash-card" role="button" tabindex="0" aria-label="카드 뒤집기">
+  panel.innerHTML=`<div class="flash-tabs" role="tablist" aria-label="앱카드 앞뒤 선택"><button id="flashQuestionTab" class="active" type="button" role="tab" aria-selected="true">문제</button><button id="flashAnswerTab" type="button" role="tab" aria-selected="false">정답</button></div><div id="flashCard" class="flash-card" role="button" tabindex="0" aria-label="문제와 정답 전환">
     <div class="flash-side">앞면 · 문제</div><div id="flashQuestion" class="flash-question"></div><div id="flashAnswer" class="flash-answer"></div>
   </div><button id="flashFlip" class="flash-flip" type="button">뒤집기</button>
   <div class="flash-ratings" aria-label="기억 정도"><button data-rate="again">모름</button><button data-rate="hard">어려움</button><button data-rate="good">보통</button><button data-rate="easy">쉬움</button></div>
@@ -786,13 +821,22 @@ body.flashcard-mode .flashcard-panel{display:block}
     flashToggle.textContent=state.flashMode?'문제풀이':'앱카드';
     if(!state.flashMode)return;
     const q=current(),k=qkey(q),card=document.querySelector('#flashCard');
-    card.classList.remove('flipped');
+    setFlashSide('question');
     document.querySelector('#flashQuestion').textContent=q.question;
     document.querySelector('#flashAnswer').innerHTML=`<div class="flash-side">뒷면 · 정답</div>${answerText(q).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}`;
     const due=state.review[k]?.due;
     document.querySelector('#flashDue').textContent=due?`다음 복습 예정: ${due}`:'아직 복습 일정 없음';
   }
-  function flip(){document.querySelector('#flashCard').classList.add('flipped')}
+  function setFlashSide(side){
+    const card=document.querySelector('#flashCard');
+    const showAnswer=side==='answer';
+    card.classList.toggle('flipped',showAnswer);
+    const qTab=document.querySelector('#flashQuestionTab');
+    const aTab=document.querySelector('#flashAnswerTab');
+    qTab.classList.toggle('active',!showAnswer);aTab.classList.toggle('active',showAnswer);
+    qTab.setAttribute('aria-selected',String(!showAnswer));aTab.setAttribute('aria-selected',String(showAnswer));
+  }
+  function flip(){setFlashSide(document.querySelector('#flashCard').classList.contains('flipped')?'question':'answer')}
   function rate(kind){
     const k=qkey(current()),prev=state.review[k]||{},streak=prev.streak||0;
     let days=0,nextStreak=streak;
@@ -808,7 +852,9 @@ body.flashcard-mode .flashcard-panel{display:block}
   const originalRender=render;
   render=function(){originalRender();renderFlash()};
   flashToggle.onclick=()=>{state.flashMode=!state.flashMode;save();render()};
-  document.querySelector('#flashFlip').onclick=flip;
+  document.querySelector('#flashFlip').onclick=()=>setFlashSide('answer');
+  document.querySelector('#flashQuestionTab').onclick=()=>setFlashSide('question');
+  document.querySelector('#flashAnswerTab').onclick=()=>setFlashSide('answer');
   document.querySelector('#flashCard').onclick=flip;
   document.querySelector('#flashCard').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();flip()}};
   panel.querySelectorAll('[data-rate]').forEach(b=>b.onclick=()=>rate(b.dataset.rate));
