@@ -612,45 +612,84 @@ function makeScene(cores){
   return `${head} → 끝에 ${cores[cores.length-1]}`;
 }
 
-function mnemonicFor(q){
-  const answers=(q.allAnswers||[])
-    .map(g=>(g||[])[0]||'')
-    .filter(Boolean);
+function mnemonicToken(text){
+  const core=memoryCore(text||'').trim();
+  if(!core)return '';
 
-  if(!answers.length)return null;
+  /* 영문 약어·기호로 시작하면 영문 첫 글자를 우선한다.
+     예: CBR → C, K값 → K, Cone값 → C, N치 → N */
+  const leadingEnglish=core.match(/^\s*([A-Za-z])/);
+  if(leadingEnglish)return leadingEnglish[1].toUpperCase();
+
+  const leadingKorean=core.match(/^\s*([가-힣])/);
+  if(leadingKorean)return leadingKorean[1];
+
+  const anyEnglish=core.match(/[A-Za-z]/);
+  if(anyEnglish)return anyEnglish[0].toUpperCase();
+  const anyKorean=core.match(/[가-힣]/);
+  return anyKorean?anyKorean[0]:core.slice(0,1);
+}
+
+const MNEMONIC_WORDS={
+  'A':'아기','B':'비행기','C':'씨앗','D':'달','E':'이불','F':'꽃','G':'구름','H':'하마','I':'아이','J':'주스','K':'케이크','L':'레몬','M':'모자','N':'나무','O':'오리','P':'피자','Q':'큐브','R':'로봇','S':'사과','T':'토끼','U':'우산','V':'브이','W':'시계','X':'엑스','Y':'요요','Z':'지퍼',
+  '가':'가방','강':'강아지','건':'건물','경':'경찰','고':'고양이','공':'공원','관':'관장님','교':'교장','구':'구름','굴':'굴착기','기':'기차','긴':'긴팔',
+  '나':'나비','낙':'낙타','노':'노루','누':'누나','다':'다람쥐','단':'단추','대':'대장','도':'도깨비','동':'동생','드':'드럼','라':'라면','레':'레몬','로':'로봇','리':'리본',
+  '마':'마법사','말':'말','맹':'맹구','모':'모자','무':'무지개','물':'물고기','미':'미끄럼틀','바':'바나나','반':'반장','방':'방패','배':'배','버':'버스','베':'베개','보':'보물','부':'부엉이','블':'블록','비':'비행기',
+  '사':'사자','샌':'샌드위치','서':'서랍','석':'석상','선':'선생님','소':'소방차','수':'수박','스':'스프','시':'시계','심':'심부름꾼','아':'아이','암':'암벽','압':'압력솥','양':'양','어':'어머니','에':'에어컨','연':'연필','오':'오리','원':'원숭이','유':'유리','이':'이불','자':'자동차','장':'장군','전':'전구','절':'절벽','조':'조끼','주':'주전자','지':'지우개','차':'자동차','철':'철수','침':'침대','콘':'콘','쿠':'쿠키','타':'타조','터':'터널','토':'토끼','파':'파도','펀':'펀치','펌':'펌프','평':'평상','포':'포도','프':'프라이팬','하':'하마','해':'해바라기','현':'현미경','호':'호랑이','혼':'혼자','횡':'횡단보도'
+};
+
+function mnemonicWord(token, fallback){
+  return MNEMONIC_WORDS[token]||memoryCore(fallback||token).replace(/\s+/g,' ').trim();
+}
+
+function hasBatchim(word){
+  const ch=(word||'').trim().slice(-1);
+  if(!ch)return false;
+  const code=ch.charCodeAt(0)-0xAC00;
+  return code>=0&&code<=11171&&(code%28)!==0;
+}
+function particle(word,withBatchim,withoutBatchim){return hasBatchim(word)?withBatchim:withoutBatchim}
+function subject(word){return word+particle(word,'이','가')}
+function object(word){return word+particle(word,'을','를')}
+function withWord(word){return word+particle(word,'과','와')}
+
+function buildMnemonicSentence(items){
+  const w=items.map(x=>x.word).filter(Boolean);
+  const n=w.length;
+  if(n===2)return `${subject(w[0])} ${object(w[1])} 챙긴다`;
+  if(n===3)return `${subject(w[0])} ${object(w[1])} 들고 ${w[2]}로 간다`;
+  if(n===4)return `${subject(w[0])} ${object(w[1])} 들고 ${withWord(w[2])} 함께 ${w[3]}로 간다`;
+  if(n===5)return `${subject(w[0])} ${w[1]}, ${w[2]}, ${object(w[3])} 챙겨 ${w[4]}로 간다`;
+  return `${w.slice(0,-1).join(', ')}를 차례로 챙겨 마지막에 ${w[n-1]}로 간다`;
+}
+
+function mnemonicFor(q){
+  const answers=(q.allAnswers||[]).map(g=>(g||[])[0]||'').filter(Boolean);
+  if(answers.length<2)return null;
 
   const cleaned=answers.map(memoryClean);
-  const cores=answers.map(memoryCore);
+  const items=answers.map((answer,index)=>{
+    const token=mnemonicToken(answer);
+    return {answer,index,token,word:mnemonicWord(token,answer)};
+  });
 
-  /*
-    한 문항에 정답이 여러 개면:
-    1) 핵심 흐름: 짧은 단어·행동을 화살표로 연결
-    2) 연상 문장: 실제로 소리 내어 읽을 수 있는 문장
-    3) 연결표: 각 핵심어가 어느 정답을 뜻하는지 표시
-  */
-  if(answers.length>1){
-    const flow=cores.join(' → ');
-    const scene=makeScene(cores);
-    const links=cleaned.map((x,i)=>`${i+1}. ${x}`).join(' / ');
-    return{
-      code:flow,
-      scene:scene,
-      note:links
-    };
-  }
-
-  /*
-    한 문장 안에 핵심어가 여러 개인 경우에도
-    무의미한 앞글자 나열 대신 흐름으로 기억한다.
-  */
-  const ks=keywords(answers[0]).slice(0,5);
-  if(ks.length<2)return null;
-  const flow=ks.map(memoryCore).join(' → ');
-  return{
-    code:flow,
-    scene:`${ks.join(', ')} 순서로 한 장면을 떠올리기`,
-    note:memoryClean(answers[0])
+  /* 정답 순서를 그대로 보존한다. 영문 약어도 C-K-C-N처럼 원래 순서대로 표시한다. */
+  const signature=items.map(x=>x.token).join('');
+  const manual={
+    'CKCN':'씨앗이 케이크를 들고 콘을 지나 나무로 간다',
+    '라쿠스프':'라면에 쿠키 대신 스프를 넣고 프라이팬에 볶는다',
+    '평쐐전원':'평상에 쐐기를 놓고 전구를 켜자 원숭이가 온다',
+    '펌블펀':'펌프 옆 블록을 힘껏 펀치한다',
+    '품공원':'품질 좋은 공을 들고 공원으로 간다',
+    '반가가':'반장이 가방을 들고 가배수로를 확인한다',
+    'FCM':'FCM을 그대로 소리 내어 외운다',
+    'PPL':'풀링, 푸싱, 리프트 푸싱 순서로 밀고 당긴다'
   };
+
+  const scene=manual[signature]||buildMnemonicSentence(items);
+  const code=items.map(x=>x.token).join(' · ');
+  const links=items.map((x,i)=>`${x.token} = ${cleaned[x.index]}`).join('<br>');
+  return{code,scene,note:links};
 }
 function current(){return BANK[view[pos]]}function qkey(q){return String(q.id)}
 function localDateKey(date=new Date()){const y=date.getFullYear(),m=String(date.getMonth()+1).padStart(2,'0'),d=String(date.getDate()).padStart(2,'0');return `${y}-${m}-${d}`}
@@ -780,23 +819,18 @@ render();
 
 <style id="flashcard-mode-addon">
 .flashcard-panel{display:none;margin-top:7px}
-.flash-tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:5px}
-.flash-tabs button{height:34px;border-radius:7px;font-size:12px;font-weight:900;background:#fff!important;border:1px solid #bcbcbc!important}
-.flash-tabs button.active{background:#dedede!important;border-color:#666!important;color:#111!important}
-body.flashcard-mode .answer-section,body.flashcard-mode .inline-status,body.flashcard-mode .inline-actions,body.flashcard-mode #result,body.flashcard-mode #official{display:none!important}
+body.flashcard-mode #question,body.flashcard-mode .answer-section,body.flashcard-mode .inline-status,body.flashcard-mode .inline-actions,body.flashcard-mode #result,body.flashcard-mode #official{display:none!important}
 body.flashcard-mode .flashcard-panel{display:block}
-.flash-card{min-height:230px;border:1px solid #bcbcbc;border-radius:10px;background:#fafafa;padding:14px;display:flex;flex-direction:column;justify-content:center;text-align:center}
-.flash-card .flash-side{font-size:11px;font-weight:900;color:#666!important;margin-bottom:9px;letter-spacing:.5px}
-.flash-card .flash-question{white-space:pre-wrap;word-break:keep-all;font-size:17px;line-height:1.65;font-weight:850}
-.flash-card .flash-answer{display:none;text-align:left;white-space:pre-wrap;font-size:14px;line-height:1.65}
+.flash-card{min-height:230px;border:1px solid #bcbcbc;border-radius:10px;background:#fafafa;padding:16px;display:flex;flex-direction:column;justify-content:center;text-align:left}
+.flash-card .flash-question{width:100%;white-space:pre-wrap;word-break:keep-all;text-align:left;font-size:18px;line-height:1.65;font-weight:850}
+.flash-card .flash-answer{display:none;width:100%;text-align:left;white-space:pre-wrap;word-break:keep-all;font-size:18px;line-height:1.65;font-weight:850}
 .flash-card.flipped .flash-question{display:none}.flash-card.flipped .flash-answer{display:block}
-.flash-flip{width:100%;height:42px;margin-top:6px;font-weight:900;background:#dedede!important;border-color:#888!important}
-.flash-ratings{display:none;grid-template-columns:repeat(4,1fr);gap:4px;margin-top:5px}
-.flash-card.flipped+.flash-flip{display:none}.flash-card.flipped~.flash-ratings{display:grid}
+.flash-nav{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:6px}.flash-nav button{height:40px;padding:2px;font-size:12px;font-weight:900;background:#fff!important;color:#222!important;border:1px solid #bcbcbc!important}.flash-nav #flashNext{background:#dedede!important;border-color:#888!important}.flash-ratings{display:none;grid-template-columns:repeat(4,1fr);gap:4px;margin-top:5px}
+.flash-card.flipped~.flash-ratings{display:grid}
 .flash-ratings button{height:40px;padding:2px;font-size:12px;font-weight:900}
 .flash-due{margin-top:6px;text-align:center;font-size:11px;color:#666!important;font-weight:750}
 #flashToggle.active{background:#dedede!important;border-color:#666!important;font-weight:950}
-@media(max-width:560px){.flash-card{min-height:205px;padding:11px}.flash-card .flash-question{font-size:15px}.flash-card .flash-answer{font-size:13px}.flash-ratings button{height:38px;font-size:11px}}
+@media(max-width:560px){.flash-card{min-height:205px;padding:13px}.flash-card .flash-question{font-size:17px}.flash-card .flash-answer{font-size:17px}.flash-ratings button{height:38px;font-size:11px}}
 </style>
 <script id="flashcard-mode-addon-script">
 (()=>{
@@ -807,14 +841,20 @@ body.flashcard-mode .flashcard-panel{display:block}
   document.querySelector('#manageToggle').insertAdjacentElement('beforebegin',flashToggle);
 
   const panel=document.createElement('section');panel.id='flashcardPanel';panel.className='flashcard-panel';
-  panel.innerHTML=`<div class="flash-tabs" role="tablist" aria-label="앱카드 앞뒤 선택"><button id="flashQuestionTab" class="active" type="button" role="tab" aria-selected="true">문제</button><button id="flashAnswerTab" type="button" role="tab" aria-selected="false">정답</button></div><div id="flashCard" class="flash-card" role="button" tabindex="0" aria-label="문제와 정답 전환">
-    <div class="flash-side">앞면 · 문제</div><div id="flashQuestion" class="flash-question"></div><div id="flashAnswer" class="flash-answer"></div>
-  </div><button id="flashFlip" class="flash-flip" type="button">뒤집기</button>
+  panel.innerHTML=`<div id="flashCard" class="flash-card" role="button" tabindex="0" aria-label="카드를 눌러 문제와 정답 전환">
+    <div id="flashQuestion" class="flash-question"></div><div id="flashAnswer" class="flash-answer"></div>
+  </div>
+  <div class="flash-nav" aria-label="앱카드 문제 이동"><button id="flashPrev" type="button">이전</button><button id="flashNext" type="button">다음</button></div>
   <div class="flash-ratings" aria-label="기억 정도"><button data-rate="again">모름</button><button data-rate="hard">어려움</button><button data-rate="good">보통</button><button data-rate="easy">쉬움</button></div>
   <div id="flashDue" class="flash-due"></div>`;
   document.querySelector('.inline-actions').insertAdjacentElement('afterend',panel);
 
-  function answerText(q){return (q.allAnswers||[]).map((g,i)=>`${q.mode==='grouped'?(q.inputLabels[i]||`${i+1}.`):`${i+1}.`} ${(g||[]).join(' / ')}`).join('\n');}
+  function answerText(q){return (q.allAnswers||[]).map((g,i)=>`${i+1}. ${(g||[]).join(' / ')}`).join('\n');}
+  function questionText(q){
+    if(q.mode!=='grouped'||!Array.isArray(q.inputLabels)||!q.inputLabels.length)return q.question;
+    const choices=q.inputLabels.map((label,i)=>`${i+1}. ${label}`).join('\n');
+    return `${q.question}\n\n${choices}`;
+  }
   function renderFlash(){
     document.body.classList.toggle('flashcard-mode',state.flashMode);
     flashToggle.classList.toggle('active',state.flashMode);
@@ -822,8 +862,8 @@ body.flashcard-mode .flashcard-panel{display:block}
     if(!state.flashMode)return;
     const q=current(),k=qkey(q),card=document.querySelector('#flashCard');
     setFlashSide('question');
-    document.querySelector('#flashQuestion').textContent=q.question;
-    document.querySelector('#flashAnswer').innerHTML=`<div class="flash-side">뒷면 · 정답</div>${answerText(q).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}`;
+    document.querySelector('#flashQuestion').textContent=questionText(q);
+    document.querySelector('#flashAnswer').textContent=answerText(q);
     const due=state.review[k]?.due;
     document.querySelector('#flashDue').textContent=due?`다음 복습 예정: ${due}`:'아직 복습 일정 없음';
   }
@@ -831,10 +871,6 @@ body.flashcard-mode .flashcard-panel{display:block}
     const card=document.querySelector('#flashCard');
     const showAnswer=side==='answer';
     card.classList.toggle('flipped',showAnswer);
-    const qTab=document.querySelector('#flashQuestionTab');
-    const aTab=document.querySelector('#flashAnswerTab');
-    qTab.classList.toggle('active',!showAnswer);aTab.classList.toggle('active',showAnswer);
-    qTab.setAttribute('aria-selected',String(!showAnswer));aTab.setAttribute('aria-selected',String(showAnswer));
   }
   function flip(){setFlashSide(document.querySelector('#flashCard').classList.contains('flipped')?'question':'answer')}
   function rate(kind){
@@ -852,9 +888,8 @@ body.flashcard-mode .flashcard-panel{display:block}
   const originalRender=render;
   render=function(){originalRender();renderFlash()};
   flashToggle.onclick=()=>{state.flashMode=!state.flashMode;save();render()};
-  document.querySelector('#flashFlip').onclick=()=>setFlashSide('answer');
-  document.querySelector('#flashQuestionTab').onclick=()=>setFlashSide('question');
-  document.querySelector('#flashAnswerTab').onclick=()=>setFlashSide('answer');
+  document.querySelector('#flashPrev').onclick=()=>{if(!view.length)return;pos=(pos-1+view.length)%view.length;render()};
+  document.querySelector('#flashNext').onclick=()=>{if(!view.length)return;pos=(pos+1)%view.length;render()};
   document.querySelector('#flashCard').onclick=flip;
   document.querySelector('#flashCard').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();flip()}};
   panel.querySelectorAll('[data-rate]').forEach(b=>b.onclick=()=>rate(b.dataset.rate));
