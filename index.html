@@ -828,6 +828,19 @@ body.flashcard-mode .flashcard-panel{display:block}
 .flash-nav{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:6px}.flash-nav button{height:40px;padding:2px;font-size:12px;font-weight:900;background:#fff!important;color:#222!important;border:1px solid #bcbcbc!important}.flash-nav #flashNext{background:#dedede!important;border-color:#888!important}.flash-ratings{display:none;grid-template-columns:repeat(4,1fr);gap:4px;margin-top:5px}
 .flash-card.flipped~.flash-ratings{display:grid}
 .flash-ratings button{height:40px;padding:2px;font-size:12px;font-weight:900}
+.flash-tip{display:none;margin-top:10px;padding:10px;border:1px solid #bcbcbc;border-radius:8px;background:#ececec;color:#222;text-align:left}
+.flash-card.flipped .flash-tip{display:block}
+.flash-tip-title{font-size:12px;font-weight:950;margin-bottom:6px}
+.flash-tip-code{padding:7px 8px;border:1px solid #c4c4c4;border-radius:6px;background:#fff;font-size:15px;font-weight:950;line-height:1.45;letter-spacing:.5px}
+.flash-tip-scene{margin-top:5px;padding:7px 8px;border-radius:6px;background:#dedede;font-size:12.5px;font-weight:850;line-height:1.45}
+.flash-tip-note{margin-top:6px;font-size:11.5px;color:#555!important;line-height:1.55}
+.flash-speech{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-top:6px}
+.flash-speech button{height:36px;padding:2px;font-size:11.5px;font-weight:900;background:#fff!important;color:#222!important;border:1px solid #bcbcbc!important}
+.flash-speech button.speaking{background:#dedede!important;border-color:#666!important}
+.flash-continuous{display:grid;grid-template-columns:2fr 1fr 1fr;gap:4px;margin-top:4px}
+.flash-continuous button{height:36px;padding:2px;font-size:11.5px;font-weight:900;background:#fff!important;color:#222!important;border:1px solid #bcbcbc!important}
+.flash-continuous #speakContinuous{background:#dedede!important;border-color:#888!important}
+.flash-play-status{margin-top:5px;text-align:center;font-size:11px;color:#555!important;font-weight:800;min-height:16px}
 .flash-due{margin-top:6px;text-align:center;font-size:11px;color:#666!important;font-weight:750}
 #flashToggle.active{background:#dedede!important;border-color:#666!important;font-weight:950}
 @media(max-width:560px){.flash-card{min-height:205px;padding:13px}.flash-card .flash-question{font-size:17px}.flash-card .flash-answer{font-size:17px}.flash-ratings button{height:38px;font-size:11px}}
@@ -842,14 +855,33 @@ body.flashcard-mode .flashcard-panel{display:block}
 
   const panel=document.createElement('section');panel.id='flashcardPanel';panel.className='flashcard-panel';
   panel.innerHTML=`<div id="flashCard" class="flash-card" role="button" tabindex="0" aria-label="카드를 눌러 문제와 정답 전환">
-    <div id="flashQuestion" class="flash-question"></div><div id="flashAnswer" class="flash-answer"></div>
+    <div id="flashQuestion" class="flash-question"></div>
+    <div id="flashAnswer" class="flash-answer"><div id="flashAnswerText"></div><div id="flashTip" class="flash-tip"></div></div>
   </div>
+  <div class="flash-speech" aria-label="앱카드 음성 듣기"><button id="speakQuestion" type="button">🔊 문제</button><button id="speakAnswer" type="button">🔊 정답</button><button id="speakAll" type="button">🔊 문제+정답</button></div>
+  <div class="flash-continuous" aria-label="전체 연속 듣기"><button id="speakContinuous" type="button">▶ 전체 문제+정답</button><button id="pauseContinuous" type="button">⏸ 일시정지</button><button id="stopContinuous" type="button">■ 중지</button></div>
+  <div id="flashPlayStatus" class="flash-play-status"></div>
   <div class="flash-nav" aria-label="앱카드 문제 이동"><button id="flashPrev" type="button">이전</button><button id="flashNext" type="button">다음</button></div>
   <div class="flash-ratings" aria-label="기억 정도"><button data-rate="again">모름</button><button data-rate="hard">어려움</button><button data-rate="good">보통</button><button data-rate="easy">쉬움</button></div>
   <div id="flashDue" class="flash-due"></div>`;
   document.querySelector('.inline-actions').insertAdjacentElement('afterend',panel);
 
   function answerText(q){return (q.allAnswers||[]).map((g,i)=>`${i+1}. ${(g||[]).join(' / ')}`).join('\n');}
+  function flashTipData(q){
+    const memo=mnemonicFor(q);
+    if(memo)return memo;
+    const one=((q.allAnswers||[])[0]||[])[0]||'';
+    if(!one)return null;
+    const core=memoryCore(one);
+    const token=mnemonicToken(one);
+    return {code:`핵심어 · ${token}`,scene:`${core}를 한 장면으로 떠올린다`,note:`${token} = ${core}`};
+  }
+  function renderFlashTip(q){
+    const tip=document.querySelector('#flashTip'),memo=flashTipData(q);
+    if(!memo){tip.innerHTML='';tip.style.display='none';return}
+    tip.style.display='';
+    tip.innerHTML=`<div class="flash-tip-title">숙지 팁</div><div class="flash-tip-code">${memo.code}</div>${memo.scene?`<div class="flash-tip-scene">“${memo.scene}”</div>`:''}<div class="flash-tip-note">${memo.note}</div>`;
+  }
   function questionText(q){
     if(q.mode!=='grouped'||!Array.isArray(q.inputLabels)||!q.inputLabels.length)return q.question;
     const choices=q.inputLabels.map((label,i)=>`${i+1}. ${label}`).join('\n');
@@ -863,9 +895,95 @@ body.flashcard-mode .flashcard-panel{display:block}
     const q=current(),k=qkey(q),card=document.querySelector('#flashCard');
     setFlashSide('question');
     document.querySelector('#flashQuestion').textContent=questionText(q);
-    document.querySelector('#flashAnswer').textContent=answerText(q);
+    document.querySelector('#flashAnswerText').textContent=answerText(q);
+    renderFlashTip(q);
     const due=state.review[k]?.due;
     document.querySelector('#flashDue').textContent=due?`다음 복습 예정: ${due}`:'아직 복습 일정 없음';
+  }
+
+  let speechQueue=[];
+  let continuousPlaying=false,continuousPaused=false,continuousIndex=0;
+  function setPlayStatus(text=''){const el=document.querySelector('#flashPlayStatus');if(el)el.textContent=text}
+  function stopContinuous(){
+    continuousPlaying=false;continuousPaused=false;continuousIndex=0;
+    if('speechSynthesis' in window){window.speechSynthesis.cancel();window.speechSynthesis.resume?.()}
+    document.querySelector('#speakContinuous')?.classList.remove('speaking');
+    document.querySelector('#pauseContinuous').textContent='⏸ 일시정지';
+    setPlayStatus('');
+  }
+  function stopSpeech(){
+    stopContinuous();
+    if('speechSynthesis' in window)window.speechSynthesis.cancel();
+    speechQueue=[];
+    panel.querySelectorAll('.flash-speech button').forEach(b=>b.classList.remove('speaking'));
+  }
+  function koreanVoice(){
+    const voices=window.speechSynthesis?.getVoices?.()||[];
+    return voices.find(v=>/^ko(-|_)/i.test(v.lang))||voices.find(v=>v.lang&&v.lang.toLowerCase().includes('ko'))||null;
+  }
+  function speakTexts(texts,button){
+    if(!('speechSynthesis' in window)){alert('이 브라우저에서는 음성 읽기를 지원하지 않습니다.');return}
+    stopSpeech();
+    speechQueue=texts.filter(Boolean);
+    button.classList.add('speaking');
+    const next=()=>{
+      if(!speechQueue.length){button.classList.remove('speaking');return}
+      const utter=new SpeechSynthesisUtterance(speechQueue.shift());
+      utter.lang='ko-KR';utter.rate=.92;utter.pitch=1;
+      const voice=koreanVoice();if(voice)utter.voice=voice;
+      utter.onend=()=>setTimeout(next,450);
+      utter.onerror=()=>{button.classList.remove('speaking');speechQueue=[]};
+      window.speechSynthesis.speak(utter);
+    };
+    next();
+  }
+  function spokenQuestion(q){return `문제 ${Number(q.number)}번. ${questionText(q)}`}
+  function spokenAnswer(q){return `정답. ${answerText(q)}`}
+  function showContinuousCard(q){
+    document.querySelector('#flashQuestion').textContent=questionText(q);
+    document.querySelector('#flashAnswerText').textContent=answerText(q);
+    renderFlashTip(q);
+    setFlashSide('question');
+  }
+  function speakContinuousItem(){
+    if(!continuousPlaying||continuousPaused)return;
+    if(continuousIndex>=BANK.length){
+      continuousPlaying=false;
+      document.querySelector('#speakContinuous')?.classList.remove('speaking');
+      setPlayStatus('전체 445문항 재생 완료');
+      return;
+    }
+    const q=BANK[continuousIndex];
+    showContinuousCard(q);
+    setPlayStatus(`${continuousIndex+1} / ${BANK.length} 재생 중`);
+    const parts=[spokenQuestion(q),spokenAnswer(q)];
+    let part=0;
+    const playPart=()=>{
+      if(!continuousPlaying||continuousPaused)return;
+      if(part>=parts.length){continuousIndex++;setTimeout(speakContinuousItem,650);return}
+      const utter=new SpeechSynthesisUtterance(parts[part++]);
+      utter.lang='ko-KR';utter.rate=.92;utter.pitch=1;
+      const voice=koreanVoice();if(voice)utter.voice=voice;
+      utter.onend=()=>setTimeout(playPart,450);
+      utter.onerror=()=>{if(continuousPlaying){continuousIndex++;setTimeout(speakContinuousItem,300)}};
+      window.speechSynthesis.speak(utter);
+    };
+    playPart();
+  }
+  function startContinuous(){
+    if(!('speechSynthesis' in window)){alert('이 브라우저에서는 음성 읽기를 지원하지 않습니다.');return}
+    stopSpeech();
+    continuousPlaying=true;continuousPaused=false;continuousIndex=0;
+    document.querySelector('#speakContinuous').classList.add('speaking');
+    setPlayStatus(`1 / ${BANK.length} 재생 준비`);
+    speakContinuousItem();
+  }
+  function togglePauseContinuous(){
+    if(!continuousPlaying)return;
+    continuousPaused=!continuousPaused;
+    const btn=document.querySelector('#pauseContinuous');
+    if(continuousPaused){window.speechSynthesis.pause();btn.textContent='▶ 이어듣기';setPlayStatus(`${continuousIndex+1} / ${BANK.length} 일시정지`)}
+    else{window.speechSynthesis.resume();btn.textContent='⏸ 일시정지';setPlayStatus(`${continuousIndex+1} / ${BANK.length} 재생 중`)}
   }
   function setFlashSide(side){
     const card=document.querySelector('#flashCard');
@@ -887,9 +1005,15 @@ body.flashcard-mode .flashcard-panel{display:block}
   }
   const originalRender=render;
   render=function(){originalRender();renderFlash()};
-  flashToggle.onclick=()=>{state.flashMode=!state.flashMode;save();render()};
-  document.querySelector('#flashPrev').onclick=()=>{if(!view.length)return;pos=(pos-1+view.length)%view.length;render()};
-  document.querySelector('#flashNext').onclick=()=>{if(!view.length)return;pos=(pos+1)%view.length;render()};
+  flashToggle.onclick=()=>{stopSpeech();state.flashMode=!state.flashMode;save();render()};
+  document.querySelector('#speakQuestion').onclick=e=>{e.stopPropagation();speakTexts([spokenQuestion(current())],e.currentTarget)};
+  document.querySelector('#speakAnswer').onclick=e=>{e.stopPropagation();speakTexts([spokenAnswer(current())],e.currentTarget)};
+  document.querySelector('#speakAll').onclick=e=>{e.stopPropagation();speakTexts([spokenQuestion(current()),spokenAnswer(current())],e.currentTarget)};
+  document.querySelector('#speakContinuous').onclick=e=>{e.stopPropagation();startContinuous()};
+  document.querySelector('#pauseContinuous').onclick=e=>{e.stopPropagation();togglePauseContinuous()};
+  document.querySelector('#stopContinuous').onclick=e=>{e.stopPropagation();stopContinuous()};
+  document.querySelector('#flashPrev').onclick=()=>{stopSpeech();if(!view.length)return;pos=(pos-1+view.length)%view.length;render()};
+  document.querySelector('#flashNext').onclick=()=>{stopSpeech();if(!view.length)return;pos=(pos+1)%view.length;render()};
   document.querySelector('#flashCard').onclick=flip;
   document.querySelector('#flashCard').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();flip()}};
   panel.querySelectorAll('[data-rate]').forEach(b=>b.onclick=()=>rate(b.dataset.rate));
