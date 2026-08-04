@@ -493,13 +493,31 @@ const BANK = [{"id":1,"number":"001","label":"14-1","question":"연약지반상�
 <script>
 const $=s=>document.querySelector(s);
 const STORAGE_KEY='essay445-v1';
-let state;try{state=JSON.parse(localStorage.getItem(STORAGE_KEY)||'null')}catch(e){state=null}if(!state||typeof state!=='object')state={answers:{},fav:{},wrong:{},status:{},corrections:{},index:0};state.answers||={};state.fav||={};state.wrong||={};state.status||={};state.corrections||={};state.attempts||={};state.review||={};state.wrongMeta||={};state.fav||={};
+function createInitialState(){
+  return {answers:{},fav:{},wrong:{},status:{},corrections:{},attempts:{},review:{},wrongMeta:{},flashStats:{},flashMode:false,index:0,currentId:1,view:[],mode:'all',search:''};
+}
+let state;
+try{state=JSON.parse(localStorage.getItem(STORAGE_KEY)||'null')}catch(e){state=null}
+if(!state||typeof state!=='object')state=createInitialState();
+state.answers||={};state.fav||={};state.wrong||={};state.status||={};state.corrections||={};state.attempts||={};state.review||={};state.wrongMeta||={};state.flashStats||={};
 const savedView=Array.isArray(state.view)&&state.view.length&&state.view.every(i=>Number.isInteger(i)&&i>=0&&i<BANK.length)?state.view:null;
-let view=savedView?[...savedView]:[...BANK.keys()];let pos=Math.min(state.index||0,Math.max(0,view.length-1));
+let view=savedView?[...savedView]:[...BANK.keys()];
+let pos=Math.min(Number.isInteger(state.index)?state.index:0,Math.max(0,view.length-1));
+if(state.currentId!=null){
+  const restoredPos=view.findIndex(i=>BANK[i]&&BANK[i].id===state.currentId);
+  if(restoredPos>=0)pos=restoredPos;
+}
 const ALIASES={'rockbolt':['록볼트','락볼트'],'rock bolt':['록볼트','락볼트'],'shotcrete':['숏크리트','쇼트크리트'],'sandmat':['샌드매트','샌드매트공법','부사'],'sand mat':['샌드매트','샌드매트공법','부사'],'wellpoint':['웰포인트'],'well point':['웰포인트'],'deepwell':['딥웰'],'deep well':['딥웰'],'pulling':['풀링'],'pushing':['푸싱'],'rcd':['역순환공법','알씨디'],'muck':['버력','먹'],'heaving':['히빙'],'boiling':['보일링','퀵샌드'],'quick sand':['보일링','퀵샌드'],'forepoling':['훠폴링','포어폴링'],'fore poling':['훠폴링','포어폴링'],'pipe roof':['파이프루프'],'mass curve':['토적곡선','매스커브'],'seal coat':['실코트'],'overlay':['오버레이'],'over lay':['오버레이'],'spalling':['스폴링']};
 const aliasEntries=Object.entries(ALIASES).sort((a,b)=>b[0].length-a[0].length);
 let memoryTimer=null,memoryNextTimer=null,memoryActive=false,examActive=false,examOriginalView=null,examStartedAt=0;
-function save(){state.index=pos;state.view=[...view];state.mode=$('#mode')?.value||state.mode||'all';localStorage.setItem(STORAGE_KEY,JSON.stringify(state))}
+function save(){
+  state.index=pos;
+  state.view=[...view];
+  state.currentId=(view.length&&BANK[view[pos]])?BANK[view[pos]].id:null;
+  state.mode=$('#mode')?.value||state.mode||'all';
+  state.search=$('#search')?.value||'';
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(state));
+}
 function norm(s){let x=(s||'').normalize('NFKC').toLowerCase();for(const [en,kos] of aliasEntries){const canon=kos[0];x=x.split(en).join(canon);for(const ko of kos)x=x.split(ko).join(canon)}return x.replace(/[^0-9a-z가-힣]/g,'')}
 function similarity(a,b){if(a===b)return 1;const m=a.length,n=b.length;if(!m||!n)return 0;const d=Array.from({length:m+1},(_,i)=>[i]);for(let j=1;j<=n;j++)d[0][j]=j;for(let i=1;i<=m;i++)for(let j=1;j<=n;j++)d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+(a[i-1]===b[j-1]?0:1));return 1-d[m][n]/Math.max(m,n)}
 const STOP_WORDS=new Set(['방법','공법','종류','가지','대한','의한','위한','하는','하여','있다','된다','것','및','또는','등','때문','경우','사용','설치','시공','적용','필요','가능','형성','확보','발생','예상','결정','검토','확인','증가','감소','저하','방지','유지','개량']);
@@ -713,22 +731,59 @@ function practicalIntent(q){
   return '해야 할 일을 하나씩 확인하듯';
 }
 
+
+const EASY_MNEMONIC_WORDS={
+  '0':'공','1':'일기장','2':'이불','3':'삼각김밥','4':'사과','5':'오리','6':'육상선수','7':'칠판',
+  '번':'번개','표':'표범','케':'케이크','크':'크레파스','숏':'숏다리친구','코':'코끼리','화':'화분',
+  '각':'각설탕','간':'간식','감':'감자','같':'같이','개':'개구리','객':'객실','거':'거북이','격':'격투기','계':'계란','곡':'곡식','과':'과자','국':'국수','균':'균형인형','그':'그림','극':'극장','글':'글씨',
+  '내':'내복','냉':'냉면','닐':'닐센로봇','댐':'댐','돌':'돌고래','두':'두부','뒤':'뒤집개','뒷':'뒷문','등':'등대','디':'디딤돌','딜':'딜리버리차','띠':'띠용공','랭':'랭킹표',
+  '록':'록스타','롤':'롤러','루':'루돌프','림':'림보막대','막':'막대기','매':'매미','머':'머리띠','먼':'먼지','메':'메론','박':'박수','받':'받침대','발':'발자국','벤':'벤치','벽':'벽돌','변':'변신로봇',
+  '복':'복숭아','볼':'볼펜','봉':'봉지','분':'분필','불':'불꽃','빗':'빗자루','뿜':'뿜뿜이','살':'살구','상':'상자','색':'색연필','샤':'샤워기','설':'설탕','성':'성냥','쇄':'쇄도기차',
+  '슈':'슈퍼맨','슬':'슬리퍼','신':'신발','싣':'싣는차','쐐':'쐐기블록','씨':'씨앗','안':'안경','액':'액자','앵':'앵무새','야':'야구공','약':'약과','억':'억새','엄':'엄마','여':'여우','역':'역무원',
+  '영':'영구','예':'예쁜꽃','완':'완두콩','요':'요요','우':'우산','운':'운동화','웰':'웰시코기','응':'응원봉','인':'인형','일':'일기장','입':'입술','작':'작은별','잔':'잔디','잠':'잠자리',
+  '재':'재봉틀','저':'저금통','적':'적토마','점':'점프공','정':'정리함','제':'제비','중':'중간문','즉':'즉석밥','증':'증기기관차','직':'직진차','진':'진돗개','집':'집게','짜':'짜장면','착':'착한곰',
+  '천':'천사','체':'체리','초':'초코','최':'최고봉','충':'충전기','측':'측정자','층':'층층블록','치':'치약','캔':'캔디','커':'커다란공','컨':'컨테이너','콜':'콜라','큰':'큰북','탄':'탄산수',
+  '탑':'탑','택':'택시','탠':'탠덤자전거','턴':'턴테이블','테':'테이블','투':'투명우산','틸':'틸트자동차','팽':'팽이','페':'페인트','편':'편지','폭':'폭죽','품':'품에안은곰','풍':'풍선','플':'플루트','피':'피아노',
+  '한':'한복','함':'함박웃음','항':'항아리','허':'허수아비','활':'활','회':'회전목마','횜':'횜돌이','후':'후추','훠':'훠궈냄비','휴':'휴지','흐':'흐르는물','흙':'흙장난','히':'히어로',
+  '관':'관찰차','공':'공룡','교':'교실','구':'구름','굴':'굴착기','기':'기차','나':'나비','낙':'낙타','노':'노루','누':'누나','다':'다람쥐','단':'단추','동':'동생','드':'드럼','라':'라면','레':'레몬','로':'로봇','리':'리본',
+  '마':'마법사','말':'말','맹':'맹구','모':'모자','무':'무지개','물':'물고기','미':'미끄럼틀','바':'바나나','반':'반장','방':'방패','배':'배','버':'버스','베':'베개','보':'보물','부':'부엉이','블':'블록','비':'비행기',
+  '사':'사자','샌':'샌드위치','서':'서랍','석':'석상','선':'선생님','소':'소방차','수':'수박','스':'스프','시':'시계','심':'심부름꾼','아':'아이','암':'암벽','압':'압력솥','양':'양','어':'어머니','에':'에어컨','연':'연필','오':'오리','원':'원숭이','유':'유리','이':'이불','자':'자동차','장':'장군','전':'전구','절':'절벽','조':'조끼','주':'주전자','지':'지우개','차':'자동차','철':'철수','침':'침대','콘':'콘','쿠':'쿠키','타':'타조','터':'터널','토':'토끼','파':'파도','펀':'펀치','펌':'펌프','평':'평상','포':'포도','프':'프라이팬','하':'하마','해':'해바라기','현':'현미경','호':'호랑이','혼':'혼자','횡':'횡단보도'
+};
+
+function mnemonicAnswerSet(q){
+  const groups=Array.isArray(q.allAnswers)?q.allAnswers:[];
+  if(q.mode==='grouped')return groups.map(g=>Array.isArray(g)?g[0]:'').filter(Boolean);
+  const required=Math.max(1,Number(q.required)||((q.inputLabels||[]).length)||1);
+  return groups.slice(0,required).map(g=>Array.isArray(g)?g[0]:'').filter(Boolean);
+}
+
+function easyMnemonicWord(token){
+  if(EASY_MNEMONIC_WORDS[token])return EASY_MNEMONIC_WORDS[token];
+  if(MNEMONIC_WORDS[token])return MNEMONIC_WORDS[token];
+  if(/^[A-Z]$/.test(token))return MNEMONIC_WORDS[token]||`${token}로봇`;
+  if(/^[가-힣]+$/.test(token))return `${token}돌이`;
+  return `${token}카드`;
+}
+
+function easyMnemonicScene(words){
+  if(!words.length)return '';
+  if(words.length===1)return `${subject(words[0])} 크게 손을 흔들어요.`;
+  const last=words[words.length-1];
+  return `${words.join(', ')}${particle(last,'이','가')} 한 줄 기차를 타요.`;
+}
+
 function mnemonicFor(q){
-  const answers=(q.allAnswers||[]).map(g=>(g||[])[0]||'').filter(Boolean);
+  const answers=mnemonicAnswerSet(q);
   if(!answers.length)return null;
 
-  const context=lifeContextFor(q);
-  const topic=practicalTopic(q);
-  const cues=answers.map(practicalTipKeyword);
-  const scene=answers.length===1
-    ? `${context.intro}. ${practicalIntent(q)} 핵심 이름을 “${cues[0]}”${particle(cues[0],'과','와')} 연결해 기억한다.`
-    : `${context.intro}. ${practicalIntent(q)} ${cues.join(' → ')} 순서로 연결한다.`;
-  const links=answers.map((answer,i)=>`${i+1}. ${answer}`).join('<br>');
+  const tokens=answers.map(initialOf).filter(Boolean);
+  const words=tokens.map(easyMnemonicWord);
+  const links=answers.map((answer,i)=>`${tokens[i]||'?'} = ${answer}`).join('<br>');
 
   return{
-    code:`생활 장면 · ${context.title} · ${topic}`,
-    scene,
-    note:`정답 연결<br>${links}`
+    code:`두문법 · ${tokens.join('·')}`,
+    scene:easyMnemonicScene(words),
+    note:`두문 풀기<br>${links}`
   };
 }
 function current(){return BANK[view[pos]]}function qkey(q){return String(q.id)}
@@ -848,11 +903,56 @@ $('#markMastered').onclick=()=>setStatus('mastered');$('#markUncertain').onclick
 function daysBetween(a,b){const A=new Date(a+'T12:00:00'),B=new Date(b+'T12:00:00');return Math.round((B-A)/86400000)}
 function hasAttempt(k){return Array.isArray(state.attempts[k])&&state.attempts[k].some(v=>String(v||'').trim())}
 function applyView(){const mode=$('#mode').value,term=norm($('#search').value);view=BANK.map((q,i)=>({q,i})).filter(({q})=>{const k=qkey(q),wm=state.wrongMeta[k]||{};if(mode==='wrong'&&!state.wrong[k])return false;if(mode==='frequentWrong'&&!(wm.count>=2))return false;if(mode==='recentWrong'&&!(wm.last&&daysBetween(wm.last,localDateKey())<=7))return false;if(mode==='unanswered'&&hasAttempt(k))return false;if(mode==='favorite'&&!state.fav[k])return false;if(['mastered','uncertain','unmastered'].includes(mode)&&state.status[k]!==mode)return false;if(mode==='review'&&!isDueToday(k))return false;if(term&&!norm(`${q.number} ${q.label} ${q.question}`).includes(term))return false;return true}).map(x=>x.i);if(!view.length){alert(mode==='review'?'오늘 복습할 문제가 없습니다.':'조건에 맞는 문제가 없습니다.');$('#mode').value='all';view=[...BANK.keys()]}pos=0;state.mode=$('#mode').value;save();render()}
-$('#mode').onchange=applyView;$('#search').oninput=applyView;$('#shuffle').onclick=()=>{for(let i=view.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[view[i],view[j]]=[view[j],view[i]]}pos=0;save();render()};$('#reset').onclick=()=>{if(confirm('답안, 오답, 숙지 기록을 모두 초기화할까요?')){localStorage.removeItem(STORAGE_KEY);location.reload()}};
+$('#mode').onchange=applyView;$('#search').oninput=applyView;$('#shuffle').onclick=()=>{for(let i=view.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[view[i],view[j]]=[view[j],view[i]]}pos=0;save();render()};
+function removeAppStorage(storage){
+  if(!storage)return;
+  const targets=[];
+  for(let i=0;i<storage.length;i++){
+    const key=storage.key(i);
+    if(key&&(key===STORAGE_KEY||/^essay445(?:-|$)/.test(key)))targets.push(key);
+  }
+  targets.forEach(key=>storage.removeItem(key));
+}
+function resetLearningRecords(){
+  // 학습 기록만 비우고 현재 문제, 랜덤 순서, 필터와 화면 모드는 유지한다.
+  const keptView=[...view];
+  const keptPos=pos;
+  const keptCurrentId=(keptView.length&&BANK[keptView[keptPos]])?BANK[keptView[keptPos]].id:1;
+  const keptMode=$('#mode')?.value||state.mode||'all';
+  const keptSearch=$('#search')?.value||'';
+  const keptFlashMode=!!state.flashMode;
+
+  removeAppStorage(localStorage);
+  removeAppStorage(sessionStorage);
+
+  state=createInitialState();
+  state.view=keptView;
+  state.index=keptPos;
+  state.currentId=keptCurrentId;
+  state.mode=keptMode;
+  state.search=keptSearch;
+  state.flashMode=keptFlashMode;
+  view=keptView;
+  pos=keptPos;
+
+  save();
+  render();
+  const resetBtn=$('#reset');
+  if(resetBtn){
+    const original='기록 초기화';
+    resetBtn.textContent='초기화 완료';
+    resetBtn.disabled=true;
+    setTimeout(()=>{resetBtn.textContent=original;resetBtn.disabled=false},900);
+  }
+}
+$('#reset').onclick=resetLearningRecords;
 
 $('#favoriteToggle').onclick=()=>{const k=qkey(current());state.fav[k]=!state.fav[k];if(!state.fav[k])delete state.fav[k];save();render()};
 document.addEventListener('keydown',e=>{if(e.target.matches('textarea,input,select'))return;if(e.key==='ArrowLeft')$('#prev').click();if(e.key==='ArrowRight')$('#next').click();if(e.key==='Enter')$('#check').click()});
 if(['all','review','wrong','frequentWrong','recentWrong','unanswered','favorite','mastered','uncertain','unmastered'].includes(state.mode))$('#mode').value=state.mode;
+if(typeof state.search==='string')$('#search').value=state.search;
+window.addEventListener('pagehide',save);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')save()});
 render();
 
 </script>
@@ -861,7 +961,7 @@ render();
 .flashcard-panel{display:none;margin-top:7px}
 body.flashcard-mode #question,body.flashcard-mode .answer-section,body.flashcard-mode .inline-status,body.flashcard-mode .inline-actions,body.flashcard-mode #result,body.flashcard-mode #official{display:none!important}
 body.flashcard-mode .flashcard-panel{display:block}
-.flash-card{min-height:230px;border:1px solid #bcbcbc;border-radius:10px;background:#fafafa;padding:16px;display:flex;flex-direction:column;justify-content:center;text-align:left;touch-action:pan-y;user-select:none;-webkit-user-select:none}
+.flash-card{min-height:230px;border:1px solid #bcbcbc;border-radius:10px;background:#fafafa;padding:16px;display:flex;flex-direction:column;justify-content:center;text-align:left;touch-action:none;overscroll-behavior:contain;user-select:none;-webkit-user-select:none}
 .flash-card .flash-question{width:100%;white-space:pre-wrap;word-break:keep-all;text-align:left;font-size:18px;line-height:1.65;font-weight:850}
 .flash-card .flash-answer{display:none;width:100%;text-align:left;white-space:pre-wrap;word-break:keep-all;font-size:18px;line-height:1.65;font-weight:850}
 .flash-card.flipped .flash-question{display:none}.flash-card.flipped .flash-answer{display:block}
