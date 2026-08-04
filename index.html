@@ -663,33 +663,73 @@ function buildMnemonicSentence(items){
   return `${w.slice(0,-1).join(', ')}를 차례로 챙겨 마지막에 ${w[n-1]}로 간다`;
 }
 
+function practicalTipKeyword(text){
+  let s=memoryClean(text||'').replace(/\s+/g,' ').trim();
+  if(!s)s=String(text||'').replace(/\s+/g,' ').trim();
+  if(s.length>26){
+    const ks=keywords(s).slice(0,4);
+    if(ks.length)s=ks.join(' · ');
+  }
+  return s;
+}
+
+function practicalTopic(q){
+  const ks=keywords(q.question||'').slice(0,2);
+  return ks.length?ks.join('·'):`${q.number||''}번`;
+}
+
+function lifeContextFor(q){
+  const text=`${q.question||''} ${(q.allAnswers||[]).flat().join(' ')}`;
+  const contexts=[
+    {keys:['시험','측정','평가','판정','조사','계측','검사','검토'],title:'건강검진 항목 확인',intro:'건강검진표에서 필요한 수치를 항목별로 확인하는 장면'},
+    {keys:['시간','온도','일수','몇 분','몇 배','비율','단위수량','수량','배합'],title:'주방 타이머와 계량컵',intro:'요리할 때 시간과 양을 계량하고 순서대로 확인하는 장면'},
+    {keys:['배수','지하수','용수','수위','여수로','침투압','압밀','우수','누수'],title:'싱크대와 젖은 수건의 물 빼기',intro:'싱크대 물길을 열고 젖은 수건의 물을 빼는 장면'},
+    {keys:['교량','교각','거더','케이블','사장교','현수교','PSC','PS 콘크리트'],title:'텐트 줄을 팽팽하게 설치',intro:'텐트 기둥과 줄을 균형 있게 세워 하중을 나누는 장면'},
+    {keys:['콘크리트','시멘트','골재','양생','슬럼프','숏크리트','비비기'],title:'반죽을 만들고 굳히기',intro:'반죽의 재료와 시간을 맞추고 마르지 않게 굳히는 장면'},
+    {keys:['터널','굴착','발파','암반','사면','지보','록볼트','여굴','버력'],title:'벽을 뚫고 바로 받쳐 주기',intro:'벽에 구멍을 낸 뒤 흔들리지 않게 받침과 보강재를 대는 장면'},
+    {keys:['말뚝','기초','지지력','침하','부마찰력','항타','케이슨'],title:'무거운 책장 다리와 바닥 점검',intro:'무거운 책장을 세우기 전에 다리 길이와 바닥 상태를 확인하는 장면'},
+    {keys:['도로','포장','아스팔트','노상','교통','줄눈','노면'],title:'주차장 바닥 오래 쓰기',intro:'주차장 바닥이 꺼지거나 갈라지지 않게 재료와 두께를 점검하는 장면'},
+    {keys:['댐','하천','제방','호안','수제','유수','저수','홍수'],title:'욕조의 물 흐름 조절',intro:'욕조에 물을 모으고 넘치기 전에 물길과 배출구를 조절하는 장면'},
+    {keys:['다짐','성토','절토','토질','흙','연약지반','지반개량','토공','비탈면'],title:'화분 흙을 채우고 다지기',intro:'화분에 흙을 채우고 물빠짐과 단단함을 확인하는 장면'},
+    {keys:['공정','품질','원가','관리','경제성','시공기면','계획','선정'],title:'이사 일정과 비용표 점검',intro:'이사할 때 시간·비용·품질을 체크리스트로 맞추는 장면'},
+    {keys:['기계','장비','롤러','믹서','펌프','크레인','불도저','셔블'],title:'공구함에서 맞는 도구 고르기',intro:'집수리 전에 작업별로 필요한 공구를 골라 놓는 장면'},
+    {keys:['안전','위험','사고','보호','방지','충격','대책'],title:'자동차 출발 전 안전점검',intro:'출발 전에 안전벨트·거울·브레이크를 차례로 확인하는 장면'},
+    {keys:['압출','Pulling','Pushing','풀링','푸싱'],title:'무거운 가구를 옮기기',intro:'가구를 당기고 밀고 필요하면 들어 올려 자리를 옮기는 장면'},
+    {keys:['종류','분류','형식','방식'],title:'옷장을 용도별로 나누기',intro:'옷장을 종류별 칸으로 나누어 같은 계열끼리 정리하는 장면'}
+  ];
+  return contexts.find(c=>c.keys.some(k=>text.includes(k)))||{
+    title:'집안일 체크리스트',
+    intro:'집안일을 시작하기 전에 필요한 항목을 순서대로 적고 하나씩 확인하는 장면'
+  };
+}
+
+function practicalIntent(q){
+  const text=q.question||'';
+  if(/단점|문제점|원인|발생원인|파괴형태|결함|고장/.test(text))return '문제가 생긴 원인을 찾듯';
+  if(/목적|역할|효과|장점|이유/.test(text))return '왜 필요한지 따져 보듯';
+  if(/순서|절차|과정|단계/.test(text))return '요리 순서를 따라가듯';
+  if(/조건|고려|선정|요구되는|기준/.test(text))return '시작 전 체크리스트를 보듯';
+  if(/종류|분류|형식|방식|공법/.test(text))return '서랍을 종류별로 나누듯';
+  return '해야 할 일을 하나씩 확인하듯';
+}
+
 function mnemonicFor(q){
   const answers=(q.allAnswers||[]).map(g=>(g||[])[0]||'').filter(Boolean);
-  if(answers.length<2)return null;
+  if(!answers.length)return null;
 
-  const cleaned=answers.map(memoryClean);
-  const items=answers.map((answer,index)=>{
-    const token=mnemonicToken(answer);
-    return {answer,index,token,word:mnemonicWord(token,answer)};
-  });
+  const context=lifeContextFor(q);
+  const topic=practicalTopic(q);
+  const cues=answers.map(practicalTipKeyword);
+  const scene=answers.length===1
+    ? `${context.intro}. ${practicalIntent(q)} 핵심 이름을 “${cues[0]}”${particle(cues[0],'과','와')} 연결해 기억한다.`
+    : `${context.intro}. ${practicalIntent(q)} ${cues.join(' → ')} 순서로 연결한다.`;
+  const links=answers.map((answer,i)=>`${i+1}. ${answer}`).join('<br>');
 
-  /* 정답 순서를 그대로 보존한다. 영문 약어도 C-K-C-N처럼 원래 순서대로 표시한다. */
-  const signature=items.map(x=>x.token).join('');
-  const manual={
-    'CKCN':'씨앗이 케이크를 들고 콘을 지나 나무로 간다',
-    '라쿠스프':'라면에 쿠키 대신 스프를 넣고 프라이팬에 볶는다',
-    '평쐐전원':'평상에 쐐기를 놓고 전구를 켜자 원숭이가 온다',
-    '펌블펀':'펌프 옆 블록을 힘껏 펀치한다',
-    '품공원':'품질 좋은 공을 들고 공원으로 간다',
-    '반가가':'반장이 가방을 들고 가배수로를 확인한다',
-    'FCM':'FCM을 그대로 소리 내어 외운다',
-    'PPL':'풀링, 푸싱, 리프트 푸싱 순서로 밀고 당긴다'
+  return{
+    code:`생활 장면 · ${context.title} · ${topic}`,
+    scene,
+    note:`정답 연결<br>${links}`
   };
-
-  const scene=manual[signature]||buildMnemonicSentence(items);
-  const code=items.map(x=>x.token).join(' · ');
-  const links=items.map((x,i)=>`${x.token} = ${cleaned[x.index]}`).join('<br>');
-  return{code,scene,note:links};
 }
 function current(){return BANK[view[pos]]}function qkey(q){return String(q.id)}
 function localDateKey(date=new Date()){const y=date.getFullYear(),m=String(date.getMonth()+1).padStart(2,'0'),d=String(date.getDate()).padStart(2,'0');return `${y}-${m}-${d}`}
@@ -700,7 +740,7 @@ function scheduleFromGrade(key,isPerfect){const prev=state.review[key]||{};if(is
 function todayReviewCount(){return BANK.reduce((n,q)=>n+(isDueToday(qkey(q))?1:0),0)}
 function autoGrow(el){el.style.height='36px';el.style.height=Math.min(180,Math.max(36,el.scrollHeight))+'px';el.style.overflowY=el.scrollHeight>180?'auto':'hidden'}
 function render(){const q=current(),key=qkey(q),saved=state.status[key]==='mastered'?(state.answers[key]||[]):[];const reviewOption=$('#mode')?.querySelector('option[value="review"]');if(reviewOption)reviewOption.textContent=`오늘 복습 (${todayReviewCount()})`;$('#number').textContent=q.number;$('#label').textContent=q.label;const freq=Math.max(1,Number(q.frequency)||1);$('#frequency').textContent='★'.repeat(Math.min(5,freq))+` (${freq}회)`;const favBtn=$('#favoriteToggle');favBtn.textContent=state.fav[key]?'★':'☆';favBtn.classList.toggle('active',!!state.fav[key]);favBtn.title=state.fav[key]?'즐겨찾기 해제':'즐겨찾기 추가';favBtn.setAttribute('aria-label',favBtn.title);$('#question').textContent=q.question;$('#answers').innerHTML='';q.inputLabels.forEach((label,i)=>{const wrap=document.createElement('div');wrap.className='answer-item';const lab=document.createElement('label');lab.className='answer-label';lab.textContent=label||`${i+1}.`;const ta=document.createElement('textarea');ta.className='answer-input';ta.value=saved[i]||'';ta.placeholder=`${i+1}번 답 입력`;ta.setAttribute('aria-label',`${i+1}번 답안`);if(state.corrections[key]?.[i])ta.classList.add('auto-corrected');ta.addEventListener('input',()=>{autoGrow(ta);ta.classList.remove('auto-corrected');if(state.corrections[key]){state.corrections[key][i]=false;if(!state.corrections[key].some(Boolean))delete state.corrections[key]}const currentVals=[...document.querySelectorAll('.answer-input')].map(x=>x.value);state.answers[key]=currentVals;state.attempts[key]=[...currentVals];save()});wrap.append(lab,ta);$('#answers').append(wrap);requestAnimationFrame(()=>autoGrow(ta))});$('#result').className='result';$('#result').innerHTML='';$('#official').className='official';$('#officialContent').innerHTML='';$('#reveal').textContent='정답';$('#reveal').setAttribute('aria-expanded','false');document.querySelectorAll('.status-row button').forEach(b=>b.classList.remove('active'));const st=state.status[key];if(st)$('#mark'+st[0].toUpperCase()+st.slice(1))?.classList.add('active');const pct=view.length?((pos+1)/view.length*100):0;$('#progress').textContent=`${pos+1} / ${view.length}`;$('#score').textContent=`진행 ${pct.toFixed(1)}%`;$('#wrongCount').textContent=`오답 ${Object.keys(state.wrong).length}`;$('#progressBar').style.width=`${pct}%`;save();window.scrollTo(0,0)}
-function showOfficial(){const q=current(),box=$('#officialContent');box.innerHTML='';q.allAnswers.forEach((group,i)=>{const div=document.createElement('div');div.className='official-group';const label=q.mode==='grouped'?(q.inputLabels[i]||`${i+1}.`):`${i+1}.`;const b=document.createElement('b');b.textContent=label+' ';const span=document.createElement('span');span.textContent=group.join(' / ');div.append(b,span);box.append(div)});const memo=mnemonicFor(q);if(memo){const div=document.createElement('div');div.className='mnemonic';div.innerHTML=`<div class="mnemonic-title">연상 암기</div><div class="mnemonic-code">${memo.code}</div>${memo.scene?`<div class="mnemonic-scene">“${memo.scene}”</div>`:''}<div class="mnemonic-note">${memo.note}</div>`;box.append(div)}$('#official').classList.add('show');$('#reveal').textContent='닫기';$('#reveal').setAttribute('aria-expanded','true')}
+function showOfficial(){const q=current(),box=$('#officialContent');box.innerHTML='';q.allAnswers.forEach((group,i)=>{const div=document.createElement('div');div.className='official-group';const label=q.mode==='grouped'?(q.inputLabels[i]||`${i+1}.`):`${i+1}.`;const b=document.createElement('b');b.textContent=label+' ';const span=document.createElement('span');span.textContent=group.join(' / ');div.append(b,span);box.append(div)});const memo=mnemonicFor(q);if(memo){const div=document.createElement('div');div.className='mnemonic';div.innerHTML=`<div class="mnemonic-title">숙지 팁</div><div class="mnemonic-code">${memo.code}</div>${memo.scene?`<div class="mnemonic-scene">“${memo.scene}”</div>`:''}<div class="mnemonic-note">${memo.note}</div>`;box.append(div)}$('#official').classList.add('show');$('#reveal').textContent='닫기';$('#reveal').setAttribute('aria-expanded','true')}
 $('#check').addEventListener('click',()=>{
   const q=current();
   const key=qkey(q);
@@ -821,7 +861,7 @@ render();
 .flashcard-panel{display:none;margin-top:7px}
 body.flashcard-mode #question,body.flashcard-mode .answer-section,body.flashcard-mode .inline-status,body.flashcard-mode .inline-actions,body.flashcard-mode #result,body.flashcard-mode #official{display:none!important}
 body.flashcard-mode .flashcard-panel{display:block}
-.flash-card{min-height:230px;border:1px solid #bcbcbc;border-radius:10px;background:#fafafa;padding:16px;display:flex;flex-direction:column;justify-content:center;text-align:left}
+.flash-card{min-height:230px;border:1px solid #bcbcbc;border-radius:10px;background:#fafafa;padding:16px;display:flex;flex-direction:column;justify-content:center;text-align:left;touch-action:pan-y;user-select:none;-webkit-user-select:none}
 .flash-card .flash-question{width:100%;white-space:pre-wrap;word-break:keep-all;text-align:left;font-size:18px;line-height:1.65;font-weight:850}
 .flash-card .flash-answer{display:none;width:100%;text-align:left;white-space:pre-wrap;word-break:keep-all;font-size:18px;line-height:1.65;font-weight:850}
 .flash-card.flipped .flash-question{display:none}.flash-card.flipped .flash-answer{display:block}
@@ -858,13 +898,7 @@ body.flashcard-mode .flashcard-panel{display:block}
 
   function answerText(q){return (q.allAnswers||[]).map((g,i)=>`${i+1}. ${(g||[]).join(' / ')}`).join('\n');}
   function flashTipData(q){
-    const memo=mnemonicFor(q);
-    if(memo)return memo;
-    const one=((q.allAnswers||[])[0]||[])[0]||'';
-    if(!one)return null;
-    const core=memoryCore(one);
-    const token=mnemonicToken(one);
-    return {code:`핵심어 · ${token}`,scene:`${core}를 한 장면으로 떠올린다`,note:`${token} = ${core}`};
+    return mnemonicFor(q);
   }
   function renderFlashTip(q){
     const tip=document.querySelector('#flashTip'),memo=flashTipData(q);
@@ -912,10 +946,39 @@ body.flashcard-mode .flashcard-panel{display:block}
   const originalRender=render;
   render=function(){originalRender();renderFlash()};
   flashToggle.onclick=()=>{state.flashMode=!state.flashMode;save();render()};
-  document.querySelector('#flashPrev').onclick=()=>{if(!view.length)return;pos=(pos-1+view.length)%view.length;render()};
-  document.querySelector('#flashNext').onclick=()=>{if(!view.length)return;pos=(pos+1)%view.length;render()};
-  document.querySelector('#flashCard').onclick=flip;
-  document.querySelector('#flashCard').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();flip()}};
+  function goFlashPrev(){if(!view.length)return;pos=(pos-1+view.length)%view.length;render()}
+  function goFlashNext(){if(!view.length)return;pos=(pos+1)%view.length;render()}
+  document.querySelector('#flashPrev').onclick=goFlashPrev;
+  document.querySelector('#flashNext').onclick=goFlashNext;
+
+  const flashCard=document.querySelector('#flashCard');
+  let swipeStartX=0,swipeStartY=0,swipePointer=null,swipeMoved=false,ignoreCardClick=false;
+  flashCard.addEventListener('pointerdown',e=>{
+    if(e.pointerType==='mouse'&&e.button!==0)return;
+    swipePointer=e.pointerId;swipeStartX=e.clientX;swipeStartY=e.clientY;swipeMoved=false;
+    try{flashCard.setPointerCapture(e.pointerId)}catch(_){ }
+  });
+  flashCard.addEventListener('pointermove',e=>{
+    if(e.pointerId!==swipePointer)return;
+    const dx=e.clientX-swipeStartX,dy=e.clientY-swipeStartY;
+    if(Math.abs(dx)>12&&Math.abs(dx)>Math.abs(dy))swipeMoved=true;
+  });
+  flashCard.addEventListener('pointerup',e=>{
+    if(e.pointerId!==swipePointer)return;
+    const dx=e.clientX-swipeStartX,dy=e.clientY-swipeStartY;
+    swipePointer=null;
+    if(dx<-55&&Math.abs(dx)>Math.abs(dy)*1.2){
+      ignoreCardClick=true;
+      goFlashNext();
+      setTimeout(()=>{ignoreCardClick=false},0);
+    }
+  });
+  flashCard.addEventListener('pointercancel',()=>{swipePointer=null;swipeMoved=false});
+  flashCard.onclick=()=>{
+    if(ignoreCardClick||swipeMoved){swipeMoved=false;return}
+    flip();
+  };
+  flashCard.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();flip()}};
   panel.querySelectorAll('[data-rate]').forEach(b=>b.onclick=()=>rate(b.dataset.rate));
   render();
 })();
