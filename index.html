@@ -429,6 +429,16 @@ button.good,
   }
 }
 </style>
+
+<style id="github-mobile-status-filter-fix">
+.status-filter-quick{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-top:6px}
+.status-filter-quick button{height:34px;min-height:34px;padding:0 4px;border-radius:7px;background:#fff!important;color:#222!important;border:1px solid #bcbcbc!important;font-size:11.5px;font-weight:850}
+.status-filter-quick button.active{background:#dedede!important;border-color:#555!important;color:#111!important;font-weight:950}
+@media(max-width:560px){
+  .status-filter-quick{position:sticky;top:0;z-index:2;margin-top:5px}
+  .status-filter-quick button{height:36px;min-height:36px;font-size:12px}
+}
+</style>
 </head>
 <body>
 <div class="app">
@@ -466,6 +476,12 @@ button.good,
       <input id="search" type="search" placeholder="문제번호·연도·내용 검색">
       <button id="shuffle">랜덤</button>
       <button id="reset" type="button" onclick="openResetConfirm(event)">기록 초기화</button>
+    </div>
+    <div class="status-filter-quick" aria-label="숙지 상태별 바로 보기">
+      <button type="button" data-status-filter="all">전체</button>
+      <button type="button" data-status-filter="mastered">숙지만</button>
+      <button type="button" data-status-filter="uncertain">애매만</button>
+      <button type="button" data-status-filter="unmastered">미숙지만</button>
     </div>
   </section>
 </header>
@@ -835,8 +851,17 @@ function updateStatusCounts(){
     if(btn)btn.textContent=`${label} (${count})`;
   });
 }
+function updateQuickFilterButtons(){
+  const mode=$('#mode')?.value||state.mode||'all';
+  const labels={all:`전체 ${BANK.length}`,mastered:`숙지 ${statusCount('mastered')}`,uncertain:`애매 ${statusCount('uncertain')}`,unmastered:`미숙지 ${statusCount('unmastered')}`};
+  document.querySelectorAll('[data-status-filter]').forEach(btn=>{
+    const value=btn.dataset.statusFilter;
+    btn.textContent=labels[value]||btn.textContent;
+    btn.classList.toggle('active',mode===value);
+  });
+}
 function autoGrow(el){el.style.height='36px';el.style.height=Math.min(180,Math.max(36,el.scrollHeight))+'px';el.style.overflowY=el.scrollHeight>180?'auto':'hidden'}
-function render(){const q=current(),key=qkey(q),saved=state.status[key]==='mastered'?(state.answers[key]||[]):[];const reviewOption=$('#mode')?.querySelector('option[value="review"]');if(reviewOption)reviewOption.textContent=`오늘 복습 (${todayReviewCount()})`;updateStatusCounts();$('#number').textContent=q.number;$('#label').textContent=q.label;const freq=Math.max(1,Number(q.frequency)||1);$('#frequency').textContent='★'.repeat(Math.min(5,freq))+` (${freq}회)`;const favBtn=$('#favoriteToggle');favBtn.textContent=state.fav[key]?'★':'☆';favBtn.classList.toggle('active',!!state.fav[key]);favBtn.title=state.fav[key]?'즐겨찾기 해제':'즐겨찾기 추가';favBtn.setAttribute('aria-label',favBtn.title);$('#question').textContent=q.question;$('#answers').innerHTML='';q.inputLabels.forEach((label,i)=>{const wrap=document.createElement('div');wrap.className='answer-item';const lab=document.createElement('label');lab.className='answer-label';lab.textContent=label||`${i+1}.`;const ta=document.createElement('textarea');ta.className='answer-input';ta.value=saved[i]||'';ta.placeholder=`${i+1}번 답 입력`;ta.setAttribute('aria-label',`${i+1}번 답안`);if(state.corrections[key]?.[i])ta.classList.add('auto-corrected');ta.addEventListener('input',()=>{autoGrow(ta);ta.classList.remove('auto-corrected');if(state.corrections[key]){state.corrections[key][i]=false;if(!state.corrections[key].some(Boolean))delete state.corrections[key]}const currentVals=[...document.querySelectorAll('.answer-input')].map(x=>x.value);state.answers[key]=currentVals;state.attempts[key]=[...currentVals];save()});wrap.append(lab,ta);$('#answers').append(wrap);requestAnimationFrame(()=>autoGrow(ta))});$('#result').className='result';$('#result').innerHTML='';$('#official').className='official';$('#officialContent').innerHTML='';$('#reveal').textContent='정답';$('#reveal').setAttribute('aria-expanded','false');document.querySelectorAll('.status-row button').forEach(b=>b.classList.remove('active'));const st=state.status[key];if(st)$('#mark'+st[0].toUpperCase()+st.slice(1))?.classList.add('active');const pct=view.length?((pos+1)/view.length*100):0;$('#progress').textContent=`${pos+1} / ${view.length}`;$('#score').textContent=`진행 ${pct.toFixed(1)}%`;$('#wrongCount').textContent=`오답 ${Object.keys(state.wrong).length}`;$('#progressBar').style.width=`${pct}%`;save();window.scrollTo(0,0)}
+function render(){const q=current(),key=qkey(q),saved=state.status[key]==='mastered'?(state.answers[key]||[]):[];const reviewOption=$('#mode')?.querySelector('option[value="review"]');if(reviewOption)reviewOption.textContent=`오늘 복습 (${todayReviewCount()})`;updateStatusCounts();updateQuickFilterButtons();$('#number').textContent=q.number;$('#label').textContent=q.label;const freq=Math.max(1,Number(q.frequency)||1);$('#frequency').textContent='★'.repeat(Math.min(5,freq))+` (${freq}회)`;const favBtn=$('#favoriteToggle');favBtn.textContent=state.fav[key]?'★':'☆';favBtn.classList.toggle('active',!!state.fav[key]);favBtn.title=state.fav[key]?'즐겨찾기 해제':'즐겨찾기 추가';favBtn.setAttribute('aria-label',favBtn.title);$('#question').textContent=q.question;$('#answers').innerHTML='';q.inputLabels.forEach((label,i)=>{const wrap=document.createElement('div');wrap.className='answer-item';const lab=document.createElement('label');lab.className='answer-label';lab.textContent=label||`${i+1}.`;const ta=document.createElement('textarea');ta.className='answer-input';ta.value=saved[i]||'';ta.placeholder=`${i+1}번 답 입력`;ta.setAttribute('aria-label',`${i+1}번 답안`);if(state.corrections[key]?.[i])ta.classList.add('auto-corrected');ta.addEventListener('input',()=>{autoGrow(ta);ta.classList.remove('auto-corrected');if(state.corrections[key]){state.corrections[key][i]=false;if(!state.corrections[key].some(Boolean))delete state.corrections[key]}const currentVals=[...document.querySelectorAll('.answer-input')].map(x=>x.value);state.answers[key]=currentVals;state.attempts[key]=[...currentVals];save()});wrap.append(lab,ta);$('#answers').append(wrap);requestAnimationFrame(()=>autoGrow(ta))});$('#result').className='result';$('#result').innerHTML='';$('#official').className='official';$('#officialContent').innerHTML='';$('#reveal').textContent='정답';$('#reveal').setAttribute('aria-expanded','false');document.querySelectorAll('.status-row button').forEach(b=>b.classList.remove('active'));const st=state.status[key];if(st)$('#mark'+st[0].toUpperCase()+st.slice(1))?.classList.add('active');const pct=view.length?((pos+1)/view.length*100):0;$('#progress').textContent=`${pos+1} / ${view.length}`;$('#score').textContent=`진행 ${pct.toFixed(1)}%`;$('#wrongCount').textContent=`오답 ${Object.keys(state.wrong).length}`;$('#progressBar').style.width=`${pct}%`;save();window.scrollTo(0,0)}
 function showOfficial(){const q=current(),box=$('#officialContent');box.innerHTML='';q.allAnswers.forEach((group,i)=>{const div=document.createElement('div');div.className='official-group';const label=q.mode==='grouped'?(q.inputLabels[i]||`${i+1}.`):`${i+1}.`;const b=document.createElement('b');b.textContent=label+' ';const span=document.createElement('span');span.textContent=group.join(' / ');div.append(b,span);box.append(div)});const memo=mnemonicFor(q);if(memo){const div=document.createElement('div');div.className='mnemonic';div.innerHTML=`<div class="mnemonic-title">숙지 팁</div><div class="mnemonic-code">${memo.code}</div>${memo.scene?`<div class="mnemonic-scene">“${memo.scene}”</div>`:''}<div class="mnemonic-note">${memo.note}</div>`;box.append(div)}$('#official').classList.add('show');$('#reveal').textContent='닫기';$('#reveal').setAttribute('aria-expanded','true')}
 $('#check').addEventListener('click',()=>{
   const q=current();
@@ -947,8 +972,34 @@ function daysBetween(a,b){const A=new Date(a+'T12:00:00'),B=new Date(b+'T12:00:0
 function hasAttempt(k){return Array.isArray(state.attempts[k])&&state.attempts[k].some(v=>String(v||'').trim())}
 function filteredIndices(mode,term){return BANK.map((q,i)=>({q,i})).filter(({q})=>{const k=qkey(q),wm=state.wrongMeta[k]||{};if(mode==='wrong'&&!state.wrong[k])return false;if(mode==='frequentWrong'&&!(wm.count>=2))return false;if(mode==='recentWrong'&&!(wm.last&&daysBetween(wm.last,localDateKey())<=7))return false;if(mode==='unanswered'&&hasAttempt(k))return false;if(mode==='favorite'&&!state.fav[k])return false;if(['mastered','uncertain','unmastered'].includes(mode)&&state.status[k]!==mode)return false;if(mode==='review'&&!isDueToday(k))return false;if(term&&!norm(`${q.number} ${q.label} ${q.question}`).includes(term))return false;return true}).map(x=>x.i)}
 function syncViewToActiveFilter(){const mode=$('#mode')?.value||state.mode||'all',term=norm($('#search')?.value||'');const currentIndex=view.length?view[pos]:null;const currentId=currentIndex!=null&&BANK[currentIndex]?BANK[currentIndex].id:null;const fresh=filteredIndices(mode,term);if(!fresh.length)return false;const freshSet=new Set(fresh);const kept=view.filter(i=>freshSet.has(i));const keptSet=new Set(kept);view=[...kept,...fresh.filter(i=>!keptSet.has(i))];let nextPos=currentId!=null?view.findIndex(i=>BANK[i]&&BANK[i].id===currentId):-1;if(nextPos<0&&currentIndex!=null){const after=view.findIndex(i=>i>=currentIndex);nextPos=after>=0?after:view.length-1}if(nextPos<0)nextPos=0;pos=nextPos;return true}
-function applyView(){const mode=$('#mode').value,term=norm($('#search').value);view=filteredIndices(mode,term);if(!view.length){alert(mode==='review'?'오늘 복습할 문제가 없습니다.':'조건에 맞는 문제가 없습니다.');$('#mode').value='all';view=filteredIndices('all',term);if(!view.length){$('#search').value='';view=[...BANK.keys()]}}pos=0;state.mode=$('#mode').value;save();render()}
-$('#mode').onchange=applyView;$('#search').oninput=applyView;$('#shuffle').onclick=()=>{for(let i=view.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[view[i],view[j]]=[view[j],view[i]]}pos=0;save();render()};
+function applyView(){
+  const mode=$('#mode').value,term=norm($('#search').value);
+  view=filteredIndices(mode,term);
+  if(!view.length){
+    alert(mode==='review'?'오늘 복습할 문제가 없습니다.':'조건에 맞는 문제가 없습니다.');
+    $('#mode').value='all';
+    view=filteredIndices('all',term);
+    if(!view.length){$('#search').value='';view=[...BANK.keys()]}
+  }
+  pos=0;
+  state.mode=$('#mode').value;
+  save();
+  render();
+  if(window.matchMedia&&window.matchMedia('(max-width:560px)').matches){
+    const p=$('#managePanel');
+    if(p){p.classList.remove('open');$('#manageToggle')?.setAttribute('aria-expanded','false')}
+  }
+}
+$('#mode').addEventListener('change',applyView);
+$('#search').addEventListener('input',applyView);
+document.querySelectorAll('[data-status-filter]').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const mode=btn.dataset.statusFilter||'all';
+    $('#mode').value=mode;
+    applyView();
+  });
+});
+$('#shuffle').onclick=()=>{for(let i=view.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[view[i],view[j]]=[view[j],view[i]]}pos=0;save();render()};
 function removeAppStorage(storage){
   if(!storage)return;
   const targets=[];
@@ -1123,6 +1174,27 @@ body.flashcard-mode .flashcard-panel{display:block}
     state.review[k]={streak:nextStreak,due:addDaysKey(days),last:localDateKey(),rating:kind};
     const fs=state.flashStats[k]||{count:0};fs.count++;fs.last=localDateKey();fs.rating=kind;state.flashStats[k]=fs;
     save();
+    const activeMode=$('#mode')?.value||state.mode||'all';
+    if(['mastered','uncertain','unmastered'].includes(activeMode)){
+      const oldBankIndex=view[pos];
+      const fresh=filteredIndices(activeMode,norm($('#search')?.value||''));
+      if(!fresh.length){
+        view=[];
+        $('#mode').value='all';
+        state.mode='all';
+        view=filteredIndices('all',norm($('#search')?.value||''));
+        pos=Math.min(oldBankIndex??0,Math.max(0,view.length-1));
+        save();render();
+        alert('현재 상태의 앱카드 학습을 모두 마쳤습니다.');
+        return;
+      }
+      view=fresh;
+      let nextPos=view.findIndex(i=>i>oldBankIndex);
+      if(nextPos<0)nextPos=0;
+      pos=nextPos;
+      save();render();
+      return;
+    }
     if(pos<view.length-1){pos++;render()}else{render();alert('현재 앱카드 학습을 모두 마쳤습니다.')}
   }
   const originalRender=render;
@@ -1167,5 +1239,6 @@ body.flashcard-mode .flashcard-panel{display:block}
 </script>
 </body>
 </html>
+<!-- github-mobile-unmastered-filter-fix-2026-08-07 -->
 
 <!-- grayscale-ui-v2 -->
