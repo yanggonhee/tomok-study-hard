@@ -972,31 +972,43 @@ function daysBetween(a,b){const A=new Date(a+'T12:00:00'),B=new Date(b+'T12:00:0
 function hasAttempt(k){return Array.isArray(state.attempts[k])&&state.attempts[k].some(v=>String(v||'').trim())}
 function filteredIndices(mode,term){return BANK.map((q,i)=>({q,i})).filter(({q})=>{const k=qkey(q),wm=state.wrongMeta[k]||{};if(mode==='wrong'&&!state.wrong[k])return false;if(mode==='frequentWrong'&&!(wm.count>=2))return false;if(mode==='recentWrong'&&!(wm.last&&daysBetween(wm.last,localDateKey())<=7))return false;if(mode==='unanswered'&&hasAttempt(k))return false;if(mode==='favorite'&&!state.fav[k])return false;if(['mastered','uncertain','unmastered'].includes(mode)&&state.status[k]!==mode)return false;if(mode==='review'&&!isDueToday(k))return false;if(term&&!norm(`${q.number} ${q.label} ${q.question}`).includes(term))return false;return true}).map(x=>x.i)}
 function syncViewToActiveFilter(){const mode=$('#mode')?.value||state.mode||'all',term=norm($('#search')?.value||'');const currentIndex=view.length?view[pos]:null;const currentId=currentIndex!=null&&BANK[currentIndex]?BANK[currentIndex].id:null;const fresh=filteredIndices(mode,term);if(!fresh.length)return false;const freshSet=new Set(fresh);const kept=view.filter(i=>freshSet.has(i));const keptSet=new Set(kept);view=[...kept,...fresh.filter(i=>!keptSet.has(i))];let nextPos=currentId!=null?view.findIndex(i=>BANK[i]&&BANK[i].id===currentId):-1;if(nextPos<0&&currentIndex!=null){const after=view.findIndex(i=>i>=currentIndex);nextPos=after>=0?after:view.length-1}if(nextPos<0)nextPos=0;pos=nextPos;return true}
-function applyView(){
+function applyView(options={}){
+  const closePanel=!!options.closePanel;
+  const silentEmpty=!!options.silentEmpty;
   const mode=$('#mode').value,term=norm($('#search').value);
-  view=filteredIndices(mode,term);
-  if(!view.length){
+  const fresh=filteredIndices(mode,term);
+  if(!fresh.length){
+    // 모바일 검색 입력 중에는 경고/초기화/창 닫힘 없이 입력을 계속할 수 있게 한다.
+    if(silentEmpty){
+      state.mode=mode;
+      state.search=$('#search').value;
+      save();
+      return;
+    }
     alert(mode==='review'?'오늘 복습할 문제가 없습니다.':'조건에 맞는 문제가 없습니다.');
     $('#mode').value='all';
     view=filteredIndices('all',term);
     if(!view.length){$('#search').value='';view=[...BANK.keys()]}
+  }else{
+    view=fresh;
   }
   pos=0;
   state.mode=$('#mode').value;
+  state.search=$('#search').value;
   save();
   render();
-  if(window.matchMedia&&window.matchMedia('(max-width:560px)').matches){
+  if(closePanel&&window.matchMedia&&window.matchMedia('(max-width:560px)').matches){
     const p=$('#managePanel');
     if(p){p.classList.remove('open');$('#manageToggle')?.setAttribute('aria-expanded','false')}
   }
 }
-$('#mode').addEventListener('change',applyView);
-$('#search').addEventListener('input',applyView);
+$('#mode').addEventListener('change',()=>applyView({closePanel:true}));
+$('#search').addEventListener('input',()=>applyView({closePanel:false,silentEmpty:true}));
 document.querySelectorAll('[data-status-filter]').forEach(btn=>{
   btn.addEventListener('click',()=>{
     const mode=btn.dataset.statusFilter||'all';
     $('#mode').value=mode;
-    applyView();
+    applyView({closePanel:true});
   });
 });
 $('#shuffle').onclick=()=>{for(let i=view.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[view[i],view[j]]=[view[j],view[i]]}pos=0;save();render()};
