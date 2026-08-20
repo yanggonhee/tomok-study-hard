@@ -534,12 +534,12 @@ const BANK = [{"id":1,"number":"001","label":"14-1","question":"연약지반상�
 const $=s=>document.querySelector(s);
 const STORAGE_KEY='essay445-v1';
 function createInitialState(){
-  return {answers:{},fav:{},wrong:{},status:{},corrections:{},attempts:{},review:{},wrongMeta:{},flashStats:{},flashMode:false,index:0,currentId:1,view:[],mode:'all',search:''};
+  return {answers:{},fav:{},wrong:{},status:{},corrections:{},attempts:{},review:{},wrongMeta:{},flashStats:{},flashMode:false,index:0,currentId:1,allReturnId:1,view:[],mode:'all',search:''};
 }
 let state;
 try{state=JSON.parse(localStorage.getItem(STORAGE_KEY)||'null')}catch(e){state=null}
 if(!state||typeof state!=='object')state=createInitialState();
-state.answers||={};state.fav||={};state.wrong||={};state.status||={};state.corrections||={};state.attempts||={};state.review||={};state.wrongMeta||={};state.flashStats||={};
+state.answers||={};state.fav||={};state.wrong||={};state.status||={};state.corrections||={};state.attempts||={};state.review||={};state.wrongMeta||={};state.flashStats||={};if(state.allReturnId==null)state.allReturnId=(state.mode==='all'&&state.currentId!=null)?state.currentId:1;
 const savedView=Array.isArray(state.view)&&state.view.length&&state.view.every(i=>Number.isInteger(i)&&i>=0&&i<BANK.length)?state.view:null;
 let view=savedView?[...savedView]:[...BANK.keys()];
 let pos=Math.min(Number.isInteger(state.index)?state.index:0,Math.max(0,view.length-1));
@@ -554,7 +554,9 @@ function save(){
   state.index=pos;
   state.view=[...view];
   state.currentId=(view.length&&BANK[view[pos]])?BANK[view[pos]].id:null;
-  state.mode=$('#mode')?.value||state.mode||'all';
+  const activeMode=$('#mode')?.value||state.mode||'all';
+  if(activeMode==='all'&&state.currentId!=null)state.allReturnId=state.currentId;
+  state.mode=activeMode;
   state.search=$('#search')?.value||'';
   localStorage.setItem(STORAGE_KEY,JSON.stringify(state));
 }
@@ -975,7 +977,11 @@ function syncViewToActiveFilter(){const mode=$('#mode')?.value||state.mode||'all
 function applyView(options={}){
   const closePanel=!!options.closePanel;
   const silentEmpty=!!options.silentEmpty;
+  const previousMode=state.mode||'all';
+  const currentQ=(view.length&&BANK[view[pos]])?BANK[view[pos]]:null;
+  const currentId=currentQ?currentQ.id:null;
   const mode=$('#mode').value,term=norm($('#search').value);
+  if(previousMode==='all'&&mode!=='all'&&currentId!=null)state.allReturnId=currentId;
   const fresh=filteredIndices(mode,term);
   if(!fresh.length){
     // 모바일 검색 입력 중에는 경고/초기화/창 닫힘 없이 입력을 계속할 수 있게 한다.
@@ -992,7 +998,14 @@ function applyView(options={}){
   }else{
     view=fresh;
   }
-  pos=0;
+  const effectiveMode=$('#mode').value;
+  if(effectiveMode==='all'){
+    const returnId=state.allReturnId!=null?state.allReturnId:currentId;
+    const keptPos=returnId!=null?view.findIndex(i=>BANK[i]&&BANK[i].id===returnId):-1;
+    pos=keptPos>=0?keptPos:0;
+  }else{
+    pos=0;
+  }
   state.mode=$('#mode').value;
   state.search=$('#search').value;
   save();
