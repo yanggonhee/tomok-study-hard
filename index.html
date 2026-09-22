@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
-<title>서술형 작성</title>
+<title>서술형 작성 - 빠른 암기 30문제</title>
 <meta name="theme-color" content="#333333">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="서술형 작성">
@@ -439,6 +439,20 @@ button.good,
   .status-filter-quick button{height:36px;min-height:36px;font-size:12px}
 }
 </style>
+
+<style id="binary-memory-study-ui">
+/* 암기 완료 / 암기 못함 2단계 학습 구분 */
+.status-filter-quick{grid-template-columns:repeat(3,1fr)!important}
+.inline-status{grid-template-columns:repeat(2,1fr)!important}
+.inline-status #markMastered.active{background:#222!important;color:#fff!important;border-color:#222!important}
+.inline-status #markUnmastered.active{background:#6a6a6a!important;color:#fff!important;border-color:#555!important}
+.memory-state-badge{display:inline-flex;align-items:center;justify-content:center;min-height:26px;padding:3px 8px;border:1px solid #aaa;border-radius:999px;background:#f4f4f4;color:#333!important;font-size:10.5px;font-weight:950;white-space:nowrap}
+.memory-state-badge.done{background:#222!important;color:#fff!important;border-color:#222!important}
+.memory-state-badge.need{background:#777!important;color:#fff!important;border-color:#666!important}
+#memorizedCount{background:#e7e7e7!important;border-color:#999!important;font-weight:950}
+#needsStudyCount{background:#d5d5d5!important;border-color:#888!important;font-weight:950}
+@media(max-width:560px){.memory-state-badge{min-height:24px;padding:2px 6px;font-size:9.5px}.status-filter-quick button{font-size:11.5px}}
+</style>
 </head>
 <body>
 <div class="app">
@@ -455,6 +469,8 @@ button.good,
       <span id="progress" class="pill"></span>
       <span id="score" class="pill"></span>
       <span id="wrongCount" class="pill"></span>
+      <span id="memorizedCount" class="pill">암기 완료 0</span>
+      <span id="needsStudyCount" class="pill">암기 못함 445</span>
     </div>
     <div class="toolbar">
       <select id="mode" aria-label="문제 필터">
@@ -467,38 +483,35 @@ button.good,
           <option value="unanswered">미답안 문제</option>
           <option value="favorite">즐겨찾기</option>
         </optgroup>
-        <optgroup label="숙지 상태">
-          <option value="mastered">숙지</option>
-          <option value="uncertain">애매</option>
-          <option value="unmastered">미숙지</option>
+        <optgroup label="암기 상태">
+          <option value="mastered">암기 완료</option>
+          <option value="needsStudy">암기 못함</option>
         </optgroup>
       </select>
       <input id="search" type="search" placeholder="문제번호·연도·내용 검색">
       <button id="shuffle">랜덤</button>
       <button id="reset" type="button" onclick="openResetConfirm(event)">기록 초기화</button>
     </div>
-    <div class="status-filter-quick" aria-label="숙지 상태별 바로 보기">
+    <div class="status-filter-quick" aria-label="암기 상태별 바로 보기">
       <button type="button" data-status-filter="all">전체</button>
-      <button type="button" data-status-filter="mastered">숙지만</button>
-      <button type="button" data-status-filter="uncertain">애매만</button>
-      <button type="button" data-status-filter="unmastered">미숙지만</button>
+      <button type="button" data-status-filter="mastered">암기 완료</button>
+      <button type="button" data-status-filter="needsStudy">암기 못함</button>
     </div>
   </section>
 </header>
 <main class="card">
   <div class="meta">
     <div class="number-wrap"><strong id="number"></strong><span id="label" class="tag"></span></div>
-    <div class="meta-tools"><span id="frequency" class="stars"></span><button id="favoriteToggle" type="button" aria-label="즐겨찾기 추가" title="즐겨찾기 추가">☆</button></div>
+    <div class="meta-tools"><span id="memoryStateBadge" class="memory-state-badge need">암기 못함</span><span id="frequency" class="stars"></span><button id="favoriteToggle" type="button" aria-label="즐겨찾기 추가" title="즐겨찾기 추가">☆</button></div>
   </div>
   <div id="question" class="question"></div>
   <section class="answer-section">
     <div class="section-title-row"><h2>답안 작성</h2><span class="autosave">자동 저장</span></div>
     <div id="answers"></div>
   </section>
-  <div class="status-row inline-status" aria-label="숙지 상태">
-    <button id="markMastered">숙지</button>
-    <button id="markUncertain">애매</button>
-    <button id="markUnmastered">미숙지</button>
+  <div class="status-row inline-status" aria-label="암기 상태">
+    <button id="markMastered">암기 완료</button>
+    <button id="markUnmastered">암기 못함</button>
   </div>
   <nav class="answer-actions inline-actions" aria-label="문제 조작">
     <button id="prev">이전</button>
@@ -518,7 +531,7 @@ button.good,
   <div class="reset-confirm-backdrop" data-reset-close="true"></div>
   <div class="reset-confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="resetConfirmTitle" aria-describedby="resetConfirmDesc">
     <div id="resetConfirmTitle" class="reset-confirm-title">학습 기록을 초기화할까요?</div>
-    <div id="resetConfirmDesc" class="reset-confirm-desc">숙지·애매·미숙지, 오답, 즐겨찾기, 복습 기록이 모두 삭제됩니다.</div>
+    <div id="resetConfirmDesc" class="reset-confirm-desc">암기 완료·암기 못함, 오답, 즐겨찾기, 복습 기록이 모두 삭제됩니다.</div>
     <div class="reset-confirm-actions">
       <button id="resetConfirmNo" type="button">취소</button>
       <button id="resetConfirmYes" type="button">초기화</button>
@@ -534,12 +547,12 @@ const BANK = [{"id":1,"number":"001","label":"14-1","question":"연약지반상�
 const $=s=>document.querySelector(s);
 const STORAGE_KEY='essay445-v1';
 function createInitialState(){
-  return {answers:{},fav:{},wrong:{},status:{},corrections:{},attempts:{},review:{},wrongMeta:{},flashStats:{},flashMode:false,index:0,currentId:1,allReturnId:1,view:[],mode:'all',search:''};
+  return {answers:{},fav:{},wrong:{},status:{},corrections:{},attempts:{},review:{},wrongMeta:{},flashStats:{},memoryVerify:{},flashMode:false,index:0,currentId:1,allReturnId:1,view:[],mode:'all',search:''};
 }
 let state;
 try{state=JSON.parse(localStorage.getItem(STORAGE_KEY)||'null')}catch(e){state=null}
 if(!state||typeof state!=='object')state=createInitialState();
-state.answers||={};state.fav||={};state.wrong||={};state.status||={};state.corrections||={};state.attempts||={};state.review||={};state.wrongMeta||={};state.flashStats||={};if(state.allReturnId==null)state.allReturnId=(state.mode==='all'&&state.currentId!=null)?state.currentId:1;
+state.answers||={};state.fav||={};state.wrong||={};state.status||={};state.corrections||={};state.attempts||={};state.review||={};state.wrongMeta||={};state.flashStats||={};state.memoryVerify||={};Object.keys(state.status).forEach(k=>{if(state.status[k]==='uncertain')state.status[k]='unmastered'});if(state.mode==='uncertain'||state.mode==='unmastered')state.mode='needsStudy';if(state.allReturnId==null)state.allReturnId=(state.mode==='all'&&state.currentId!=null)?state.currentId:1;
 const savedView=Array.isArray(state.view)&&state.view.length&&state.view.every(i=>Number.isInteger(i)&&i>=0&&i<BANK.length)?state.view:null;
 let view=savedView?[...savedView]:[...BANK.keys()];
 let pos=Math.min(Number.isInteger(state.index)?state.index:0,Math.max(0,view.length-1));
@@ -834,28 +847,35 @@ function mnemonicFor(q){
 function current(){return BANK[view[pos]]}function qkey(q){return String(q.id)}
 function localDateKey(date=new Date()){const y=date.getFullYear(),m=String(date.getMonth()+1).padStart(2,'0'),d=String(date.getDate()).padStart(2,'0');return `${y}-${m}-${d}`}
 function addDaysKey(days){const d=new Date();d.setHours(12,0,0,0);d.setDate(d.getDate()+days);return localDateKey(d)}
-function isDueToday(key){const due=state.review[key]?.due;return !!due&&due<=localDateKey()}
-function scheduleReview(key,status){const prev=state.review[key]||{};if(status==='mastered'){const streak=(prev.streak||0)+1;const intervals=[1,3,7,14,30];const days=intervals[Math.min(streak-1,intervals.length-1)];state.review[key]={streak,due:addDaysKey(days),last:localDateKey()}}else if(status==='uncertain'||status==='unmastered'){state.review[key]={streak:0,due:addDaysKey(1),last:localDateKey()}}else delete state.review[key]}
+function isDueToday(key){const today=localDateKey(),verify=state.memoryVerify?.[key];if(state.status[key]==='mastered'&&verify?.pending&&verify.due&&verify.due<=today)return true;const due=state.review[key]?.due;return !!due&&due<=today}
+function scheduleReview(key,status){const prev=state.review[key]||{};if(status==='mastered'){const streak=(prev.streak||0)+1;const intervals=[1,3,7,14,30];const days=intervals[Math.min(streak-1,intervals.length-1)];state.review[key]={streak,due:addDaysKey(days),last:localDateKey()}}else if(status==='unmastered'){state.review[key]={streak:0,due:addDaysKey(1),last:localDateKey()}}else delete state.review[key]}
 function scheduleFromGrade(key,isPerfect){const prev=state.review[key]||{};if(isPerfect){const streak=(prev.streak||0)+1;const intervals=[1,3,7,14,30];const days=intervals[Math.min(streak-1,intervals.length-1)];state.review[key]={streak,due:addDaysKey(days),last:localDateKey()}}else{state.review[key]={streak:0,due:addDaysKey(1),last:localDateKey()}}}
 function todayReviewCount(){return BANK.reduce((n,q)=>n+(isDueToday(qkey(q))?1:0),0)}
 function statusCount(name){return BANK.reduce((n,q)=>n+(state.status[qkey(q)]===name?1:0),0)}
+function memorizedCount(){return statusCount('mastered')}
+function needsStudyCount(){return BANK.length-memorizedCount()}
 function updateStatusCounts(){
-  const items=[
-    ['mastered','숙지','#markMastered'],
-    ['uncertain','애매','#markUncertain'],
-    ['unmastered','미숙지','#markUnmastered']
-  ];
-  items.forEach(([value,label,buttonSelector])=>{
-    const count=statusCount(value);
-    const opt=$('#mode')?.querySelector(`option[value="${value}"]`);
-    if(opt)opt.textContent=`${label} (${count})`;
-    const btn=$(buttonSelector);
-    if(btn)btn.textContent=`${label} (${count})`;
-  });
+  const done=memorizedCount(),need=needsStudyCount();
+  const masteredOpt=$('#mode')?.querySelector('option[value="mastered"]');
+  const needsOpt=$('#mode')?.querySelector('option[value="needsStudy"]');
+  if(masteredOpt)masteredOpt.textContent=`암기 완료 (${done})`;
+  if(needsOpt)needsOpt.textContent=`암기 못함 (${need})`;
+  const masteredBtn=$('#markMastered'),unmasteredBtn=$('#markUnmastered');
+  if(masteredBtn)masteredBtn.textContent=`암기 완료 (${done})`;
+  if(unmasteredBtn)unmasteredBtn.textContent=`암기 못함 (${need})`;
+  if($('#memorizedCount'))$('#memorizedCount').textContent=`암기 완료 ${done}`;
+  if($('#needsStudyCount'))$('#needsStudyCount').textContent=`암기 못함 ${need}`;
+}
+function updateCurrentMemoryUI(key){
+  const done=state.status[key]==='mastered';
+  document.querySelectorAll('.status-row button').forEach(b=>b.classList.remove('active'));
+  (done?$('#markMastered'):$('#markUnmastered'))?.classList.add('active');
+  const badge=$('#memoryStateBadge');
+  if(badge){badge.textContent=done?'암기 완료':'암기 못함';badge.classList.toggle('done',done);badge.classList.toggle('need',!done)}
 }
 function updateQuickFilterButtons(){
   const mode=$('#mode')?.value||state.mode||'all';
-  const labels={all:`전체 ${BANK.length}`,mastered:`숙지 ${statusCount('mastered')}`,uncertain:`애매 ${statusCount('uncertain')}`,unmastered:`미숙지 ${statusCount('unmastered')}`};
+  const labels={all:`전체 ${BANK.length}`,mastered:`암기 완료 ${memorizedCount()}`,needsStudy:`암기 못함 ${needsStudyCount()}`};
   document.querySelectorAll('[data-status-filter]').forEach(btn=>{
     const value=btn.dataset.statusFilter;
     btn.textContent=labels[value]||btn.textContent;
@@ -863,8 +883,8 @@ function updateQuickFilterButtons(){
   });
 }
 function autoGrow(el){el.style.height='36px';el.style.height=Math.min(180,Math.max(36,el.scrollHeight))+'px';el.style.overflowY=el.scrollHeight>180?'auto':'hidden'}
-function render(){const q=current(),key=qkey(q),saved=state.status[key]==='mastered'?(state.answers[key]||[]):[];const reviewOption=$('#mode')?.querySelector('option[value="review"]');if(reviewOption)reviewOption.textContent=`오늘 복습 (${todayReviewCount()})`;updateStatusCounts();updateQuickFilterButtons();$('#number').textContent=q.number;$('#label').textContent=q.label;const freq=Math.max(1,Number(q.frequency)||1);$('#frequency').textContent='★'.repeat(Math.min(5,freq))+` (${freq}회)`;const favBtn=$('#favoriteToggle');favBtn.textContent=state.fav[key]?'★':'☆';favBtn.classList.toggle('active',!!state.fav[key]);favBtn.title=state.fav[key]?'즐겨찾기 해제':'즐겨찾기 추가';favBtn.setAttribute('aria-label',favBtn.title);$('#question').textContent=q.question;$('#answers').innerHTML='';q.inputLabels.forEach((label,i)=>{const wrap=document.createElement('div');wrap.className='answer-item';const lab=document.createElement('label');lab.className='answer-label';lab.textContent=label||`${i+1}.`;const ta=document.createElement('textarea');ta.className='answer-input';ta.value=saved[i]||'';ta.placeholder=`${i+1}번 답 입력`;ta.setAttribute('aria-label',`${i+1}번 답안`);if(state.corrections[key]?.[i])ta.classList.add('auto-corrected');ta.addEventListener('input',()=>{autoGrow(ta);ta.classList.remove('auto-corrected');if(state.corrections[key]){state.corrections[key][i]=false;if(!state.corrections[key].some(Boolean))delete state.corrections[key]}const currentVals=[...document.querySelectorAll('.answer-input')].map(x=>x.value);state.answers[key]=currentVals;state.attempts[key]=[...currentVals];save()});wrap.append(lab,ta);$('#answers').append(wrap);requestAnimationFrame(()=>autoGrow(ta))});$('#result').className='result';$('#result').innerHTML='';$('#official').className='official';$('#officialContent').innerHTML='';$('#reveal').textContent='정답';$('#reveal').setAttribute('aria-expanded','false');document.querySelectorAll('.status-row button').forEach(b=>b.classList.remove('active'));const st=state.status[key];if(st)$('#mark'+st[0].toUpperCase()+st.slice(1))?.classList.add('active');const pct=view.length?((pos+1)/view.length*100):0;$('#progress').textContent=`${pos+1} / ${view.length}`;$('#score').textContent=`진행 ${pct.toFixed(1)}%`;$('#wrongCount').textContent=`오답 ${Object.keys(state.wrong).length}`;$('#progressBar').style.width=`${pct}%`;save();window.scrollTo(0,0)}
-function showOfficial(){const q=current(),box=$('#officialContent');box.innerHTML='';q.allAnswers.forEach((group,i)=>{const div=document.createElement('div');div.className='official-group';const label=q.mode==='grouped'?(q.inputLabels[i]||`${i+1}.`):`${i+1}.`;const b=document.createElement('b');b.textContent=label+' ';const span=document.createElement('span');span.textContent=group.join(' / ');div.append(b,span);box.append(div)});const memo=mnemonicFor(q);if(memo){const div=document.createElement('div');div.className='mnemonic';div.innerHTML=`<div class="mnemonic-title">숙지 팁</div><div class="mnemonic-code">${memo.code}</div>${memo.scene?`<div class="mnemonic-scene">“${memo.scene}”</div>`:''}<div class="mnemonic-note">${memo.note}</div>`;box.append(div)}$('#official').classList.add('show');$('#reveal').textContent='닫기';$('#reveal').setAttribute('aria-expanded','true')}
+function render(){const q=current(),key=qkey(q),saved=state.status[key]==='mastered'?(state.answers[key]||[]):[];const reviewOption=$('#mode')?.querySelector('option[value="review"]');if(reviewOption)reviewOption.textContent=`오늘 복습 (${todayReviewCount()})`;updateStatusCounts();updateQuickFilterButtons();$('#number').textContent=q.number;$('#label').textContent=q.label;const freq=Math.max(1,Number(q.frequency)||1);$('#frequency').textContent='★'.repeat(Math.min(5,freq))+` (${freq}회)`;const favBtn=$('#favoriteToggle');favBtn.textContent=state.fav[key]?'★':'☆';favBtn.classList.toggle('active',!!state.fav[key]);favBtn.title=state.fav[key]?'즐겨찾기 해제':'즐겨찾기 추가';favBtn.setAttribute('aria-label',favBtn.title);$('#question').textContent=q.question;$('#answers').innerHTML='';q.inputLabels.forEach((label,i)=>{const wrap=document.createElement('div');wrap.className='answer-item';const lab=document.createElement('label');lab.className='answer-label';lab.textContent=label||`${i+1}.`;const ta=document.createElement('textarea');ta.className='answer-input';ta.value=saved[i]||'';ta.placeholder=`${i+1}번 답 입력`;ta.setAttribute('aria-label',`${i+1}번 답안`);if(state.corrections[key]?.[i])ta.classList.add('auto-corrected');ta.addEventListener('input',()=>{autoGrow(ta);ta.classList.remove('auto-corrected');if(state.corrections[key]){state.corrections[key][i]=false;if(!state.corrections[key].some(Boolean))delete state.corrections[key]}const currentVals=[...document.querySelectorAll('.answer-input')].map(x=>x.value);state.answers[key]=currentVals;state.attempts[key]=[...currentVals];save()});wrap.append(lab,ta);$('#answers').append(wrap);requestAnimationFrame(()=>autoGrow(ta))});$('#result').className='result';$('#result').innerHTML='';$('#official').className='official';$('#officialContent').innerHTML='';$('#reveal').textContent='정답';$('#reveal').setAttribute('aria-expanded','false');updateCurrentMemoryUI(key);const pct=view.length?((pos+1)/view.length*100):0;$('#progress').textContent=`${pos+1} / ${view.length}`;$('#score').textContent=`진행 ${pct.toFixed(1)}%`;$('#wrongCount').textContent=`오답 ${Object.keys(state.wrong).length}`;$('#progressBar').style.width=`${pct}%`;save();window.scrollTo(0,0)}
+function showOfficial(){const q=current(),box=$('#officialContent');box.innerHTML='';q.allAnswers.forEach((group,i)=>{const div=document.createElement('div');div.className='official-group';const label=q.mode==='grouped'?(q.inputLabels[i]||`${i+1}.`):`${i+1}.`;const b=document.createElement('b');b.textContent=label+' ';const span=document.createElement('span');span.textContent=group.join(' / ');div.append(b,span);box.append(div)});const memo=mnemonicFor(q);if(memo){const div=document.createElement('div');div.className='mnemonic';div.innerHTML=`<div class="mnemonic-title">암기 팁</div><div class="mnemonic-code">${memo.code}</div>${memo.scene?`<div class="mnemonic-scene">“${memo.scene}”</div>`:''}<div class="mnemonic-note">${memo.note}</div>`;box.append(div)}$('#official').classList.add('show');$('#reveal').textContent='닫기';$('#reveal').setAttribute('aria-expanded','true')}
 $('#check').addEventListener('click',()=>{
   const q=current();
   const key=qkey(q);
@@ -914,7 +934,11 @@ $('#check').addEventListener('click',()=>{
   }else{
     delete state.wrong[key];
   }
+  state.status[key]=perfect?'mastered':'unmastered';
   scheduleFromGrade(key,perfect);
+  updateStatusCounts();
+  updateQuickFilterButtons();
+  updateCurrentMemoryUI(key);
 
   const resultBox=$('#result');
   resultBox.className='result show';
@@ -966,13 +990,13 @@ $('#check').addEventListener('click',()=>{
 });
 $('#reveal').addEventListener('click',()=>{$('#official').classList.contains('show')?($('#official').classList.remove('show'),$('#reveal').textContent='정답',$('#reveal').setAttribute('aria-expanded','false')):showOfficial()});
 function clearCurrentUnlessMastered(){const k=qkey(current());if(state.status[k]!=='mastered'){delete state.answers[k];delete state.corrections[k];delete state.attempts[k];save()}}
-function moveWithinActiveView(delta){if(!syncViewToActiveFilter())return;const target=pos+delta;if(target<0||target>=view.length)return;clearCurrentUnlessMastered();pos=target;render()}
+function moveWithinActiveView(delta){const oldQ=current(),oldId=oldQ?oldQ.id:null,activeMode=$('#mode')?.value||state.mode||'all';clearCurrentUnlessMastered();if(!syncViewToActiveFilter()){if(activeMode==='needsStudy'){alert('암기 못함 학습을 모두 마쳤습니다.');$('#mode').value='all';applyView({closePanel:false});}return;}const sameCurrent=oldId!=null&&current()?.id===oldId;const target=sameCurrent?pos+delta:(delta>0?pos:pos-1);if(target<0||target>=view.length)return;pos=target;render()}
 $('#prev').addEventListener('click',()=>moveWithinActiveView(-1));$('#next').addEventListener('click',()=>moveWithinActiveView(1));
-function setStatus(name){const k=qkey(current());const oldPos=pos;const next=state.status[k]===name?'':name;if(next)state.status[k]=next;else delete state.status[k];scheduleReview(k,next);if(next==='mastered'){const vals=[...document.querySelectorAll('.answer-input')].map(x=>x.value);state.answers[k]=vals}else{delete state.answers[k];delete state.corrections[k];delete state.attempts[k]}save();const mode=$('#mode')?.value||'all';if(['mastered','uncertain','unmastered'].includes(mode)){const fresh=filteredIndices(mode,norm($('#search')?.value||''));if(fresh.length){const freshSet=new Set(fresh);const kept=view.filter(i=>freshSet.has(i));const keptSet=new Set(kept);view=[...kept,...fresh.filter(i=>!keptSet.has(i))];const stillHere=view.findIndex(i=>BANK[i]&&qkey(BANK[i])===k);pos=stillHere>=0?stillHere:Math.min(oldPos,view.length-1)}else{$('#mode').value='all';view=filteredIndices('all',norm($('#search')?.value||''));if(!view.length)view=[...BANK.keys()];pos=Math.min(oldPos,view.length-1)}}save();render()}
-$('#markMastered').onclick=()=>setStatus('mastered');$('#markUncertain').onclick=()=>setStatus('uncertain');$('#markUnmastered').onclick=()=>setStatus('unmastered');$('#manageToggle').onclick=()=>{const p=$('#managePanel');p.classList.toggle('open');$('#manageToggle').setAttribute('aria-expanded',p.classList.contains('open'))};
+function setStatus(name){const k=qkey(current());const oldPos=pos;const next=name==='mastered'?'mastered':'unmastered';state.status[k]=next;scheduleReview(k,next);if(next==='mastered'){const vals=[...document.querySelectorAll('.answer-input')].map(x=>x.value);state.answers[k]=vals;state.memoryVerify[k]={pending:true,due:localDateKey(),source:'manual',reason:'typing',marked:localDateKey()}}else{delete state.memoryVerify[k];delete state.answers[k];delete state.corrections[k];delete state.attempts[k]}save();const mode=$('#mode')?.value||'all';if(['mastered','needsStudy'].includes(mode)){const fresh=filteredIndices(mode,norm($('#search')?.value||''));if(fresh.length){const freshSet=new Set(fresh);const kept=view.filter(i=>freshSet.has(i));const keptSet=new Set(kept);view=[...kept,...fresh.filter(i=>!keptSet.has(i))];const stillHere=view.findIndex(i=>BANK[i]&&qkey(BANK[i])===k);pos=stillHere>=0?stillHere:Math.min(oldPos,view.length-1)}else{$('#mode').value='all';view=filteredIndices('all',norm($('#search')?.value||''));if(!view.length)view=[...BANK.keys()];pos=Math.min(oldPos,view.length-1)}}save();render()}
+$('#markMastered').onclick=()=>setStatus('mastered');$('#markUnmastered').onclick=()=>setStatus('unmastered');$('#manageToggle').onclick=()=>{const p=$('#managePanel');p.classList.toggle('open');$('#manageToggle').setAttribute('aria-expanded',p.classList.contains('open'))};
 function daysBetween(a,b){const A=new Date(a+'T12:00:00'),B=new Date(b+'T12:00:00');return Math.round((B-A)/86400000)}
 function hasAttempt(k){return Array.isArray(state.attempts[k])&&state.attempts[k].some(v=>String(v||'').trim())}
-function filteredIndices(mode,term){return BANK.map((q,i)=>({q,i})).filter(({q})=>{const k=qkey(q),wm=state.wrongMeta[k]||{};if(mode==='wrong'&&!state.wrong[k])return false;if(mode==='frequentWrong'&&!(wm.count>=2))return false;if(mode==='recentWrong'&&!(wm.last&&daysBetween(wm.last,localDateKey())<=7))return false;if(mode==='unanswered'&&hasAttempt(k))return false;if(mode==='favorite'&&!state.fav[k])return false;if(['mastered','uncertain','unmastered'].includes(mode)&&state.status[k]!==mode)return false;if(mode==='review'&&!isDueToday(k))return false;if(term&&!norm(`${q.number} ${q.label} ${q.question}`).includes(term))return false;return true}).map(x=>x.i)}
+function filteredIndices(mode,term){return BANK.map((q,i)=>({q,i})).filter(({q})=>{const k=qkey(q),wm=state.wrongMeta[k]||{};if(mode==='wrong'&&!state.wrong[k])return false;if(mode==='frequentWrong'&&!(wm.count>=2))return false;if(mode==='recentWrong'&&!(wm.last&&daysBetween(wm.last,localDateKey())<=7))return false;if(mode==='unanswered'&&hasAttempt(k))return false;if(mode==='favorite'&&!state.fav[k])return false;if(mode==='mastered'&&state.status[k]!=='mastered')return false;if(mode==='needsStudy'&&state.status[k]==='mastered')return false;if(mode==='review'&&!isDueToday(k))return false;if(term&&!norm(`${q.number} ${q.label} ${q.question}`).includes(term))return false;return true}).map(x=>x.i)}
 function syncViewToActiveFilter(){const mode=$('#mode')?.value||state.mode||'all',term=norm($('#search')?.value||'');const currentIndex=view.length?view[pos]:null;const currentId=currentIndex!=null&&BANK[currentIndex]?BANK[currentIndex].id:null;const fresh=filteredIndices(mode,term);if(!fresh.length)return false;const freshSet=new Set(fresh);const kept=view.filter(i=>freshSet.has(i));const keptSet=new Set(kept);view=[...kept,...fresh.filter(i=>!keptSet.has(i))];let nextPos=currentId!=null?view.findIndex(i=>BANK[i]&&BANK[i].id===currentId):-1;if(nextPos<0&&currentIndex!=null){const after=view.findIndex(i=>i>=currentIndex);nextPos=after>=0?after:view.length-1}if(nextPos<0)nextPos=0;pos=nextPos;return true}
 function applyView(options={}){
   const closePanel=!!options.closePanel;
@@ -1106,7 +1130,7 @@ if(resetButton){
 }
 $('#favoriteToggle').onclick=()=>{const k=qkey(current());state.fav[k]=!state.fav[k];if(!state.fav[k])delete state.fav[k];save();render()};
 document.addEventListener('keydown',e=>{if(e.target.matches('textarea,input,select'))return;if(e.key==='ArrowLeft')$('#prev').click();if(e.key==='ArrowRight')$('#next').click();if(e.key==='Enter')$('#check').click()});
-if(['all','review','wrong','frequentWrong','recentWrong','unanswered','favorite','mastered','uncertain','unmastered'].includes(state.mode))$('#mode').value=state.mode;
+if(['all','review','wrong','frequentWrong','recentWrong','unanswered','favorite','mastered','needsStudy'].includes(state.mode))$('#mode').value=state.mode;
 if(typeof state.search==='string')$('#search').value=state.search;
 if(!syncViewToActiveFilter()){$('#mode').value='all';view=filteredIndices('all',norm($('#search').value));if(!view.length){$('#search').value='';view=[...BANK.keys()]}pos=Math.min(pos,Math.max(0,view.length-1));save()}
 window.addEventListener('pagehide',save);
@@ -1123,7 +1147,7 @@ body.flashcard-mode .flashcard-panel{display:block}
 .flash-card .flash-question{width:100%;white-space:pre-wrap;word-break:keep-all;text-align:left;font-size:18px;line-height:1.65;font-weight:850}
 .flash-card .flash-answer{display:none;width:100%;text-align:left;white-space:pre-wrap;word-break:keep-all;font-size:18px;line-height:1.65;font-weight:850}
 .flash-card.flipped .flash-question{display:none}.flash-card.flipped .flash-answer{display:block}
-.flash-nav{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:6px}.flash-nav button{height:40px;padding:2px;font-size:12px;font-weight:900;background:#fff!important;color:#222!important;border:1px solid #bcbcbc!important}.flash-nav #flashNext{background:#dedede!important;border-color:#888!important}.flash-ratings{display:none;grid-template-columns:repeat(4,1fr);gap:4px;margin-top:5px}
+.flash-nav{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:6px}.flash-nav button{height:40px;padding:2px;font-size:12px;font-weight:900;background:#fff!important;color:#222!important;border:1px solid #bcbcbc!important}.flash-nav #flashNext{background:#dedede!important;border-color:#888!important}.flash-ratings{display:none;grid-template-columns:repeat(2,1fr);gap:4px;margin-top:5px}
 .flash-card.flipped~.flash-ratings{display:grid}
 .flash-ratings button{height:40px;padding:2px;font-size:12px;font-weight:900}
 .flash-tip{display:none;margin-top:10px;padding:10px;border:1px solid #bcbcbc;border-radius:8px;background:#ececec;color:#222;text-align:left}
@@ -1150,7 +1174,7 @@ body.flashcard-mode .flashcard-panel{display:block}
     <div id="flashAnswer" class="flash-answer"><div id="flashAnswerText"></div><div id="flashTip" class="flash-tip"></div></div>
   </div>
   <div class="flash-nav" aria-label="앱카드 문제 이동"><button id="flashPrev" type="button">이전</button><button id="flashNext" type="button">다음</button></div>
-  <div class="flash-ratings" aria-label="기억 정도"><button data-rate="again">모름</button><button data-rate="hard">어려움</button><button data-rate="good">보통</button><button data-rate="easy">쉬움</button></div>
+  <div class="flash-ratings" aria-label="암기 상태"><button data-rate="unmastered">암기 못함</button><button data-rate="mastered">암기 완료</button></div>
   <div id="flashDue" class="flash-due"></div>`;
   document.querySelector('.inline-actions').insertAdjacentElement('afterend',panel);
 
@@ -1162,7 +1186,7 @@ body.flashcard-mode .flashcard-panel{display:block}
     const tip=document.querySelector('#flashTip'),memo=flashTipData(q);
     if(!memo){tip.innerHTML='';tip.style.display='none';return}
     tip.style.display='';
-    tip.innerHTML=`<div class="flash-tip-title">숙지 팁</div><div class="flash-tip-code">${memo.code}</div>${memo.scene?`<div class="flash-tip-scene">“${memo.scene}”</div>`:''}<div class="flash-tip-note">${memo.note}</div>`;
+    tip.innerHTML=`<div class="flash-tip-title">암기 팁</div><div class="flash-tip-code">${memo.code}</div>${memo.scene?`<div class="flash-tip-scene">“${memo.scene}”</div>`:''}<div class="flash-tip-note">${memo.note}</div>`;
   }
   function questionText(q){
     if(q.hideGroupedChoices||q.mode!=='grouped'||!Array.isArray(q.inputLabels)||!q.inputLabels.length)return q.question;
@@ -1190,17 +1214,25 @@ body.flashcard-mode .flashcard-panel{display:block}
   }
   function flip(){setFlashSide(document.querySelector('#flashCard').classList.contains('flipped')?'question':'answer')}
   function rate(kind){
-    const k=qkey(current()),prev=state.review[k]||{},streak=prev.streak||0;
-    let days=0,nextStreak=streak;
-    if(kind==='again'){days=0;nextStreak=0;state.status[k]='unmastered'}
-    if(kind==='hard'){days=1;nextStreak=Math.max(0,streak);state.status[k]='uncertain'}
-    if(kind==='good'){nextStreak=streak+1;days=[1,3,7,14,30][Math.min(nextStreak-1,4)];state.status[k]='mastered'}
-    if(kind==='easy'){nextStreak=streak+1;days=[3,7,14,30,60][Math.min(nextStreak-1,4)];state.status[k]='mastered'}
-    state.review[k]={streak:nextStreak,due:addDaysKey(days),last:localDateKey(),rating:kind};
-    const fs=state.flashStats[k]||{count:0};fs.count++;fs.last=localDateKey();fs.rating=kind;state.flashStats[k]=fs;
+    const k=qkey(current());
+    if(kind==='mastered'){
+      state.status[k]='mastered';
+      scheduleReview(k,'mastered');
+      // 앱카드의 자기평가는 화면상 완료로 표시하되, 실제 암기 검증은 타이핑으로 한 번 더 한다.
+      state.memoryVerify[k]={pending:true,due:localDateKey(),source:'flashcard',reason:'typing',marked:localDateKey()};
+    }else{
+      state.status[k]='unmastered';
+      scheduleReview(k,'unmastered');
+      delete state.memoryVerify[k];
+    }
+    const fs=state.flashStats[k]||{count:0};
+    fs.count++;
+    fs.last=localDateKey();
+    fs.rating=kind;
+    state.flashStats[k]=fs;
     save();
     const activeMode=$('#mode')?.value||state.mode||'all';
-    if(['mastered','uncertain','unmastered'].includes(activeMode)){
+    if(['mastered','needsStudy'].includes(activeMode)){
       const oldBankIndex=view[pos];
       const fresh=filteredIndices(activeMode,norm($('#search')?.value||''));
       if(!fresh.length){
@@ -1262,6 +1294,528 @@ body.flashcard-mode .flashcard-panel{display:block}
   render();
 })();
 </script>
+<!-- binary-memory-study-v3-2026-09-22 -->
+
+
+<style id="fast30-study-addon">
+.fast30-panel{display:none;margin:7px 0 2px;padding:9px;border:1px solid #9e9e9e;border-radius:8px;background:#ededed;color:#222}
+body.fast30-mode .fast30-panel{display:block}
+.fast30-head{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;font-weight:950}
+.fast30-title{font-size:13px;font-weight:950}
+.fast30-set{padding:3px 7px;border:1px solid #b8b8b8;border-radius:999px;background:#fff;font-size:11px;font-weight:900;white-space:nowrap}
+.fast30-rule{margin-top:6px;font-size:11.5px;line-height:1.5;color:#4f4f4f!important;font-weight:750}
+.fast30-current{margin-top:6px;padding:6px 8px;border:1px solid #b8b8b8;border-radius:6px;background:#fff;font-size:12px;font-weight:900;line-height:1.45}
+.fast30-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-top:7px}
+.fast30-stat{padding:6px 3px;border:1px solid #bbb;border-radius:6px;background:#fff;text-align:center;font-size:10.5px;font-weight:850}
+.fast30-stat strong{display:block;margin-top:2px;font-size:15px;color:#111!important}
+.fast30-message{display:none;margin:7px 0 0;padding:7px 8px;border-radius:6px;border:1px solid #aaa;background:#fff;font-size:12px;font-weight:900;line-height:1.5}
+.fast30-message.show{display:block}
+.fast30-nextset{display:none;width:100%;height:38px;margin-top:7px;border:1px solid #555!important;border-radius:7px!important;background:#222!important;color:#fff!important;font-size:12px!important;font-weight:950!important}
+.fast30-panel.finished .fast30-nextset{display:block}
+#fast30Toggle{height:32px;min-height:32px;padding:0 9px;border-radius:8px;font-size:11.5px;font-weight:900;background:#fff!important;color:#222!important;border:1px solid #888!important}
+#fast30Toggle.active{background:#222!important;color:#fff!important;border-color:#222!important}
+body.fast30-mode #markMastered,body.fast30-mode #markUnmastered{display:none!important}
+body.fast30-mode #reveal,body.fast30-mode #prev{display:none!important}
+body.fast30-mode .inline-actions{grid-template-columns:1fr 1fr!important}
+body.fast30-mode #check{background:#222!important;color:#fff!important;border-color:#222!important}
+body.fast30-mode #next{background:#dedede!important;border-color:#888!important}
+body.fast30-mode .answer-input{border-width:2px!important;border-color:#8a8a8a!important}
+body.fast30-mode .answer-input:focus{border-color:#222!important;outline:2px solid #222!important}
+body.fast30-mode #manageToggle{opacity:.55}
+body.fast30-mode .toolbar #flashToggle{display:none!important}
+@media(max-width:560px){
+  #fast30Toggle{height:30px;min-height:30px;padding:0 7px;font-size:10.5px}
+  .fast30-panel{padding:7px}.fast30-title{font-size:12px}.fast30-rule{font-size:10.5px}
+  .fast30-stat{font-size:9.8px;padding:5px 1px}.fast30-stat strong{font-size:14px}
+  .fast30-current,.fast30-message{font-size:11px}
+}
+</style>
+<script id="fast30-study-script">
+(()=>{
+  /*
+    빠른 암기 30문제
+    - 반드시 타이핑 후 채점
+    - 1회 정답: 15문제 뒤 재확인
+    - 2회 연속 정답: 암기 완료
+    - 첫 오답: 5문제 뒤 재출제
+    - 연속 오답: 3문제 뒤 재출제
+    - 창을 닫아도 세트/대기열/현재 위치를 그대로 복원
+  */
+  state.fast30Mode=!!state.fast30Mode;
+  state.fast30SetNumber=Math.max(0,Number(state.fast30SetNumber)||0);
+  state.fast30Session=(state.fast30Session&&typeof state.fast30Session==='object')?state.fast30Session:null;
+  state.fast30Processed=(state.fast30Processed&&typeof state.fast30Processed==='object')?state.fast30Processed:null;
+
+  // V4의 예전 집중암기 세션은 일반 학습기록에는 손대지 않고 세션 정보만 정리한다.
+  if(state.speedTypingMode||state.speedSession||state.speedProcessed){
+    state.speedTypingMode=false;state.speedSession=null;state.speedProcessed=null;
+  }
+
+  let session=state.fast30Session;
+  let processed=state.fast30Processed;
+  let autoMoveTimer=null;
+
+  const toggle=document.createElement('button');
+  toggle.id='fast30Toggle';
+  toggle.type='button';
+  toggle.textContent='빠른 암기 30문제';
+  document.querySelector('#manageToggle').insertAdjacentElement('beforebegin',toggle);
+
+  const panel=document.createElement('section');
+  panel.id='fast30Panel';
+  panel.className='fast30-panel';
+  panel.innerHTML=`
+    <div class="fast30-head"><span class="fast30-title">빠른 암기 · 타이핑 30문제</span><span id="fast30Set" class="fast30-set">세트 1</span></div>
+    <div class="fast30-rule"><b>자동선정:</b> 암기 못함 + 오늘 복습 + 자주 틀린 문제 + 출제빈도 높은 문제 · 직접 타이핑 → 채점 · 신규 문제는 두 번 연속 정답, 완료 문제는 다음 날 1회 확인</div>
+    <div id="fast30Current" class="fast30-current">현재 단계</div>
+    <div class="fast30-stats">
+      <div class="fast30-stat">암기 못함<strong id="fast30Unseen">0</strong></div>
+      <div class="fast30-stat">오늘 확인<strong id="fast30Learning">0</strong></div>
+      <div class="fast30-stat">세트 완료<strong id="fast30Done">0</strong></div>
+      <div class="fast30-stat">재출제 대기<strong id="fast30Retry">0</strong></div>
+    </div>
+    <div id="fast30Message" class="fast30-message"></div>
+    <button id="fast30NextSet" class="fast30-nextset" type="button">다음 30문제 시작</button>`;
+  document.querySelector('#question').insertAdjacentElement('beforebegin',panel);
+
+  function clearAutoTimer(){if(autoMoveTimer){clearTimeout(autoMoveTimer);autoMoveTimer=null}}
+  function term(){return norm($('#search')?.value||'')}
+  function currentBankIndex(){return view[pos]}
+  function keyForIndex(idx){return BANK[idx]?qkey(BANK[idx]):''}
+  function currentKey(){const q=current();return q?qkey(q):''}
+  function isValidSession(s){
+    return !!(s&&Array.isArray(s.selected)&&s.selected.length&&Array.isArray(s.queue)&&s.queue.length&&s.progress&&typeof s.progress==='object');
+  }
+  function pFor(key){
+    if(!session.progress[key])session.progress[key]={seen:0,hitStreak:0,failStreak:0,totalFails:0,done:false};
+    return session.progress[key];
+  }
+  function kindFor(key){return session?.kindMap?.[key]||'learn'}
+  function setKind(key,kind){session.kindMap=session.kindMap||{};session.kindMap[key]=kind}
+  function verifyIsDue(key){const v=state.memoryVerify?.[key];return !!(v?.pending&&v.due&&v.due<=localDateKey())}
+  function lastStudyDay(key){return state.wrongMeta?.[key]?.last||state.review?.[key]?.last||state.flashStats?.[key]?.last||state.memoryVerify?.[key]?.marked||''}
+  function priorityScore(idx,type){
+    const q=BANK[idx],k=keyForIndex(idx),wm=state.wrongMeta[k]||{},freq=Math.max(1,Number(q?.frequency)||1);
+    const last=lastStudyDay(k),age=last?Math.max(0,daysBetween(last,localDateKey())):30;
+    const overdue=(state.review[k]?.due&&state.review[k].due<=localDateKey())?Math.max(0,daysBetween(state.review[k].due,localDateKey())):0;
+    let score=(Number(wm.count)||0)*28+freq*8+Math.min(30,age)+Math.min(30,overdue*4);
+    if(type==='review')score+=90;
+    if(verifyIsDue(k))score+=130;
+    if(state.status[k]==='unmastered')score+=35;
+    if(!hasAttempt(k))score+=12;
+    return score;
+  }
+  function autoSelect30(){
+    const reviewPool=[],learnPool=[];
+    BANK.forEach((q,idx)=>{
+      const k=qkey(q);
+      if(state.status[k]==='mastered'){
+        if(verifyIsDue(k)||isDueToday(k))reviewPool.push(idx);
+      }else learnPool.push(idx);
+    });
+    reviewPool.sort((a,b)=>priorityScore(b,'review')-priorityScore(a,'review')||a-b);
+    learnPool.sort((a,b)=>priorityScore(b,'learn')-priorityScore(a,'learn')||a-b);
+    const chosenReview=reviewPool.slice(0,10);
+    const chosenLearn=learnPool.slice(0,20);
+    const chosen=new Set([...chosenLearn,...chosenReview]);
+    const remaining=[
+      ...learnPool.slice(chosenLearn.length).map(i=>({i,t:'learn',s:priorityScore(i,'learn')})),
+      ...reviewPool.slice(chosenReview.length).map(i=>({i,t:'review',s:priorityScore(i,'review')}))
+    ].sort((a,b)=>b.s-a.s||a.i-b.i);
+    for(const x of remaining){if(chosen.size>=30)break;chosen.add(x.i)}
+    const learn=[...chosen].filter(i=>state.status[keyForIndex(i)]!=='mastered').sort((a,b)=>priorityScore(b,'learn')-priorityScore(a,'learn'));
+    const review=[...chosen].filter(i=>state.status[keyForIndex(i)]==='mastered').sort((a,b)=>priorityScore(b,'review')-priorityScore(a,'review'));
+    const selected=[];
+    // 학습 2문제 : 복습 1문제 비율로 섞어서 체감 난이도를 안정시킨다.
+    while(learn.length||review.length){
+      for(let n=0;n<2&&learn.length;n++)selected.push(learn.shift());
+      if(review.length)selected.push(review.shift());
+      if(!learn.length&&review.length)selected.push(...review.splice(0));
+    }
+    return selected.slice(0,30);
+  }
+  function persistFast(){
+    // 일반 학습 화면으로 빠져나온 뒤의 pos가 빠른 암기 커서를 덮어쓰지 않게 한다.
+    if(session&&state.fast30Mode)session.cursor=Math.max(0,Math.min(pos,Math.max(0,session.queue.length-1)));
+    state.fast30Mode=!!state.fast30Mode;
+    state.fast30Session=session;
+    state.fast30Processed=processed;
+  }
+  function lockNormalControls(lock){
+    ['mode','search','shuffle'].forEach(id=>{const el=$('#'+id);if(el)el.disabled=!!lock});
+  }
+  function focusFirst(){
+    if(!state.fast30Mode||processed||session?.finished)return;
+    setTimeout(()=>{
+      const first=document.querySelector('.answer-input');
+      if(first){first.focus();try{first.setSelectionRange(first.value.length,first.value.length)}catch(_){}}
+    },0);
+  }
+  function selectedStats(){
+    if(!session)return{unseen:0,learning:0,done:0,retry:0,total:0};
+    let need=0,review=0,done=0;
+    for(const idx of session.selected){
+      const k=keyForIndex(idx),p=pFor(k);
+      if(p.done)done++;
+      else if(kindFor(k)==='review')review++;
+      else need++;
+    }
+    const retry=session.queue.slice(pos+1).reduce((n,idx)=>{
+      const p=pFor(keyForIndex(idx));
+      return n+(!p.done&&p.seen?1:0);
+    },0);
+    return{unseen:need,learning:review,done,retry,total:session.selected.length};
+  }
+  function stageText(){
+    if(!session||session.finished)return '세트 완료';
+    const k=currentKey(),p=pFor(k),kind=kindFor(k);
+    if(kind==='review'&&!p.seen)return verifyIsDue(k)?'현재: 타이핑 확인 · 앱카드/전날 암기 내용을 직접 써보세요.':'현재: 오늘 복습 · 한 번 정확히 타이핑하면 유지됩니다.';
+    if(!p.seen)return '현재: 첫 학습 · 답을 직접 타이핑하세요.';
+    if(p.hitStreak===1)return '현재: 2차 확인 · 이번에도 맞혀야 오늘 암기 완료됩니다.';
+    if(p.failStreak>=2)return `현재: 재도전 · 연속 오답 ${p.failStreak}회`;
+    if(p.failStreak===1)return '현재: 오답 재도전';
+    return '현재: 다시 회상해서 타이핑하세요.';
+  }
+  function updatePanel(message=''){
+    if(!session)return;
+    const st=selectedStats();
+    $('#fast30Unseen').textContent=st.unseen;
+    $('#fast30Learning').textContent=st.learning;
+    $('#fast30Done').textContent=`${st.done}/${st.total}`;
+    $('#fast30Retry').textContent=st.retry;
+    $('#fast30Set').textContent=`세트 ${session.setNumber} · ${st.total}문제`;
+    const learnTotal=session.selected.filter(idx=>kindFor(keyForIndex(idx))==='learn').length;
+    const reviewTotal=session.selected.length-learnTotal;
+    panel.title=`자동선정: 암기 못함 ${learnTotal} · 오늘 확인 ${reviewTotal}`;
+    $('#fast30Current').textContent=stageText();
+    const box=$('#fast30Message');
+    if(message){box.textContent=message;box.classList.add('show')}
+    else if(processed&&processed.message){box.textContent=processed.message;box.classList.add('show')}
+    else{box.textContent='';box.classList.remove('show')}
+    panel.classList.toggle('finished',!!session.finished);
+  }
+  function setToggleText(){
+    toggle.classList.toggle('active',!!state.fast30Mode);
+    if(state.fast30Mode)toggle.textContent='빠른 암기 종료';
+    else if(isValidSession(session)&&!session.finished)toggle.textContent='빠른 암기 이어하기';
+    else toggle.textContent='빠른 암기 30문제';
+  }
+  function rotateCandidates(candidates,startIdx){
+    if(!candidates.length)return candidates;
+    let p=candidates.indexOf(startIdx);
+    if(p<0)p=candidates.findIndex(i=>i>=startIdx);
+    if(p<0)p=0;
+    return [...candidates.slice(p),...candidates.slice(0,p)];
+  }
+  function startNewSet(){
+    clearAutoTimer();
+    const selected=autoSelect30();
+    if(!selected.length){alert('오늘 바로 학습할 문제가 없습니다. 암기 못함 문제와 오늘 복습 예정 문제가 모두 비어 있습니다.');return false}
+    const progress={},kindMap={};
+    selected.forEach(idx=>{
+      const k=keyForIndex(idx),kind=state.status[k]==='mastered'?'review':'learn';
+      progress[k]={seen:0,hitStreak:0,failStreak:0,totalFails:0,done:false};kindMap[k]=kind;
+    });
+    state.fast30SetNumber=(Number(state.fast30SetNumber)||0)+1;
+    const returnQ=current();
+    session={
+      setNumber:state.fast30SetNumber,
+      selected:[...selected],queue:[...selected],cursor:0,progress,kindMap,finished:false,
+      returnMode:$('#mode')?.value||state.mode||'all',
+      returnSearch:$('#search')?.value||'',
+      returnId:returnQ?returnQ.id:null,
+      startedAt:Date.now()
+    };
+    processed=null;
+    state.fast30Mode=true;
+    if(state.flashMode)state.flashMode=false;
+    view=session.queue;pos=0;
+    persistFast();save();render();
+    return true;
+  }
+  function resumeSet(){
+    if(!isValidSession(session)||session.finished)return startNewSet();
+    clearAutoTimer();
+    state.fast30Mode=true;
+    if(state.flashMode)state.flashMode=false;
+    view=session.queue;
+    pos=Math.max(0,Math.min(Number(session.cursor)||0,view.length-1));
+    persistFast();save();render();
+    return true;
+  }
+  function restoreNormalView(){
+    const mode=(session?.returnMode&&['all','review','wrong','frequentWrong','recentWrong','unanswered','favorite','mastered','needsStudy'].includes(session.returnMode))?session.returnMode:'all';
+    const search=typeof session?.returnSearch==='string'?session.returnSearch:'';
+    if($('#mode'))$('#mode').value=mode;
+    if($('#search'))$('#search').value=search;
+    state.mode=mode;state.search=search;
+    let fresh=filteredIndices(mode,norm(search));
+    if(!fresh.length){fresh=filteredIndices('all',norm(search));if($('#mode'))$('#mode').value='all';state.mode='all'}
+    if(!fresh.length){fresh=[...BANK.keys()];if($('#search'))$('#search').value='';state.search=''}
+    view=[...fresh];
+    const wanted=session?.returnId;
+    const found=wanted!=null?view.findIndex(i=>BANK[i]?.id===wanted):-1;
+    pos=found>=0?found:0;
+  }
+  function stopFast(){
+    clearAutoTimer();
+    // 종료는 세트 포기가 아니라 잠시 빠져나오는 기능이다. 현재 세트/채점상태를 그대로 보존한다.
+    if(session)session.cursor=Math.max(0,Math.min(pos,Math.max(0,session.queue.length-1)));
+    state.fast30Mode=false;
+    restoreNormalView();
+    persistFast();save();render();
+  }
+  function removeFutureCopies(idx){
+    for(let i=session.queue.length-1;i>pos;i--){if(session.queue[i]===idx)session.queue.splice(i,1)}
+    view=session.queue;
+  }
+  function scheduleAgain(idx,gap){
+    removeFutureCopies(idx);
+    const at=Math.min(pos+gap+1,session.queue.length);
+    session.queue.splice(at,0,idx);
+    view=session.queue;
+  }
+  function allDone(){return session.selected.every(idx=>pFor(keyForIndex(idx)).done)}
+  function finishSet(){
+    clearAutoTimer();
+    session.finished=true;
+    processed=null;
+    persistFast();save();
+    updatePanel(`세트 완료! 오늘 자동선정된 ${session.selected.length}문제를 모두 처리했습니다.`);
+    setToggleText();
+    alert(`빠른 암기 세트 완료! 오늘 선정된 ${session.selected.length}문제를 모두 처리했습니다.`);
+  }
+  function ensureQueueHasUnfinished(){
+    const unfinished=session.selected.filter(idx=>!pFor(keyForIndex(idx)).done);
+    if(!unfinished.length){finishSet();return false}
+    session.queue.push(...unfinished);
+    view=session.queue;
+    return true;
+  }
+  function goNext(){
+    if(!state.fast30Mode||!session||session.finished)return;
+    clearAutoTimer();
+    // 채점 없이 넘기면 회상 실패로 처리한다.
+    if(!processed){
+      const idx=currentBankIndex(),k=currentKey(),p=pFor(k);
+      p.seen=(p.seen||0)+1;p.hitStreak=0;p.failStreak=(p.failStreak||0)+1;p.totalFails=(p.totalFails||0)+1;p.done=false;
+      state.status[k]='unmastered';state.wrong[k]=true;delete state.memoryVerify[k];setKind(k,'learn');
+      const m=state.wrongMeta[k]||{count:0};m.count=(m.count||0)+1;m.last=localDateKey();state.wrongMeta[k]=m;
+      scheduleFromGrade(k,false);
+      const gap=p.failStreak===1?5:3;
+      scheduleAgain(idx,gap);
+    }
+    processed=null;
+    persistFast();
+    let nextPos=pos+1;
+    while(nextPos<session.queue.length&&pFor(keyForIndex(session.queue[nextPos])).done)nextPos++;
+    if(nextPos>=session.queue.length){
+      if(allDone()){finishSet();return}
+      if(!ensureQueueHasUnfinished())return;
+      nextPos=pos+1;
+      while(nextPos<session.queue.length&&pFor(keyForIndex(session.queue[nextPos])).done)nextPos++;
+    }
+    pos=Math.min(nextPos,session.queue.length-1);session.cursor=pos;view=session.queue;
+    persistFast();save();render();
+  }
+  function updateAfterGrade(){
+    if(!state.fast30Mode||!session||session.finished)return;
+    const q=current();if(!q)return;
+    const k=qkey(q),idx=currentBankIndex();
+    if(processed&&processed.pos===pos&&processed.key===k)return;
+    // 기본 채점 로직이 완전정답이면 mastered로 바꾸므로 그 값을 판별에 사용한다.
+    const perfect=state.status[k]==='mastered';
+    const p=pFor(k),kind=kindFor(k);p.seen=(p.seen||0)+1;
+    let message='';
+
+    if(kind==='review'&&p.failStreak===0){
+      if(perfect){
+        p.hitStreak=1;p.done=true;p.failStreak=0;
+        state.status[k]='mastered';delete state.memoryVerify[k];
+        scheduleFromGrade(k,true);removeFutureCopies(idx);
+        message='타이핑 확인 정답 · 암기 완료 유지! 다음 복습 간격으로 넘어갑니다.';
+        processed={pos,key:k,kind:'review-complete',perfect:true,message};
+      }else{
+        // 복습에서 틀리면 즉시 암기 못함으로 내려가고 같은 세트에서 다시 학습한다.
+        setKind(k,'learn');p.hitStreak=0;p.done=false;p.failStreak=1;p.totalFails=(p.totalFails||0)+1;
+        state.status[k]='unmastered';delete state.memoryVerify[k];
+        scheduleFromGrade(k,false);scheduleAgain(idx,5);
+        message='복습에서 오답 · 암기 못함으로 이동했습니다. 정답 확인 후 5문제 뒤 다시 타이핑합니다.';
+        processed={pos,key:k,kind:'fail',perfect:false,message,gap:5};
+      }
+    }else if(perfect){
+      p.failStreak=0;
+      if((p.hitStreak||0)>=1){
+        p.hitStreak=2;p.done=true;
+        state.status[k]='mastered';
+        scheduleFromGrade(k,true);removeFutureCopies(idx);
+        // 당일 두 번 정답이어도 다음 날 타이핑 1회를 통과해야 장기기억 확인이 끝난다.
+        state.memoryVerify[k]={pending:true,due:addDaysKey(1),source:'typing',reason:'nextday',marked:localDateKey()};
+        message='오늘 2회 연속 정답 · 암기 완료! 내일 타이핑으로 1번 다시 확인합니다.';
+        processed={pos,key:k,kind:'complete',perfect:true,message};
+      }else{
+        p.hitStreak=1;p.done=false;
+        state.status[k]='unmastered';delete state.memoryVerify[k];
+        scheduleFromGrade(k,false);scheduleAgain(idx,15);
+        message='1차 정답 · 아직 완료가 아닙니다. 15문제 뒤 다시 타이핑합니다.';
+        processed={pos,key:k,kind:'first-pass',perfect:true,message};
+      }
+    }else{
+      p.hitStreak=0;p.done=false;p.failStreak=(p.failStreak||0)+1;p.totalFails=(p.totalFails||0)+1;
+      state.status[k]='unmastered';delete state.memoryVerify[k];setKind(k,'learn');
+      scheduleFromGrade(k,false);
+      const gap=p.failStreak===1?5:3;
+      scheduleAgain(idx,gap);
+      message=p.failStreak===1
+        ?'오답 · 정답을 확인하세요. 5문제 뒤 다시 타이핑합니다.'
+        :`연속 오답 ${p.failStreak}회 · 정답을 확인하세요. 3문제 뒤 다시 나옵니다.`;
+      processed={pos,key:k,kind:'fail',perfect:false,message,gap};
+    }
+    persistFast();save();updateStatusCounts();updateQuickFilterButtons();updateCurrentMemoryUI(k);updatePanel(message);
+    const next=$('#next');if(next)next.textContent=processed.kind==='fail'?'정답 확인 후 다음':'다음';
+    if(processed.kind==='fail'){
+      next?.focus();
+    }else{
+      autoMoveTimer=setTimeout(()=>{
+        if(state.fast30Mode&&processed&&processed.pos===pos&&processed.key===k)goNext();
+      },700);
+    }
+  }
+
+  const previousRender=render;
+  render=function(){
+    previousRender();
+    const active=!!state.fast30Mode&&isValidSession(session);
+    document.body.classList.toggle('fast30-mode',active);
+    setToggleText();
+    lockNormalControls(active);
+    if(active){
+      view=session.queue;
+      session.cursor=pos;
+      // 오늘 복습/앱카드 확인 문제는 이전 정답이 입력칸에 보이면 검증이 무의미하므로 항상 빈칸에서 시작한다.
+      if(!processed&&kindFor(currentKey())==='review'){
+        document.querySelectorAll('.answer-input').forEach(el=>{el.value='';el.classList.remove('auto-corrected');autoGrow(el)});
+      }
+      updatePanel();
+      const next=$('#next');if(next)next.textContent=(processed&&processed.kind==='fail')?'정답 확인 후 다음':'다음';
+      const check=$('#check');if(check)check.textContent='채점';
+      if(processed&&processed.pos===pos&&processed.key===currentKey()&&processed.kind==='fail'&&!$('#result')?.classList.contains('show')){
+        // 창을 닫았다가 돌아온 오답 화면에서는 정답을 다시 확인할 수 있게 모범답안을 자동 표시한다.
+        showOfficial();
+      }
+      if(!processed)focusFirst();
+      persistFast();save();
+    }
+  };
+
+  toggle.onclick=()=>{
+    if(state.fast30Mode)stopFast();
+    else if(isValidSession(session)&&!session.finished)resumeSet();
+    else startNewSet();
+  };
+  $('#fast30NextSet').onclick=()=>{
+    if(!session?.finished)return;
+    // 다음 세트도 처음 시작했을 때의 일반 학습 복귀 위치를 유지한다.
+    const oldReturn={returnMode:session.returnMode,returnSearch:session.returnSearch,returnId:session.returnId};
+    session=null;processed=null;state.fast30Session=null;state.fast30Processed=null;
+    if(startNewSet()&&session){Object.assign(session,oldReturn);persistFast();save();updatePanel()}
+  };
+
+  // 빠른 암기 중 기존 이전/다음 로직, 수동 암기완료 버튼을 차단한다.
+  $('#next').addEventListener('click',e=>{
+    if(!state.fast30Mode)return;
+    e.preventDefault();e.stopImmediatePropagation();goNext();
+  },true);
+  $('#prev').addEventListener('click',e=>{
+    if(!state.fast30Mode)return;
+    e.preventDefault();e.stopImmediatePropagation();
+  },true);
+  $('#markMastered').addEventListener('click',e=>{if(state.fast30Mode){e.preventDefault();e.stopImmediatePropagation()}},true);
+  $('#markUnmastered').addEventListener('click',e=>{if(state.fast30Mode){e.preventDefault();e.stopImmediatePropagation()}},true);
+
+  // 한 화면에서 채점을 반복하여 2회 정답 조건을 우회하지 못하게 한다.
+  $('#check').addEventListener('click',e=>{
+    if(!state.fast30Mode||!processed)return;
+    if(processed.pos===pos&&processed.key===currentKey()){
+      e.preventDefault();e.stopImmediatePropagation();
+      updatePanel(processed.message||'이미 채점한 문제입니다. 다음으로 이동하세요.');
+    }
+  },true);
+  // 기본 채점 로직이 실행된 직후 빠른 암기 단계에 반영한다.
+  $('#check').addEventListener('click',()=>{updateAfterGrade()});
+
+  // Enter 중심 조작: 다음 입력칸 → 마지막 입력칸에서 채점 → 채점 후 Enter는 다음.
+  document.addEventListener('keydown',e=>{
+    if(!state.fast30Mode)return;
+    if(e.key!=='Enter'||e.shiftKey)return;
+    if(e.target.matches('textarea.answer-input')||(e.ctrlKey||e.metaKey)){
+      e.preventDefault();e.stopImmediatePropagation();
+      if(processed){goNext();return}
+      if((e.ctrlKey||e.metaKey)){ $('#check').click();return }
+      const inputs=[...document.querySelectorAll('.answer-input')];
+      const i=inputs.indexOf(e.target);
+      if(i>=0&&i<inputs.length-1)inputs[i+1].focus();
+      else $('#check').click();
+      return;
+    }
+    if(!e.target.matches('input,select')){
+      e.preventDefault();e.stopImmediatePropagation();
+      processed?goNext():$('#check').click();
+    }
+  },true);
+
+  // 앱카드와 빠른 암기는 동시에 실행하지 않는다.
+  const flashBtn=document.querySelector('#flashToggle');
+  if(flashBtn)flashBtn.addEventListener('click',e=>{
+    if(state.fast30Mode){e.preventDefault();e.stopImmediatePropagation()}
+  },true);
+
+  // 학습기록 초기화 후 세션 참조도 함께 정리한다.
+  $('#resetConfirmYes')?.addEventListener('click',()=>{
+    clearAutoTimer();session=null;processed=null;state.fast30Mode=false;state.fast30Session=null;state.fast30Processed=null;
+    document.body.classList.remove('fast30-mode');lockNormalControls(false);setToggleText();
+  });
+
+  // 창 재실행 시 진행 중이던 30문제 세트를 같은 위치에서 그대로 복원한다.
+  if(state.fast30Mode&&isValidSession(session)){
+    session.kindMap=session.kindMap||{};
+    session.selected.forEach(idx=>{const k=keyForIndex(idx);if(!session.kindMap[k])session.kindMap[k]=state.status[k]==='mastered'?'review':'learn'});
+    view=session.queue;
+    pos=Math.max(0,Math.min(Number(session.cursor)||0,view.length-1));
+  }else if(state.fast30Mode){
+    state.fast30Mode=false;session=null;processed=null;
+  }
+  persistFast();save();render();
+
+  // 정답/오답을 확인한 상태로 창을 닫았을 때도 같은 화면에서 이어진다.
+  if(state.fast30Mode&&processed&&processed.pos===pos&&processed.key===currentKey()){
+    updatePanel(processed.message||'채점된 문제입니다. 다음으로 이동하세요.');
+    if(processed.kind==='complete'||processed.kind==='first-pass'||processed.kind==='review-complete'){
+      autoMoveTimer=setTimeout(()=>{
+        if(state.fast30Mode&&processed&&processed.pos===pos&&processed.key===currentKey())goNext();
+      },700);
+    }
+  }
+  window.addEventListener('beforeunload',()=>{persistFast();save()});
+})();
+</script>
+<!-- fast30-smart-memory-v7-2026-09-22 -->
+<script id="typing-verification-bridge">
+(()=>{
+  const check=document.querySelector('#check');
+  if(!check)return;
+  check.addEventListener('click',()=>{
+    if(state.fast30Mode)return;
+    const q=current();if(!q)return;
+    const k=qkey(q),v=state.memoryVerify?.[k];
+    if(v?.pending&&v.due&&v.due<=localDateKey()){
+      delete state.memoryVerify[k];
+      save();
+    }
+  });
+})();
+</script>
+
 </body>
 </html>
 <!-- github-mobile-unmastered-filter-fix-2026-08-07 -->
