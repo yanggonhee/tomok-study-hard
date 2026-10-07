@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-title" content="서술형 작성">
 <style>
 :root{--black:#111;--text:#222;--dark:#444;--mid:#777;--line:#d8d8d8;--line-dark:#b8b8b8;--soft:#f3f3f3;--soft-2:#fafafa;--white:#fff;--danger:#555}
-*{box-sizing:border-box}html,body{margin:0;min-height:100%;overflow-x:hidden}body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans KR",sans-serif;background:var(--soft);color:var(--text)}button,input,select,textarea{font:inherit;color:inherit}button{cursor:pointer;border:1px solid var(--line-dark);background:#fff;border-radius:11px;font-weight:750}button:hover{background:#f1f1f1}button:active{transform:translateY(1px)}button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--dark);outline-offset:2px}.app{width:min(100%,920px);margin:auto;padding:10px}header{margin-bottom:10px}.title-row{display:flex;align-items:center;justify-content:space-between;gap:14px}.title-row>div{flex:1}h1{font-size:24px;margin:7px 0 8px;color:var(--black)}h2{font-size:16px;margin:0;color:var(--black)}.ghost{padding:10px 13px;background:var(--soft-2)}.progress-track{height:7px;background:#ddd;border-radius:999px;overflow:hidden}.progress-bar{height:100%;width:0;background:#555;transition:width .2s ease}.manage-panel{display:none;background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px;margin-top:9px}.manage-panel.open{display:block}.stats,.toolbar{display:flex;gap:7px;flex-wrap:wrap}.stats{margin-bottom:8px}.pill,.tag{display:inline-flex;align-items:center;padding:5px 9px;border-radius:999px;background:var(--soft);border:1px solid var(--line);color:var(--dark);font-size:13px;font-weight:750}.toolbar select,.toolbar input,.toolbar button{min-height:40px;padding:7px 9px;background:#fff;border:1px solid var(--line-dark);border-radius:10px}.toolbar input{flex:1;min-width:180px}.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:0 4px 14px rgba(0,0,0,.05)}.meta{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:13px}.number-wrap{display:flex;align-items:center;gap:8px}#number{font-size:34px;line-height:1;color:var(--black);letter-spacing:-1px}.stars{font-size:14px;color:var(--mid);white-space:nowrap}.question{white-space:pre-wrap;overflow-wrap:anywhere;word-break:keep-all;line-height:1.75;font-size:18px;background:var(--soft-2);border:1px solid var(--line);border-radius:13px;padding:16px}.question img{display:block;max-width:100%;height:auto;object-fit:contain;margin:10px auto;filter:grayscale(100%)}.answer-section{margin-top:17px}.section-title-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px}.autosave{font-size:12px;color:var(--mid)}.answer-item{margin-bottom:9px}.answer-label{display:block;font-weight:850;margin:0 0 5px;line-height:1.4;color:var(--black)}textarea.answer-input{width:100%;min-height:48px;height:48px;max-height:220px;padding:11px;border:1px solid var(--line-dark);border-radius:10px;resize:none;font-size:16px;line-height:1.55;background:#fff;overflow-y:hidden}textarea.answer-input:focus{outline:2px solid var(--dark);outline-offset:0;border-color:var(--dark)}.status-row{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:8px 0 5px}.status-row button{height:44px;background:#fff;color:#111}.status-row button.active{border:2px solid #444;background:#ededed;font-weight:900}.answer-actions{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:0}.answer-actions button{height:46px}.favorite-wide{width:100%;height:40px;margin-top:5px}.answer-input.auto-corrected{color:#444;font-weight:850;border-color:#777;background:#f1f1f1;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px}.result{display:none;margin-top:13px;padding:13px;border:1px solid var(--line);border-radius:11px;background:var(--soft-2);line-height:1.65}.result.show{display:block}.result-summary{font-weight:900;margin-bottom:7px}.grade-row{display:grid;grid-template-columns:28px 1fr auto;gap:8px;align-items:start;padding:6px 0;border-top:1px dashed var(--line)}.grade-symbol{font-size:19px;font-weight:900}.grade-detail{font-size:14px;color:var(--mid)}.correct-answer-after-mine{margin-top:4px;color:#222;font-weight:900;line-height:1.5}.missing{color:#555;font-weight:850;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:2px}.official{display:none;margin-top:13px;padding:14px;border:1px solid var(--line-dark);border-radius:12px;background:var(--soft-2);color:#4a4a4a;font-weight:650}.official.show{display:block}.official-group{padding:9px 0;border-bottom:1px dashed var(--line-dark);line-height:1.65;color:#444;font-weight:700}.official-group:last-child{border-bottom:0}.mnemonic{margin-top:10px;padding:11px 12px;border:1px solid var(--line-dark);border-radius:10px;background:#f1f1f1}.mnemonic-title{font-weight:900;margin-bottom:5px}.mnemonic-code{font-size:18px;font-weight:900;letter-spacing:1px;color:#111}.mnemonic-note{margin-top:4px;font-size:13px;color:var(--mid);line-height:1.55}.kbd-help{font-size:12px;color:var(--mid);margin-top:8px;text-align:center}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;overflow-x:hidden}body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans KR",sans-serif;background:var(--soft);color:var(--text)}button,input,select,textarea{font:inherit;color:inherit}button{cursor:pointer;border:1px solid var(--line-dark);background:#fff;border-radius:11px;font-weight:750}button:hover{background:#f1f1f1}button:active{transform:translateY(1px)}button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--dark);outline-offset:2px}.app{width:min(100%,920px);margin:auto;padding:10px}header{margin-bottom:10px}.title-row{display:flex;align-items:center;justify-content:space-between;gap:14px}.title-row>div{flex:1}h1{font-size:24px;margin:7px 0 8px;color:var(--black)}h2{font-size:16px;margin:0;color:var(--black)}.ghost{padding:10px 13px;background:var(--soft-2)}.progress-track{height:7px;background:#ddd;border-radius:999px;overflow:hidden}.progress-bar{height:100%;width:0;background:#555;transition:width .2s ease}.manage-panel{display:none;background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px;margin-top:9px}.manage-panel.open{display:block}.header-actions{display:flex;align-items:center;justify-content:flex-end;gap:7px;flex-wrap:wrap}body.header-collapsed header{margin-bottom:6px}body.header-collapsed .title-row{justify-content:flex-end}body.header-collapsed .title-row>div:first-child{display:none!important}body.header-collapsed #managePanel{display:none!important}body.header-collapsed #manageToggle,body.header-collapsed #flashToggle,body.header-collapsed #fast30Toggle{display:none!important}body.header-collapsed #headerCompactToggle{display:inline-flex!important;align-items:center;justify-content:center;min-height:34px;padding:6px 12px}@media(max-width:560px){.title-row{display:grid;grid-template-columns:minmax(112px,150px) minmax(0,1fr);align-items:start;gap:6px}.title-row>div:first-child{min-width:0;margin-bottom:0}.header-actions{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));width:100%;gap:4px;align-self:start}.header-actions button{width:100%;min-width:0;padding:0 3px;font-size:9.6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.2px}.ghost{min-width:0}#headerCompactToggle,#manageToggle,#flashToggle,#fast30Toggle{min-height:32px;height:32px;padding:0 3px;font-size:9.6px}body.header-collapsed .title-row{display:flex;align-items:center;justify-content:space-between}body.header-collapsed .header-actions{display:flex;width:auto}body.header-collapsed .header-actions button{width:auto;overflow:visible;text-overflow:clip}}.stats,.toolbar{display:flex;gap:7px;flex-wrap:wrap}.stats{margin-bottom:8px}.pill,.tag{display:inline-flex;align-items:center;padding:5px 9px;border-radius:999px;background:var(--soft);border:1px solid var(--line);color:var(--dark);font-size:13px;font-weight:750}.toolbar select,.toolbar input,.toolbar button{min-height:40px;padding:7px 9px;background:#fff;border:1px solid var(--line-dark);border-radius:10px}.toolbar input{flex:1;min-width:180px}.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:0 4px 14px rgba(0,0,0,.05)}.meta{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:13px}.number-wrap{display:flex;align-items:center;gap:8px}#number{font-size:34px;line-height:1;color:var(--black);letter-spacing:-1px}.stars{font-size:14px;color:var(--mid);white-space:nowrap}.question{white-space:pre-wrap;overflow-wrap:anywhere;word-break:keep-all;line-height:1.75;font-size:18px;background:var(--soft-2);border:1px solid var(--line);border-radius:13px;padding:16px}.question img{display:block;max-width:100%;height:auto;object-fit:contain;margin:10px auto;filter:grayscale(100%)}.answer-section{margin-top:17px}.section-title-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px}.autosave{font-size:12px;color:var(--mid)}.answer-item{margin-bottom:9px}.answer-label{display:block;font-weight:850;margin:0 0 5px;line-height:1.4;color:var(--black)}textarea.answer-input{width:100%;min-height:48px;height:48px;max-height:220px;padding:11px;border:1px solid var(--line-dark);border-radius:10px;resize:none;font-size:16px;line-height:1.55;background:#fff;overflow-y:hidden}textarea.answer-input:focus{outline:2px solid var(--dark);outline-offset:0;border-color:var(--dark)}.status-row{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:8px 0 5px}.status-row button{height:44px;background:#fff;color:#111}.status-row button.active{border:2px solid #444;background:#ededed;font-weight:900}.answer-actions{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:0}.answer-actions button{height:46px}.favorite-wide{width:100%;height:40px;margin-top:5px}.answer-input.auto-corrected{color:#444;font-weight:850;border-color:#777;background:#f1f1f1;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px}.result{display:none;margin-top:13px;padding:13px;border:1px solid var(--line);border-radius:11px;background:var(--soft-2);line-height:1.65}.result.show{display:block}.result-summary{font-weight:900;margin-bottom:7px}.grade-row{display:grid;grid-template-columns:28px 1fr auto;gap:8px;align-items:start;padding:6px 0;border-top:1px dashed var(--line)}.grade-symbol{font-size:19px;font-weight:900}.grade-detail{font-size:14px;color:var(--mid)}.correct-answer-after-mine{margin-top:4px;color:#222;font-weight:900;line-height:1.5}.missing{color:#555;font-weight:850;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:2px}.official{display:none;margin-top:13px;padding:14px;border:1px solid var(--line-dark);border-radius:12px;background:var(--soft-2);color:#4a4a4a;font-weight:650}.official.show{display:block}.official-group{padding:9px 0;border-bottom:1px dashed var(--line-dark);line-height:1.65;color:#444;font-weight:700}.official-group:last-child{border-bottom:0}.mnemonic{margin-top:10px;padding:11px 12px;border:1px solid var(--line-dark);border-radius:10px;background:#f1f1f1}.mnemonic-title{font-weight:900;margin-bottom:5px}.mnemonic-code{font-size:18px;font-weight:900;letter-spacing:1px;color:#111}.mnemonic-note{margin-top:4px;font-size:13px;color:var(--mid);line-height:1.55}.kbd-help{font-size:12px;color:var(--mid);margin-top:8px;text-align:center}
 @media(max-width:560px){.app{padding:7px}.card{padding:11px;border-radius:13px}h1{font-size:22px}.question{font-size:16px;padding:12px}#number{font-size:30px}.tag{font-size:11px}.toolbar select,.toolbar button{flex:1}.toolbar input{order:3;flex-basis:100%}.status-row,.answer-actions{gap:4px}.status-row{margin:6px 0 4px}.status-row button{height:42px;font-size:14px}.answer-actions button{height:44px;font-size:13px;padding:4px 2px}.favorite-wide{height:38px;margin-top:4px}.grade-row{grid-template-columns:24px 1fr}.grade-row>strong{grid-column:2}}
 
 /* 한손 조작용 초밀도 UI */
@@ -453,6 +453,39 @@ button.good,
 #needsStudyCount{background:#d5d5d5!important;border-color:#888!important;font-weight:950}
 @media(max-width:560px){.memory-state-badge{min-height:24px;padding:2px 6px;font-size:9.5px}.status-filter-quick button{font-size:11.5px}}
 </style>
+
+<style id="past-year-filter-ui">
+/* 전체문항 선택창과 과년도 버튼은 작은 화면에서도 함께 배치한다. */
+.toolbar .mode-year-controls{display:flex;align-items:center;gap:4px;min-width:0;flex:0 0 auto}
+.toolbar .mode-year-controls #mode{min-width:0;max-width:174px;flex:1 1 auto}
+.toolbar #yearToggle{flex:0 0 auto;white-space:nowrap;min-width:66px;font-weight:850}
+#yearToggle.active{background:#dedede!important;border-color:#777!important}
+#yearToggle:disabled{opacity:.55;cursor:default}
+.year-panel{margin-top:6px;padding:8px;border:1px solid #bcbcbc;border-radius:8px;background:#fafafa}
+.year-panel[hidden],.year-active-summary[hidden]{display:none!important}
+.year-panel-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:7px}
+.year-panel-head strong{font-size:12px}
+.year-panel-head button{padding:3px 8px;min-height:28px;border-radius:6px;font-size:11px}
+.year-options{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}
+.year-options button{min-height:38px;padding:6px 3px;border-radius:7px;font-size:12px;line-height:1.35;white-space:nowrap}
+.year-options button[aria-pressed="true"]{background:#dedede!important;border-color:#555!important;font-weight:950}
+.year-options .year-count{margin-left:3px;font-size:10.5px;font-weight:650}
+.year-panel-help{margin:7px 0 0;font-size:11px;line-height:1.5;color:#666!important}
+.year-active-summary{display:flex;align-items:center;justify-content:space-between;gap:5px;margin-top:6px;padding:5px 8px;border:1px solid #c4c4c4;border-radius:7px;background:#ededed;font-size:11.5px;font-weight:800}
+.year-active-summary button{min-height:27px;padding:3px 7px;border-radius:6px;font-size:11px;white-space:nowrap}
+.year-active-summary button:disabled{opacity:.55;cursor:default}
+@media(max-width:560px){
+  #managePanel>.toolbar{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:4px}
+  #managePanel>.toolbar .mode-year-controls{grid-column:1 / -1;width:100%}
+  #managePanel>.toolbar .mode-year-controls #mode{max-width:none;width:0;flex:1 1 0;min-height:36px;height:36px}
+  #managePanel>.toolbar #yearToggle{min-height:36px;height:36px;min-width:88px}
+  #managePanel>.toolbar #search{grid-row:2;order:0;min-width:0;width:100%}
+  #managePanel>.toolbar #shuffle,#managePanel>.toolbar #reset{grid-row:2}
+  .year-options{grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}
+  .year-options button{font-size:11.5px;min-height:38px}
+  .year-options .year-count{font-size:10px;margin-left:2px}
+}
+</style>
 </head>
 <body>
 <div class="app">
@@ -462,7 +495,10 @@ button.good,
       <h1>서술형 작성</h1>
       <div class="progress-track" aria-label="학습 진행률"><div id="progressBar" class="progress-bar"></div></div>
     </div>
-    <button id="manageToggle" class="ghost" aria-expanded="false">유형</button>
+    <div class="header-actions">
+      <button id="headerCompactToggle" class="ghost" type="button" aria-pressed="false">상단 최소화</button>
+      <button id="manageToggle" class="ghost" aria-expanded="false">유형</button>
+    </div>
   </div>
   <section id="managePanel" class="manage-panel">
     <div class="stats">
@@ -473,6 +509,7 @@ button.good,
       <span id="needsStudyCount" class="pill">암기 못함 445</span>
     </div>
     <div class="toolbar">
+      <div class="mode-year-controls">
       <select id="mode" aria-label="문제 필터">
         <option value="all">전체 445문항</option>
         <optgroup label="복습">
@@ -488,9 +525,19 @@ button.good,
           <option value="needsStudy">암기 못함</option>
         </optgroup>
       </select>
+      <button id="yearToggle" type="button" aria-expanded="false" aria-controls="yearPanel">과년도 ▾</button>
+      </div>
       <input id="search" type="search" placeholder="문제번호·연도·내용 검색">
       <button id="shuffle">랜덤</button>
       <button id="reset" type="button" onclick="openResetConfirm(event)">기록 초기화</button>
+    </div>
+    <section id="yearPanel" class="year-panel" aria-labelledby="yearPanelTitle" hidden>
+      <div class="year-panel-head"><strong id="yearPanelTitle">과년도별 문제</strong><button id="yearPanelClose" type="button">닫기</button></div>
+      <div id="yearOptions" class="year-options" role="group" aria-label="출제 연도 선택"></div>
+      <p class="year-panel-help">연도 옆 숫자는 등록된 문항 수입니다. 연도를 선택한 뒤 오답·암기 상태·검색으로 더 좁혀 볼 수 있습니다.</p>
+    </section>
+    <div id="yearActiveSummary" class="year-active-summary" hidden>
+      <span id="yearActiveText" aria-live="polite"></span><button id="yearClear" type="button">전체 연도</button>
     </div>
     <div class="status-filter-quick" aria-label="암기 상태별 바로 보기">
       <button type="button" data-status-filter="all">전체</button>
@@ -546,13 +593,94 @@ const BANK = [{"id":1,"number":"001","label":"14-1","question":"연약지반상�
 <script>
 const $=s=>document.querySelector(s);
 const STORAGE_KEY='essay445-v1';
+
+// 문제 지문이나 번호가 아닌 기존 출제표시(label)로만 연도를 분류한다.
+// 예: 14-1 → 2014년, 20-4, 5 → 2020년, 26-1-2 → 2026년.
+function questionYear(q){
+  const match=String(q?.label||'').trim().match(/^(\d{4}|\d{2})(?=\s*(?:년|[-–—]|$))/);
+  if(!match)return 'unknown';
+  return String(match[1].length===2?2000+Number(match[1]):Number(match[1]));
+}
+const YEAR_COUNTS=new Map();
+BANK.forEach(q=>{const y=questionYear(q);YEAR_COUNTS.set(y,(YEAR_COUNTS.get(y)||0)+1)});
+const AVAILABLE_YEARS=[...YEAR_COUNTS.keys()].filter(y=>y!=='unknown').sort((a,b)=>Number(b)-Number(a));
+if(YEAR_COUNTS.has('unknown'))AVAILABLE_YEARS.push('unknown');
+function validYearFilter(value){return value==='all'||YEAR_COUNTS.has(String(value))?String(value):'all'}
+function activeYear(){return validYearFilter(state.yearFilter||'all')}
+function matchesQuestionYear(q){return activeYear()==='all'||questionYear(q)===activeYear()}
+function yearScopeIndices(){return BANK.reduce((out,q,i)=>{if(matchesQuestionYear(q))out.push(i);return out},[])}
+function yearScopeCount(){return activeYear()==='all'?BANK.length:(YEAR_COUNTS.get(activeYear())||0)}
+function yearName(year){return year==='all'?'전체 연도':year==='unknown'?'연도 미분류':`${year}년`}
+function scopedWrongCount(){return BANK.reduce((n,q)=>n+(matchesQuestionYear(q)&&state.wrong[qkey(q)]?1:0),0)}
+function closeYearPanel(){
+  const panel=$('#yearPanel');if(panel)panel.hidden=true;
+  $('#yearToggle')?.setAttribute('aria-expanded','false');
+}
+function updateYearUI(){
+  const year=activeYear(),selected=year!=='all',toggle=$('#yearToggle');
+  if(toggle){
+    toggle.textContent=selected?`과년도 · ${yearName(year)} ▾`:'과년도 ▾';
+    toggle.classList.toggle('active',selected);
+    toggle.title=state.fast30Mode?'빠른 암기를 종료한 뒤 연도를 바꿀 수 있습니다.':`출제 연도 선택 · ${yearName(year)}`;
+    toggle.setAttribute('aria-label',`과년도 선택, 현재 ${yearName(year)}`);
+  }
+  document.querySelectorAll('[data-year-filter]').forEach(btn=>btn.setAttribute('aria-pressed',String(btn.dataset.yearFilter===year)));
+  const summary=$('#yearActiveSummary');
+  if(summary)summary.hidden=!selected;
+  if($('#yearActiveText'))$('#yearActiveText').textContent=`${yearName(year)} 문제만 보기 · ${yearScopeCount()}문항`;
+  const allOption=$('#mode option[value="all"]');
+  if(allOption)allOption.textContent=`전체 ${yearScopeCount()}문항`;
+}
+function selectYear(year){
+  if(state.fast30Mode)return;
+  const next=validYearFilter(year);
+  if(next===activeYear()){closeYearPanel();$('#yearToggle')?.focus();return}
+  // 연도 선택은 그 연도의 전체 문제부터 시작한다. 학습기록은 지우지 않는다.
+  save();
+  state.yearFilter=next;
+  $('#mode').value='all';state.mode='all';
+  $('#search').value='';state.search='';
+  closeYearPanel();
+  applyView({closePanel:false,resetPosition:next!=='all'});
+  $('#yearToggle')?.focus();
+}
+function initYearPicker(){
+  const options=$('#yearOptions');
+  if(!options)return;
+  ['all',...AVAILABLE_YEARS].forEach(year=>{
+    const btn=document.createElement('button');btn.type='button';btn.dataset.yearFilter=year;
+    const name=document.createElement('span');name.textContent=yearName(year);
+    const count=document.createElement('span');count.className='year-count';count.textContent=`(${year==='all'?BANK.length:YEAR_COUNTS.get(year)})`;
+    btn.setAttribute('aria-label',`${yearName(year)}, ${year==='all'?BANK.length:YEAR_COUNTS.get(year)}문항`);
+    btn.append(name,count);btn.onclick=()=>selectYear(year);options.append(btn);
+  });
+  $('#yearToggle').onclick=()=>{
+    if(state.fast30Mode)return;
+    const panel=$('#yearPanel'),open=panel.hidden;
+    panel.hidden=!open;$('#yearToggle').setAttribute('aria-expanded',String(open));updateYearUI();
+  };
+  $('#yearPanelClose').onclick=()=>{closeYearPanel();$('#yearToggle').focus()};
+  $('#yearClear').onclick=()=>selectYear('all');
+  // 기존 Enter 채점 단축키와 새 연도 선택 버튼의 키보드 조작이 겹치지 않게 한다.
+  [$('#yearToggle'),$('#yearPanel'),$('#yearClear')].forEach(el=>el.addEventListener('keydown',e=>{
+    if(e.key==='Enter'||e.key===' ')e.stopPropagation();
+    if(e.key==='Escape'){e.preventDefault();e.stopPropagation();closeYearPanel();$('#yearToggle').focus()}
+  }));
+  document.addEventListener('click',e=>{
+    if(!$('#yearPanel').hidden&&!$('#yearPanel').contains(e.target)&&!$('#yearToggle').contains(e.target))closeYearPanel();
+  });
+  $('#manageToggle').addEventListener('click',()=>{if(!$('#managePanel').classList.contains('open'))closeYearPanel()});
+  updateYearUI();
+}
+
 function createInitialState(){
-  return {answers:{},fav:{},wrong:{},status:{},corrections:{},attempts:{},review:{},wrongMeta:{},flashStats:{},memoryVerify:{},flashMode:false,index:0,currentId:1,allReturnId:1,view:[],mode:'all',search:''};
+  return {answers:{},fav:{},wrong:{},status:{},corrections:{},attempts:{},review:{},wrongMeta:{},flashStats:{},memoryVerify:{},flashMode:false,headerCollapsed:true,index:0,currentId:1,allReturnId:1,view:[],mode:'all',search:'',yearFilter:'all'};
 }
 let state;
 try{state=JSON.parse(localStorage.getItem(STORAGE_KEY)||'null')}catch(e){state=null}
 if(!state||typeof state!=='object')state=createInitialState();
-state.answers||={};state.fav||={};state.wrong||={};state.status||={};state.corrections||={};state.attempts||={};state.review||={};state.wrongMeta||={};state.flashStats||={};state.memoryVerify||={};Object.keys(state.status).forEach(k=>{if(state.status[k]==='uncertain')state.status[k]='unmastered'});if(state.mode==='uncertain'||state.mode==='unmastered')state.mode='needsStudy';if(state.allReturnId==null)state.allReturnId=(state.mode==='all'&&state.currentId!=null)?state.currentId:1;
+state.answers||={};state.fav||={};state.wrong||={};state.status||={};state.corrections||={};state.attempts||={};state.review||={};state.wrongMeta||={};state.flashStats||={};state.memoryVerify||={};if(typeof state.headerCollapsed!=='boolean')state.headerCollapsed=true;Object.keys(state.status).forEach(k=>{if(state.status[k]==='uncertain')state.status[k]='unmastered'});if(state.mode==='uncertain'||state.mode==='unmastered')state.mode='needsStudy';if(state.allReturnId==null)state.allReturnId=(state.mode==='all'&&state.currentId!=null)?state.currentId:1;
+state.yearFilter=validYearFilter(state.yearFilter||'all');
 const savedView=Array.isArray(state.view)&&state.view.length&&state.view.every(i=>Number.isInteger(i)&&i>=0&&i<BANK.length)?state.view:null;
 let view=savedView?[...savedView]:[...BANK.keys()];
 let pos=Math.min(Number.isInteger(state.index)?state.index:0,Math.max(0,view.length-1));
@@ -568,7 +696,7 @@ function save(){
   state.view=[...view];
   state.currentId=(view.length&&BANK[view[pos]])?BANK[view[pos]].id:null;
   const activeMode=$('#mode')?.value||state.mode||'all';
-  if(activeMode==='all'&&state.currentId!=null)state.allReturnId=state.currentId;
+  if(activeMode==='all'&&activeYear()==='all'&&!state.fast30Mode&&state.currentId!=null)state.allReturnId=state.currentId;
   state.mode=activeMode;
   state.search=$('#search')?.value||'';
   localStorage.setItem(STORAGE_KEY,JSON.stringify(state));
@@ -850,11 +978,12 @@ function addDaysKey(days){const d=new Date();d.setHours(12,0,0,0);d.setDate(d.ge
 function isDueToday(key){const today=localDateKey(),verify=state.memoryVerify?.[key];if(state.status[key]==='mastered'&&verify?.pending&&verify.due&&verify.due<=today)return true;const due=state.review[key]?.due;return !!due&&due<=today}
 function scheduleReview(key,status){const prev=state.review[key]||{};if(status==='mastered'){const streak=(prev.streak||0)+1;const intervals=[1,3,7,14,30];const days=intervals[Math.min(streak-1,intervals.length-1)];state.review[key]={streak,due:addDaysKey(days),last:localDateKey()}}else if(status==='unmastered'){state.review[key]={streak:0,due:addDaysKey(1),last:localDateKey()}}else delete state.review[key]}
 function scheduleFromGrade(key,isPerfect){const prev=state.review[key]||{};if(isPerfect){const streak=(prev.streak||0)+1;const intervals=[1,3,7,14,30];const days=intervals[Math.min(streak-1,intervals.length-1)];state.review[key]={streak,due:addDaysKey(days),last:localDateKey()}}else{state.review[key]={streak:0,due:addDaysKey(1),last:localDateKey()}}}
-function todayReviewCount(){return BANK.reduce((n,q)=>n+(isDueToday(qkey(q))?1:0),0)}
-function statusCount(name){return BANK.reduce((n,q)=>n+(state.status[qkey(q)]===name?1:0),0)}
+function todayReviewCount(){return BANK.reduce((n,q)=>n+(matchesQuestionYear(q)&&isDueToday(qkey(q))?1:0),0)}
+function statusCount(name){return BANK.reduce((n,q)=>n+(matchesQuestionYear(q)&&state.status[qkey(q)]===name?1:0),0)}
 function memorizedCount(){return statusCount('mastered')}
-function needsStudyCount(){return BANK.length-memorizedCount()}
+function needsStudyCount(){return yearScopeCount()-memorizedCount()}
 function updateStatusCounts(){
+  updateYearUI();
   const done=memorizedCount(),need=needsStudyCount();
   const masteredOpt=$('#mode')?.querySelector('option[value="mastered"]');
   const needsOpt=$('#mode')?.querySelector('option[value="needsStudy"]');
@@ -875,7 +1004,7 @@ function updateCurrentMemoryUI(key){
 }
 function updateQuickFilterButtons(){
   const mode=$('#mode')?.value||state.mode||'all';
-  const labels={all:`전체 ${BANK.length}`,mastered:`암기 완료 ${memorizedCount()}`,needsStudy:`암기 못함 ${needsStudyCount()}`};
+  const labels={all:`전체 ${yearScopeCount()}`,mastered:`암기 완료 ${memorizedCount()}`,needsStudy:`암기 못함 ${needsStudyCount()}`};
   document.querySelectorAll('[data-status-filter]').forEach(btn=>{
     const value=btn.dataset.statusFilter;
     btn.textContent=labels[value]||btn.textContent;
@@ -883,7 +1012,7 @@ function updateQuickFilterButtons(){
   });
 }
 function autoGrow(el){el.style.height='36px';el.style.height=Math.min(180,Math.max(36,el.scrollHeight))+'px';el.style.overflowY=el.scrollHeight>180?'auto':'hidden'}
-function render(){const q=current(),key=qkey(q),saved=state.status[key]==='mastered'?(state.answers[key]||[]):[];const reviewOption=$('#mode')?.querySelector('option[value="review"]');if(reviewOption)reviewOption.textContent=`오늘 복습 (${todayReviewCount()})`;updateStatusCounts();updateQuickFilterButtons();$('#number').textContent=q.number;$('#label').textContent=q.label;const freq=Math.max(1,Number(q.frequency)||1);$('#frequency').textContent='★'.repeat(Math.min(5,freq))+` (${freq}회)`;const favBtn=$('#favoriteToggle');favBtn.textContent=state.fav[key]?'★':'☆';favBtn.classList.toggle('active',!!state.fav[key]);favBtn.title=state.fav[key]?'즐겨찾기 해제':'즐겨찾기 추가';favBtn.setAttribute('aria-label',favBtn.title);$('#question').textContent=q.question;$('#answers').innerHTML='';q.inputLabels.forEach((label,i)=>{const wrap=document.createElement('div');wrap.className='answer-item';const lab=document.createElement('label');lab.className='answer-label';lab.textContent=label||`${i+1}.`;const ta=document.createElement('textarea');ta.className='answer-input';ta.value=saved[i]||'';ta.placeholder=`${i+1}번 답 입력`;ta.setAttribute('aria-label',`${i+1}번 답안`);if(state.corrections[key]?.[i])ta.classList.add('auto-corrected');ta.addEventListener('input',()=>{autoGrow(ta);ta.classList.remove('auto-corrected');if(state.corrections[key]){state.corrections[key][i]=false;if(!state.corrections[key].some(Boolean))delete state.corrections[key]}const currentVals=[...document.querySelectorAll('.answer-input')].map(x=>x.value);state.answers[key]=currentVals;state.attempts[key]=[...currentVals];save()});wrap.append(lab,ta);$('#answers').append(wrap);requestAnimationFrame(()=>autoGrow(ta))});$('#result').className='result';$('#result').innerHTML='';$('#official').className='official';$('#officialContent').innerHTML='';$('#reveal').textContent='정답';$('#reveal').setAttribute('aria-expanded','false');updateCurrentMemoryUI(key);const pct=view.length?((pos+1)/view.length*100):0;$('#progress').textContent=`${pos+1} / ${view.length}`;$('#score').textContent=`진행 ${pct.toFixed(1)}%`;$('#wrongCount').textContent=`오답 ${Object.keys(state.wrong).length}`;$('#progressBar').style.width=`${pct}%`;save();window.scrollTo(0,0)}
+function render(){const q=current(),key=qkey(q),saved=state.status[key]==='mastered'?(state.answers[key]||[]):[];const reviewOption=$('#mode')?.querySelector('option[value="review"]');if(reviewOption)reviewOption.textContent=`오늘 복습 (${todayReviewCount()})`;updateStatusCounts();updateQuickFilterButtons();$('#number').textContent=q.number;$('#label').textContent=q.label;const freq=Math.max(1,Number(q.frequency)||1);$('#frequency').textContent='★'.repeat(Math.min(5,freq))+` (${freq}회)`;const favBtn=$('#favoriteToggle');favBtn.textContent=state.fav[key]?'★':'☆';favBtn.classList.toggle('active',!!state.fav[key]);favBtn.title=state.fav[key]?'즐겨찾기 해제':'즐겨찾기 추가';favBtn.setAttribute('aria-label',favBtn.title);$('#question').textContent=q.question;$('#answers').innerHTML='';q.inputLabels.forEach((label,i)=>{const wrap=document.createElement('div');wrap.className='answer-item';const lab=document.createElement('label');lab.className='answer-label';lab.textContent=label||`${i+1}.`;const ta=document.createElement('textarea');ta.className='answer-input';ta.value=saved[i]||'';ta.placeholder=`${i+1}번 답 입력`;ta.setAttribute('aria-label',`${i+1}번 답안`);if(state.corrections[key]?.[i])ta.classList.add('auto-corrected');ta.addEventListener('input',()=>{autoGrow(ta);ta.classList.remove('auto-corrected');if(state.corrections[key]){state.corrections[key][i]=false;if(!state.corrections[key].some(Boolean))delete state.corrections[key]}const currentVals=[...document.querySelectorAll('.answer-input')].map(x=>x.value);state.answers[key]=currentVals;state.attempts[key]=[...currentVals];save()});wrap.append(lab,ta);$('#answers').append(wrap);requestAnimationFrame(()=>autoGrow(ta))});$('#result').className='result';$('#result').innerHTML='';$('#official').className='official';$('#officialContent').innerHTML='';$('#reveal').textContent='정답';$('#reveal').setAttribute('aria-expanded','false');updateCurrentMemoryUI(key);const pct=view.length?((pos+1)/view.length*100):0;$('#progress').textContent=`${pos+1} / ${view.length}`;$('#score').textContent=`진행 ${pct.toFixed(1)}%`;$('#wrongCount').textContent=`오답 ${scopedWrongCount()}`;$('#progressBar').style.width=`${pct}%`;save();window.scrollTo(0,0)}
 function showOfficial(){const q=current(),box=$('#officialContent');box.innerHTML='';q.allAnswers.forEach((group,i)=>{const div=document.createElement('div');div.className='official-group';const label=q.mode==='grouped'?(q.inputLabels[i]||`${i+1}.`):`${i+1}.`;const b=document.createElement('b');b.textContent=label+' ';const span=document.createElement('span');span.textContent=group.join(' / ');div.append(b,span);box.append(div)});const memo=mnemonicFor(q);if(memo){const div=document.createElement('div');div.className='mnemonic';div.innerHTML=`<div class="mnemonic-title">암기 팁</div><div class="mnemonic-code">${memo.code}</div>${memo.scene?`<div class="mnemonic-scene">“${memo.scene}”</div>`:''}<div class="mnemonic-note">${memo.note}</div>`;box.append(div)}$('#official').classList.add('show');$('#reveal').textContent='닫기';$('#reveal').setAttribute('aria-expanded','true')}
 $('#check').addEventListener('click',()=>{
   const q=current();
@@ -986,17 +1115,17 @@ $('#check').addEventListener('click',()=>{
   btn.textContent='채점완료';
   setTimeout(()=>{btn.textContent=original},700);
   save();
-  $('#wrongCount').textContent=`오답 ${Object.keys(state.wrong).length}`;
+  $('#wrongCount').textContent=`오답 ${scopedWrongCount()}`;
 });
 $('#reveal').addEventListener('click',()=>{$('#official').classList.contains('show')?($('#official').classList.remove('show'),$('#reveal').textContent='정답',$('#reveal').setAttribute('aria-expanded','false')):showOfficial()});
 function clearCurrentUnlessMastered(){const k=qkey(current());if(state.status[k]!=='mastered'){delete state.answers[k];delete state.corrections[k];delete state.attempts[k];save()}}
 function moveWithinActiveView(delta){const oldQ=current(),oldId=oldQ?oldQ.id:null,activeMode=$('#mode')?.value||state.mode||'all';clearCurrentUnlessMastered();if(!syncViewToActiveFilter()){if(activeMode==='needsStudy'){alert('암기 못함 학습을 모두 마쳤습니다.');$('#mode').value='all';applyView({closePanel:false});}return;}const sameCurrent=oldId!=null&&current()?.id===oldId;const target=sameCurrent?pos+delta:(delta>0?pos:pos-1);if(target<0||target>=view.length)return;pos=target;render()}
 $('#prev').addEventListener('click',()=>moveWithinActiveView(-1));$('#next').addEventListener('click',()=>moveWithinActiveView(1));
-function setStatus(name){const k=qkey(current());const oldPos=pos;const next=name==='mastered'?'mastered':'unmastered';state.status[k]=next;scheduleReview(k,next);if(next==='mastered'){const vals=[...document.querySelectorAll('.answer-input')].map(x=>x.value);state.answers[k]=vals;state.memoryVerify[k]={pending:true,due:localDateKey(),source:'manual',reason:'typing',marked:localDateKey()}}else{delete state.memoryVerify[k];delete state.answers[k];delete state.corrections[k];delete state.attempts[k]}save();const mode=$('#mode')?.value||'all';if(['mastered','needsStudy'].includes(mode)){const fresh=filteredIndices(mode,norm($('#search')?.value||''));if(fresh.length){const freshSet=new Set(fresh);const kept=view.filter(i=>freshSet.has(i));const keptSet=new Set(kept);view=[...kept,...fresh.filter(i=>!keptSet.has(i))];const stillHere=view.findIndex(i=>BANK[i]&&qkey(BANK[i])===k);pos=stillHere>=0?stillHere:Math.min(oldPos,view.length-1)}else{$('#mode').value='all';view=filteredIndices('all',norm($('#search')?.value||''));if(!view.length)view=[...BANK.keys()];pos=Math.min(oldPos,view.length-1)}}save();render()}
-$('#markMastered').onclick=()=>setStatus('mastered');$('#markUnmastered').onclick=()=>setStatus('unmastered');$('#manageToggle').onclick=()=>{const p=$('#managePanel');p.classList.toggle('open');$('#manageToggle').setAttribute('aria-expanded',p.classList.contains('open'))};
+function setStatus(name){const k=qkey(current());const oldPos=pos;const next=name==='mastered'?'mastered':'unmastered';state.status[k]=next;scheduleReview(k,next);if(next==='mastered'){const vals=[...document.querySelectorAll('.answer-input')].map(x=>x.value);state.answers[k]=vals;state.memoryVerify[k]={pending:true,due:localDateKey(),source:'manual',reason:'typing',marked:localDateKey()}}else{delete state.memoryVerify[k];delete state.answers[k];delete state.corrections[k];delete state.attempts[k]}save();const mode=$('#mode')?.value||'all';if(['mastered','needsStudy'].includes(mode)){const fresh=filteredIndices(mode,norm($('#search')?.value||''));if(fresh.length){const freshSet=new Set(fresh);const kept=view.filter(i=>freshSet.has(i));const keptSet=new Set(kept);view=[...kept,...fresh.filter(i=>!keptSet.has(i))];const stillHere=view.findIndex(i=>BANK[i]&&qkey(BANK[i])===k);pos=stillHere>=0?stillHere:Math.min(oldPos,view.length-1)}else{$('#mode').value='all';view=filteredIndices('all',norm($('#search')?.value||''));if(!view.length)view=yearScopeIndices();pos=Math.min(oldPos,view.length-1)}}save();render()}
+$('#markMastered').onclick=()=>setStatus('mastered');$('#markUnmastered').onclick=()=>setStatus('unmastered');function applyHeaderCollapsed(collapsed){state.headerCollapsed=!!collapsed;document.body.classList.toggle('header-collapsed',state.headerCollapsed);const btn=$('#headerCompactToggle');if(btn){btn.textContent=state.headerCollapsed?'상단 펼치기':'상단 최소화';btn.setAttribute('aria-pressed',state.headerCollapsed?'true':'false');btn.title=state.headerCollapsed?'숨긴 상단 영역 다시 보기':'상단 영역 최소화';btn.setAttribute('aria-label',btn.title)}const p=$('#managePanel');if(state.headerCollapsed&&p){closeYearPanel();p.classList.remove('open');$('#manageToggle')?.setAttribute('aria-expanded','false')}}applyHeaderCollapsed(state.headerCollapsed);$('#headerCompactToggle').onclick=()=>{applyHeaderCollapsed(!state.headerCollapsed);save()};$('#manageToggle').onclick=()=>{const p=$('#managePanel');p.classList.toggle('open');$('#manageToggle').setAttribute('aria-expanded',p.classList.contains('open'))};
 function daysBetween(a,b){const A=new Date(a+'T12:00:00'),B=new Date(b+'T12:00:00');return Math.round((B-A)/86400000)}
 function hasAttempt(k){return Array.isArray(state.attempts[k])&&state.attempts[k].some(v=>String(v||'').trim())}
-function filteredIndices(mode,term){return BANK.map((q,i)=>({q,i})).filter(({q})=>{const k=qkey(q),wm=state.wrongMeta[k]||{};if(mode==='wrong'&&!state.wrong[k])return false;if(mode==='frequentWrong'&&!(wm.count>=2))return false;if(mode==='recentWrong'&&!(wm.last&&daysBetween(wm.last,localDateKey())<=7))return false;if(mode==='unanswered'&&hasAttempt(k))return false;if(mode==='favorite'&&!state.fav[k])return false;if(mode==='mastered'&&state.status[k]!=='mastered')return false;if(mode==='needsStudy'&&state.status[k]==='mastered')return false;if(mode==='review'&&!isDueToday(k))return false;if(term&&!norm(`${q.number} ${q.label} ${q.question}`).includes(term))return false;return true}).map(x=>x.i)}
+function filteredIndices(mode,term){return BANK.map((q,i)=>({q,i})).filter(({q})=>{if(!matchesQuestionYear(q))return false;const k=qkey(q),wm=state.wrongMeta[k]||{};if(mode==='wrong'&&!state.wrong[k])return false;if(mode==='frequentWrong'&&!(wm.count>=2))return false;if(mode==='recentWrong'&&!(wm.last&&daysBetween(wm.last,localDateKey())<=7))return false;if(mode==='unanswered'&&hasAttempt(k))return false;if(mode==='favorite'&&!state.fav[k])return false;if(mode==='mastered'&&state.status[k]!=='mastered')return false;if(mode==='needsStudy'&&state.status[k]==='mastered')return false;if(mode==='review'&&!isDueToday(k))return false;if(term&&!norm(`${q.number} ${q.label} ${q.question}`).includes(term))return false;return true}).map(x=>x.i)}
 function syncViewToActiveFilter(){const mode=$('#mode')?.value||state.mode||'all',term=norm($('#search')?.value||'');const currentIndex=view.length?view[pos]:null;const currentId=currentIndex!=null&&BANK[currentIndex]?BANK[currentIndex].id:null;const fresh=filteredIndices(mode,term);if(!fresh.length)return false;const freshSet=new Set(fresh);const kept=view.filter(i=>freshSet.has(i));const keptSet=new Set(kept);view=[...kept,...fresh.filter(i=>!keptSet.has(i))];let nextPos=currentId!=null?view.findIndex(i=>BANK[i]&&BANK[i].id===currentId):-1;if(nextPos<0&&currentIndex!=null){const after=view.findIndex(i=>i>=currentIndex);nextPos=after>=0?after:view.length-1}if(nextPos<0)nextPos=0;pos=nextPos;return true}
 function applyView(options={}){
   const closePanel=!!options.closePanel;
@@ -1005,7 +1134,7 @@ function applyView(options={}){
   const currentQ=(view.length&&BANK[view[pos]])?BANK[view[pos]]:null;
   const currentId=currentQ?currentQ.id:null;
   const mode=$('#mode').value,term=norm($('#search').value);
-  if(previousMode==='all'&&mode!=='all'&&currentId!=null)state.allReturnId=currentId;
+  if(previousMode==='all'&&activeYear()==='all'&&mode!=='all'&&currentId!=null)state.allReturnId=currentId;
   const fresh=filteredIndices(mode,term);
   if(!fresh.length){
     // 모바일 검색 입력 중에는 경고/초기화/창 닫힘 없이 입력을 계속할 수 있게 한다.
@@ -1018,13 +1147,15 @@ function applyView(options={}){
     alert(mode==='review'?'오늘 복습할 문제가 없습니다.':'조건에 맞는 문제가 없습니다.');
     $('#mode').value='all';
     view=filteredIndices('all',term);
-    if(!view.length){$('#search').value='';view=[...BANK.keys()]}
+    if(!view.length){$('#search').value='';view=yearScopeIndices()}
   }else{
     view=fresh;
   }
   const effectiveMode=$('#mode').value;
-  if(effectiveMode==='all'){
-    const returnId=state.allReturnId!=null?state.allReturnId:currentId;
+  if(options.resetPosition){
+    pos=0;
+  }else if(effectiveMode==='all'){
+    const returnId=activeYear()==='all'?(state.allReturnId!=null?state.allReturnId:currentId):currentId;
     const keptPos=returnId!=null?view.findIndex(i=>BANK[i]&&BANK[i].id===returnId):-1;
     pos=keptPos>=0?keptPos:0;
   }else{
@@ -1081,13 +1212,15 @@ function resetLearningRecords(){
   const currentQ=(view.length&&BANK[view[pos]])?BANK[view[pos]]:null;
   const keptCurrentId=currentQ?currentQ.id:1;
   const keptFlashMode=!!state.flashMode;
+  const keptHeaderCollapsed=!!state.headerCollapsed;
 
   removeAppStorage(localStorage);
   removeAppStorage(sessionStorage);
 
   state=createInitialState();
   state.flashMode=keptFlashMode;
-  view=[...BANK.keys()];
+  state.headerCollapsed=keptHeaderCollapsed;
+  view=yearScopeIndices();
   const bankPos=BANK.findIndex(q=>q.id===keptCurrentId);
   pos=bankPos>=0?bankPos:0;
   state.view=[...view];
@@ -1100,6 +1233,7 @@ function resetLearningRecords(){
 
   save();
   render();
+  applyHeaderCollapsed(state.headerCollapsed);
 
   const resetBtn=$('#reset');
   if(resetBtn){
@@ -1132,7 +1266,8 @@ $('#favoriteToggle').onclick=()=>{const k=qkey(current());state.fav[k]=!state.fa
 document.addEventListener('keydown',e=>{if(e.target.matches('textarea,input,select'))return;if(e.key==='ArrowLeft')$('#prev').click();if(e.key==='ArrowRight')$('#next').click();if(e.key==='Enter')$('#check').click()});
 if(['all','review','wrong','frequentWrong','recentWrong','unanswered','favorite','mastered','needsStudy'].includes(state.mode))$('#mode').value=state.mode;
 if(typeof state.search==='string')$('#search').value=state.search;
-if(!syncViewToActiveFilter()){$('#mode').value='all';view=filteredIndices('all',norm($('#search').value));if(!view.length){$('#search').value='';view=[...BANK.keys()]}pos=Math.min(pos,Math.max(0,view.length-1));save()}
+if(!syncViewToActiveFilter()){$('#mode').value='all';view=filteredIndices('all',norm($('#search').value));if(!view.length){$('#search').value='';view=yearScopeIndices()}pos=Math.min(pos,Math.max(0,view.length-1));save()}
+initYearPicker();
 window.addEventListener('pagehide',save);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')save()});
 render();
@@ -1408,6 +1543,7 @@ body.fast30-mode .toolbar #flashToggle{display:none!important}
   function autoSelect30(){
     const reviewPool=[],learnPool=[];
     BANK.forEach((q,idx)=>{
+      if(!matchesQuestionYear(q))return;
       const k=qkey(q);
       if(state.status[k]==='mastered'){
         if(verifyIsDue(k)||isDueToday(k))reviewPool.push(idx);
@@ -1442,7 +1578,9 @@ body.fast30-mode .toolbar #flashToggle{display:none!important}
     state.fast30Processed=processed;
   }
   function lockNormalControls(lock){
-    ['mode','search','shuffle'].forEach(id=>{const el=$('#'+id);if(el)el.disabled=!!lock});
+    ['mode','search','shuffle','yearToggle','yearClear'].forEach(id=>{const el=$('#'+id);if(el)el.disabled=!!lock});
+    document.querySelectorAll('[data-year-filter],[data-status-filter]').forEach(btn=>{btn.disabled=!!lock});
+    if(lock)closeYearPanel();
   }
   function focusFirst(){
     if(!state.fast30Mode||processed||session?.finished)return;
@@ -1521,6 +1659,7 @@ body.fast30-mode .toolbar #flashToggle{display:none!important}
     session={
       setNumber:state.fast30SetNumber,
       selected:[...selected],queue:[...selected],cursor:0,progress,kindMap,finished:false,
+      yearFilter:activeYear(),returnYearFilter:activeYear(),
       returnMode:$('#mode')?.value||state.mode||'all',
       returnSearch:$('#search')?.value||'',
       returnId:returnQ?returnQ.id:null,
@@ -1528,6 +1667,7 @@ body.fast30-mode .toolbar #flashToggle{display:none!important}
     };
     processed=null;
     state.fast30Mode=true;
+    state.yearFilter=validYearFilter(session.yearFilter||'all');
     if(state.flashMode)state.flashMode=false;
     view=session.queue;pos=0;
     persistFast();save();render();
@@ -1537,6 +1677,7 @@ body.fast30-mode .toolbar #flashToggle{display:none!important}
     if(!isValidSession(session)||session.finished)return startNewSet();
     clearAutoTimer();
     state.fast30Mode=true;
+    state.yearFilter=validYearFilter(session.yearFilter||'all');
     if(state.flashMode)state.flashMode=false;
     view=session.queue;
     pos=Math.max(0,Math.min(Number(session.cursor)||0,view.length-1));
@@ -1544,6 +1685,7 @@ body.fast30-mode .toolbar #flashToggle{display:none!important}
     return true;
   }
   function restoreNormalView(){
+    state.yearFilter=validYearFilter(session?.returnYearFilter||'all');
     const mode=(session?.returnMode&&['all','review','wrong','frequentWrong','recentWrong','unanswered','favorite','mastered','needsStudy'].includes(session.returnMode))?session.returnMode:'all';
     const search=typeof session?.returnSearch==='string'?session.returnSearch:'';
     if($('#mode'))$('#mode').value=mode;
@@ -1551,7 +1693,7 @@ body.fast30-mode .toolbar #flashToggle{display:none!important}
     state.mode=mode;state.search=search;
     let fresh=filteredIndices(mode,norm(search));
     if(!fresh.length){fresh=filteredIndices('all',norm(search));if($('#mode'))$('#mode').value='all';state.mode='all'}
-    if(!fresh.length){fresh=[...BANK.keys()];if($('#search'))$('#search').value='';state.search=''}
+    if(!fresh.length){fresh=yearScopeIndices();if($('#search'))$('#search').value='';state.search=''}
     view=[...fresh];
     const wanted=session?.returnId;
     const found=wanted!=null?view.findIndex(i=>BANK[i]?.id===wanted):-1;
@@ -1716,7 +1858,7 @@ body.fast30-mode .toolbar #flashToggle{display:none!important}
   $('#fast30NextSet').onclick=()=>{
     if(!session?.finished)return;
     // 다음 세트도 처음 시작했을 때의 일반 학습 복귀 위치를 유지한다.
-    const oldReturn={returnMode:session.returnMode,returnSearch:session.returnSearch,returnId:session.returnId};
+    const oldReturn={returnMode:session.returnMode,returnSearch:session.returnSearch,returnId:session.returnId,returnYearFilter:session.returnYearFilter};
     session=null;processed=null;state.fast30Session=null;state.fast30Processed=null;
     if(startNewSet()&&session){Object.assign(session,oldReturn);persistFast();save();updatePanel()}
   };
@@ -1778,6 +1920,7 @@ body.fast30-mode .toolbar #flashToggle{display:none!important}
 
   // 창 재실행 시 진행 중이던 30문제 세트를 같은 위치에서 그대로 복원한다.
   if(state.fast30Mode&&isValidSession(session)){
+    state.yearFilter=validYearFilter(session.yearFilter||'all');
     session.kindMap=session.kindMap||{};
     session.selected.forEach(idx=>{const k=keyForIndex(idx);if(!session.kindMap[k])session.kindMap[k]=state.status[k]==='mastered'?'review':'learn'});
     view=session.queue;
