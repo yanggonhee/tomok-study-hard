@@ -2398,6 +2398,75 @@ body.fast30-mode .toolbar #flashToggle{display:none!important}
 })();
 </script>
 
+<script id="ctrl-enter-grade-next">
+(()=>{
+  'use strict';
+  // Ctrl+Enter: grade once, then use the existing Next action.
+  // This transient snapshot never changes saved answers or grading rules.
+  const check=document.querySelector('#check');
+  const next=document.querySelector('#next');
+  const answers=document.querySelector('#answers');
+  if(!check||!next||!answers)return;
+  let lastGrade=null;
+  function typingMode(){return !state.fast30Mode&&!state.flashMode&&!examActive}
+  function snapshot(){
+    const q=current();
+    const inputs=[...answers.querySelectorAll('.answer-input')];
+    if(!q||!inputs.length)return null;
+    return {key:qkey(q),context:JSON.stringify([$('#mode')?.value,activeYear(),$('#search')?.value]),inputs,values:inputs.map(el=>el.value)};
+  }
+  function unchanged(s){
+    return !!(s&&lastGrade&&s.key===lastGrade.key&&s.context===lastGrade.context&&
+      s.inputs.length===lastGrade.inputs.length&&
+      s.inputs.every((el,i)=>el===lastGrade.inputs[i]&&el.value===lastGrade.values[i])&&
+      $('#result')?.classList.contains('show')&&$('#result .result-summary'));
+  }
+  check.addEventListener('click',()=>{
+    if(!typingMode())return;
+    lastGrade=$('#result')?.classList.contains('show')&&$('#result .result-summary')?snapshot():null;
+  });
+  // Any edit requires a fresh grade, even when Undo restores the old text.
+  answers.addEventListener('input',e=>{
+    if(e.target.matches?.('.answer-input'))lastGrade=null;
+  });
+  // Window capture handles only this shortcut before the old Enter handlers.
+  // Tab, Shift+Tab, plain Enter and all other modes keep their existing behavior.
+  window.addEventListener('keydown',e=>{
+    if(!typingMode()||e.key!=='Enter'||!(e.ctrlKey||e.metaKey)||e.shiftKey||e.altKey)return;
+    const target=e.target;
+    if(target?.isContentEditable||
+      (target?.matches?.('input,select,textarea')&&!target.matches('.answer-input')))return;
+    if($('#resetConfirmModal')?.classList.contains('show')){
+      e.preventDefault();e.stopImmediatePropagation();return;
+    }
+    const inStudy=target===document.body||target===document.documentElement||
+      target?.closest?.('main.card');
+    if(!inStudy)return;
+    // Do not grade a partially composed Korean character.
+    if(e.isComposing||e.keyCode===229){e.stopImmediatePropagation();return}
+    e.preventDefault();e.stopImmediatePropagation();
+    // Holding Enter must not grade and skip several questions in one press.
+    if(e.repeat)return;
+    const s=snapshot();
+    if(!s)return;
+    if(unchanged(s)){
+      if(next.disabled)return;
+      const previousFirst=s.inputs[0];
+      next.click();
+      const first=answers.querySelector('.answer-input');
+      // A boundary/completion message is not a new question.
+      if(first&&first!==previousFirst&&first.getClientRects().length){
+        lastGrade=null;
+        first.focus();
+        first.setSelectionRange(first.value.length,first.value.length);
+      }
+    }else if(!check.disabled){
+      check.click();
+    }
+  },true);
+})();
+</script>
+
 <script id="manual-study-navigation">
 (()=>{
   'use strict';
