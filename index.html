@@ -1480,7 +1480,21 @@ function updateQuickFilterButtons(){
   });
 }
 function autoGrow(el){el.style.height='36px';el.style.height=Math.min(180,Math.max(36,el.scrollHeight))+'px';el.style.overflowY=el.scrollHeight>180?'auto':'hidden'}
-function render(){const q=current(),key=qkey(q),saved=state.status[key]==='mastered'?(state.answers[key]||[]):[];const reviewOption=$('#mode')?.querySelector('option[value="review"]');if(reviewOption)reviewOption.textContent=`오늘 복습 (${todayReviewCount()})`;updateStatusCounts();updateQuickFilterButtons();$('#number').textContent=q.number;$('#label').textContent=q.label;const freq=Math.max(1,Number(q.frequency)||1);$('#frequency').textContent='★'.repeat(Math.min(5,freq))+` (${freq}회)`;const favBtn=$('#favoriteToggle');favBtn.textContent=state.fav[key]?'★':'☆';favBtn.classList.toggle('active',!!state.fav[key]);favBtn.title=state.fav[key]?'즐겨찾기 해제':'즐겨찾기 추가';favBtn.setAttribute('aria-label',favBtn.title);$('#question').textContent=q.question;$('#answers').innerHTML='';q.inputLabels.forEach((label,i)=>{const wrap=document.createElement('div');wrap.className='answer-item';const lab=document.createElement('label');lab.className='answer-label';lab.textContent=label||`${i+1}.`;const ta=document.createElement('textarea');ta.className='answer-input';ta.id=`answer-${q.id}-${i}`;lab.htmlFor=ta.id;ta.value=saved[i]||'';ta.placeholder=`${i+1}번 답 입력`;ta.setAttribute('aria-label',`${i+1}번 답안`);if(state.corrections[key]?.[i])ta.classList.add('auto-corrected');ta.addEventListener('input',()=>{autoGrow(ta);ta.classList.remove('auto-corrected');if(state.corrections[key]){state.corrections[key][i]=false;if(!state.corrections[key].some(Boolean))delete state.corrections[key]}const currentVals=[...document.querySelectorAll('.answer-input')].map(x=>x.value);state.answers[key]=currentVals;state.attempts[key]=[...currentVals];save()});wrap.append(lab,ta);$('#answers').append(wrap);requestAnimationFrame(()=>autoGrow(ta))});$('#result').className='result';$('#result').innerHTML='';$('#official').className='official';$('#officialContent').innerHTML='';$('#reveal').textContent='정답';$('#reveal').setAttribute('aria-expanded','false');updateCurrentMemoryUI(key);const pct=view.length?((pos+1)/view.length*100):0;$('#progress').textContent=`${pos+1} / ${view.length}`;$('#score').textContent=`진행 ${pct.toFixed(1)}%`;$('#wrongCount').textContent=`오답 ${scopedWrongCount()}`;$('#progressBar').style.width=`${pct}%`;save();window.scrollTo(0,0)}
+function renderEmptyStudyState(){
+  document.body.classList.add('study-empty');
+  ['prev','next','check','reveal','markMastered','markUnmastered','favoriteToggle','quickAnswer','quickNext'].forEach(id=>{const el=document.getElementById(id);if(el)el.disabled=true});
+  updateStatusCounts();updateQuickFilterButtons();
+  $('#number').textContent='완료';$('#label').textContent='';$('#frequency').textContent='';
+  $('#question').textContent=state.daily30Mode?'오늘 배정된 문제를 모두 암기 완료했습니다.\n오늘 30 종료를 누르면 다른 문제를 학습할 수 있습니다.':'선택한 범위에 남은 문제가 없습니다.';
+  $('#answers').innerHTML='';$('#result').innerHTML='';$('#result').className='result';
+  $('#officialContent').innerHTML='';$('#official').className='official';
+  $('#reveal').textContent='정답';$('#reveal').setAttribute('aria-expanded','false');
+  $('#progress').textContent='0 / 0';$('#score').textContent='학습 완료';$('#wrongCount').textContent=`오답 ${scopedWrongCount()}`;
+  $('#progressBar').style.width='100%';
+  $('#memoryStateBadge').textContent='학습 완료';
+  save();
+}
+function render(){window.CivilQuickStudy?.clearNotice?.();const q=current();if(!q){renderEmptyStudyState();return}document.body.classList.remove('study-empty');['prev','next','check','reveal','markMastered','markUnmastered','favoriteToggle','quickAnswer','quickNext'].forEach(id=>{const el=document.getElementById(id);if(el)el.disabled=false});const key=qkey(q),saved=state.status[key]==='mastered'?(state.answers[key]||[]):[];const reviewOption=$('#mode')?.querySelector('option[value="review"]');if(reviewOption)reviewOption.textContent=`오늘 복습 (${todayReviewCount()})`;updateStatusCounts();updateQuickFilterButtons();$('#number').textContent=q.number;$('#label').textContent=q.label;const freq=Math.max(1,Number(q.frequency)||1);$('#frequency').textContent='★'.repeat(Math.min(5,freq))+` (${freq}회)`;const favBtn=$('#favoriteToggle');favBtn.textContent=state.fav[key]?'★':'☆';favBtn.classList.toggle('active',!!state.fav[key]);favBtn.title=state.fav[key]?'즐겨찾기 해제':'즐겨찾기 추가';favBtn.setAttribute('aria-label',favBtn.title);$('#question').textContent=q.question;$('#answers').innerHTML='';q.inputLabels.forEach((label,i)=>{const wrap=document.createElement('div');wrap.className='answer-item';const lab=document.createElement('label');lab.className='answer-label';lab.textContent=label||`${i+1}.`;const ta=document.createElement('textarea');ta.className='answer-input';ta.id=`answer-${q.id}-${i}`;lab.htmlFor=ta.id;ta.value=saved[i]||'';ta.placeholder=`${i+1}번 답 입력`;ta.setAttribute('aria-label',`${i+1}번 답안`);if(state.corrections[key]?.[i])ta.classList.add('auto-corrected');ta.addEventListener('input',()=>{autoGrow(ta);ta.classList.remove('auto-corrected');if(state.corrections[key]){state.corrections[key][i]=false;if(!state.corrections[key].some(Boolean))delete state.corrections[key]}const currentVals=[...document.querySelectorAll('.answer-input')].map(x=>x.value);state.answers[key]=currentVals;state.attempts[key]=[...currentVals];save()});wrap.append(lab,ta);$('#answers').append(wrap);requestAnimationFrame(()=>autoGrow(ta))});$('#result').className='result';$('#result').innerHTML='';$('#official').className='official';$('#officialContent').innerHTML='';$('#reveal').textContent='정답';$('#reveal').setAttribute('aria-expanded','false');updateCurrentMemoryUI(key);const pct=view.length?((pos+1)/view.length*100):0;$('#progress').textContent=`${pos+1} / ${view.length}`;$('#score').textContent=`진행 ${pct.toFixed(1)}%`;$('#wrongCount').textContent=`오답 ${scopedWrongCount()}`;$('#progressBar').style.width=`${pct}%`;save();window.scrollTo(0,0)}
 function showOfficial(){const q=current(),box=$('#officialContent');box.innerHTML='';CivilGrader.officialRows(q).forEach(item=>{const div=document.createElement('div');div.className='official-group';const b=document.createElement('b');b.textContent=item.label+' ';const span=document.createElement('span');span.textContent=item.text;div.append(b,span);box.append(div)});const memo=mnemonicFor(q);if(memo){const div=document.createElement('div');div.className='mnemonic';div.innerHTML=`<div class="mnemonic-title">암기 팁</div><div class="mnemonic-code">${memo.code}</div>${memo.scene?`<div class="mnemonic-scene">“${memo.scene}”</div>`:''}<div class="mnemonic-note">${memo.note}</div>`;box.append(div)}$('#official').classList.add('show');$('#reveal').textContent='닫기';$('#reveal').setAttribute('aria-expanded','true')}
 $('#check').addEventListener('click',()=>{
   const q=current();
@@ -1839,7 +1853,7 @@ body.flashcard-mode .flashcard-panel{display:block}
     flashToggle.classList.toggle('active',state.flashMode);
     flashToggle.textContent=state.flashMode?'문제풀이':'앱카드';
     if(!state.flashMode)return;
-    const q=current(),k=qkey(q),card=document.querySelector('#flashCard');
+    const q=current();if(!q)return;const k=qkey(q),card=document.querySelector('#flashCard');
     setFlashSide('question');
     document.querySelector('#flashQuestion').textContent=questionText(q);
     document.querySelector('#flashAnswerText').textContent=answerText(q);
@@ -2003,6 +2017,7 @@ body.daily30-mode #yearToggle,body.daily30-mode #shuffle,body.daily30-mode #sear
     state.daily30Session=session;state.daily30Mode=!!state.daily30Mode;save();
   }
   function ensureToday(){
+    if(state.daily30Session&&state.daily30Session!==session)session=state.daily30Session;
     if(!normalizeSession()||session.date!==today())makeTodaySession();
     return session;
   }
@@ -2043,21 +2058,18 @@ body.daily30-mode #yearToggle,body.daily30-mode #shuffle,body.daily30-mode #sear
   }
   function syncDailyAfterChange(direction=1){
     if(!state.daily30Mode)return false;
-    ensureToday();const oldIndex=view[pos],active=activeAssigned();
+    ensureToday();const previousOrder=[...view],oldIndex=view[pos],active=activeAssigned();
+    const plan=studyNavigationPlan(previousOrder,oldIndex,active,direction);
     view=[...active];
-    if(!view.length){pos=0;session.cursor=0;save();render();return true}
-    let at=view.indexOf(oldIndex);
-    if(at<0){
-      const oldBankIndex=Number.isInteger(oldIndex)?oldIndex:-1;
-      at=view.findIndex(i=>i>oldBankIndex);if(at<0)at=0;
-    }else at=(at+(direction<0?-1:1)+view.length)%view.length;
-    pos=at;session.cursor=pos;save();render();return true;
+    pos=plan?Math.max(0,view.indexOf(plan.index)):0;
+    session.cursor=pos;save();render();return true;
   }
   function moveDaily(delta){
     if(!state.daily30Mode)return false;
-    ensureToday();const active=activeAssigned();view=[...active];
-    if(!view.length){pos=0;save();render();return true}
-    pos=((Math.min(pos,view.length-1)+delta)%view.length+view.length)%view.length;session.cursor=pos;save();render();return true;
+    ensureToday();const previousOrder=[...view],oldIndex=view[pos],active=activeAssigned();
+    const plan=studyNavigationPlan(previousOrder,oldIndex,active,delta);
+    view=[...active];pos=plan?Math.max(0,view.indexOf(plan.index)):0;
+    session.cursor=pos;save();render();return true;
   }
 
   const previousRender=render;
@@ -2076,8 +2088,8 @@ body.daily30-mode #yearToggle,body.daily30-mode #shuffle,body.daily30-mode #sear
   $('#markMastered').addEventListener('click',()=>{if(state.daily30Mode)setTimeout(()=>syncDailyAfterChange(1),0)});
   $('#markUnmastered').addEventListener('click',()=>{if(state.daily30Mode){ensureToday();updatePanel();save()}});
   $('#resetConfirmYes')?.addEventListener('click',()=>{state.daily30Mode=false;state.daily30Session=null;session=null;document.body.classList.remove('daily30-mode');setToggle()});
-  window.addEventListener('focus',()=>{if(state.daily30Mode&&session?.date!==today()){ensureToday();view=activeAssigned();pos=0;render()}});
-  window.CivilDaily30={active:()=>!!state.daily30Mode,session:()=>session,refresh:()=>{ensureToday();render()}};
+  window.addEventListener('focus',()=>{if(!window.CivilRandomQuiz?.isOpen?.()&&state.daily30Mode&&session?.date!==today()){ensureToday();view=activeAssigned();pos=0;render()}});
+  window.CivilDaily30={active:()=>!!state.daily30Mode,session:()=>{ensureToday();return session},refreshPanel:updatePanel,refresh:()=>{ensureToday();if(!window.CivilRandomQuiz?.isOpen?.())render()}};
   ensureToday();if(state.daily30Mode)enterDaily();else{setToggle();updatePanel();save()}
 })();
 </script>
@@ -2108,7 +2120,7 @@ body.daily30-mode #yearToggle,body.daily30-mode #shuffle,body.daily30-mode #sear
   const answers=document.querySelector('#answers');
   if(!check||!next||!answers)return;
   let lastGrade=null;
-  function typingMode(){return !state.fast30Mode&&!state.flashMode&&!examActive}
+  function typingMode(){return !window.CivilRandomQuiz?.isOpen?.()&&!state.fast30Mode&&!state.flashMode&&!examActive}
   function snapshot(){
     const q=current();
     const inputs=[...answers.querySelectorAll('.answer-input')];
@@ -2278,6 +2290,645 @@ body.daily30-mode #yearToggle,body.daily30-mode #shuffle,body.daily30-mode #sear
 </script>
 <!-- quietmemo-local-sync-v1-2026-10-15 -->
 
+<style id="quick-study-style">
+.quick-study-wrap{margin:9px 0 14px;padding:10px;border:1px solid #b5b5b5;border-radius:10px;background:#f4f4f4}
+#quickStudyTools{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;align-items:stretch}
+#quickStudyTools>button{min-width:0;min-height:41px;height:auto;padding:9px 11px;border:1px solid #888;border-radius:8px;font-size:13px;font-weight:850;line-height:1.35;white-space:normal}
+#quickStudyTools #quickAnswer{background:#262626!important;border-color:#262626!important;color:#fff!important}
+#quickStudyTools #quickNext{background:#fff!important;border-color:#aaa!important;color:#222!important}
+#quickStudyTools>button:disabled{opacity:.4;cursor:default}
+.quick-study-help{margin:7px 1px 0;font-size:11px;line-height:1.55;color:#555!important;word-break:keep-all}
+.quick-study-help kbd{font:inherit;font-weight:800;white-space:nowrap}
+#quickStudyNotice{margin-top:7px;padding:7px 9px;background:#fff;border:1px solid #c5c5c5;border-radius:7px;font-size:11.5px;line-height:1.5;color:#222!important;overflow-wrap:anywhere}
+#quickStudyNotice[hidden]{display:none}
+body.study-empty .answer-section,body.study-empty .inline-status,body.study-empty .inline-actions,body.study-empty #official,body.study-empty #result,body.study-empty .flashcard-panel{display:none!important}
+body.study-empty #question{display:block!important;padding:22px 5px;text-align:center;line-height:1.8}
+@media(max-width:560px){.quick-study-wrap{padding:8px;margin:7px 0 11px}#quickStudyTools>button{padding:9px 7px;font-size:12px;min-width:0}.quick-study-help{font-size:10.5px}}
+</style>
+<script id="quick-study-script">
+(()=>{
+  'use strict';
+  const question=document.querySelector('#question');
+  if(!question)return;
+  const wrap=document.createElement('section');
+  wrap.className='quick-study-wrap';wrap.setAttribute('aria-label','빠른 학습');
+  wrap.innerHTML='<div id="quickStudyTools"><button id="quickAnswer" type="button" title="정답을 기존 답안칸에 채웁니다. 현재 문제에서 답을 확인하세요.">정답</button><button id="quickNext" type="button" title="현재 학습 순서의 다음 문제로 이동합니다.">다음</button></div><p class="quick-study-help">정답을 채워 확인하고, ‘다음’을 눌러 이동하세요. <kbd>Alt + Enter: 정답</kbd></p><div id="quickStudyNotice" role="status" aria-live="polite" hidden></div>';
+  question.insertAdjacentElement('beforebegin',wrap);
+  const answerButton=wrap.querySelector('#quickAnswer');
+  const nextButton=wrap.querySelector('#quickNext');
+  const notice=wrap.querySelector('#quickStudyNotice');
+
+  // Read the compiled field schema: fixed labels, ordered steps and grouped
+  // lists retain precisely the existing input layout. Display-only reference
+  // rows and alternative spellings are not inserted as additional answers.
+  function canonicalAnswers(q){
+    const spec=CivilGrader.schema(q);
+    const values=Array(spec.inputCount).fill('');
+    const first=option=>String(option?.aliases?.[0]||option?.text||'');
+    for(const section of spec.sections){
+      const fields=section.indexes;
+      if(section.kind==='fixed'){
+        values[fields[0]]=first(section.options[0]);
+      }else{
+        const selected=section.options.slice(0,section.required).map(first);
+        if(fields.length===1)values[fields[0]]=selected.join('\n');
+        else fields.forEach((field,i)=>{values[field]=selected[i]||''});
+      }
+    }
+    return values;
+  }
+  function validIndex(index){return Number.isInteger(index)&&!!BANK[index]}
+  function recordChoice(index,known,source){
+    if(!validIndex(index))return false;
+    const q=BANK[index],key=qkey(q),now=Date.now();
+    state.status[key]=known?'mastered':'unmastered';
+    state.memoryUpdated||={};state.memoryUpdated[key]=now;
+    state.memoryJudgments||={};
+    state.memoryJudgments[key]={source:source||'quick-fill',kind:'self-check',known,updated:now};
+    scheduleReview(key,state.status[key]);
+    // An explicit self-check is allowed without a mandatory typing exercise.
+    // Keep the original typed attempts and historical grading records intact.
+    delete state.memoryVerify[key];
+    if(known){state.answers[key]=canonicalAnswers(q);delete state.corrections[key]}
+    save();
+    return true;
+  }
+  function markKnown(index,source){return recordChoice(index,true,source)}
+  function markRetry(index,source){return recordChoice(index,false,source)}
+  function updateCounters(){
+    updateStatusCounts();updateQuickFilterButtons();
+    window.CivilDaily30?.refreshPanel?.();
+    const q=current();if(q)updateCurrentMemoryUI(qkey(q));
+    const reviewOption=$('#mode')?.querySelector('option[value="review"]');
+    if(reviewOption)reviewOption.textContent=`오늘 복습 (${todayReviewCount()})`;
+  }
+  function say(message){notice.textContent=message;notice.hidden=false}
+  function clearNotice(){notice.hidden=true;notice.textContent=''}
+  function blocked(){return window.CivilRandomQuiz?.isOpen?.()||$('#resetConfirmModal')?.classList.contains('show')}
+  function fillAnswer(){
+    if(blocked())return;
+    const q=current();if(!q)return;
+    const key=qkey(q),values=canonicalAnswers(q);
+    const inputs=[...document.querySelectorAll('#answers .answer-input')];
+    if(inputs.length!==values.length){say('답안칸을 다시 표시한 뒤 진행해 주세요.');return}
+    inputs.forEach((input,i)=>{input.value=values[i];input.classList.remove('auto-corrected');autoGrow(input)});
+    // Viewing an answer is separate from a memory judgment. Preserve the
+    // current question, typed attempts and existing memory status.
+    state.answers[key]=[...values];delete state.corrections[key];
+    $('#result').className='result';$('#result').innerHTML='';
+    save();
+    say(`${q.number}번 · 정답을 채웠습니다. 확인 후 ‘다음’을 눌러 주세요.`);
+  }
+  function nextQuestion(){
+    if(blocked()||!current())return;
+    const originalNext=$('#next');if(!originalNext||originalNext.disabled)return;
+    const before=current().id;
+    clearNotice();
+    // Reuse the original event path, including the daily queue's capture
+    // handler, so a single click advances exactly once in the active order.
+    originalNext.click();
+    if(current()?.id===before&&!state.daily30Mode&&($('#mode')?.value||state.mode)!=='needsStudy')say('마지막 문제입니다.');
+  }
+  answerButton.addEventListener('click',fillAnswer);
+  nextButton.addEventListener('click',nextQuestion);
+  window.CivilQuickStudy={canonicalAnswers,markKnown,markRetry,fillAnswer,nextQuestion,clearNotice,updateCounters};
+  $('#resetConfirmYes')?.addEventListener('click',()=>{clearNotice();answerButton.disabled=nextButton.disabled=!current()});
+  // Keep shortcut handling outside the older global Enter-to-grade handlers.
+  window.addEventListener('keydown',event=>{
+    if(window.CivilRandomQuiz?.isOpen?.())return;
+    if(event.isComposing||event.keyCode===229)return;
+    const target=event.target;
+    if(event.key==='Enter'&&event.altKey&&!event.ctrlKey&&!event.metaKey&&!event.shiftKey&&target?.closest?.('main.card')){
+      event.preventDefault();event.stopImmediatePropagation();
+      if(!event.repeat)fillAnswer();
+      return;
+    }
+    if(target?.closest?.('#quickStudyTools')&&(event.key==='Enter'||event.key===' ')&&!event.altKey&&!event.ctrlKey&&!event.metaKey){
+      event.preventDefault();event.stopImmediatePropagation();
+      if(!event.repeat)target.closest('button')?.click();
+    }
+  },true);
+  answerButton.disabled=nextButton.disabled=!current();
+})();
+</script>
+
+<style id="civil-random-quiz-style">
+#randomQuizLaunch{min-height:38px;padding:8px 13px;display:inline-flex;align-items:center;justify-content:center;gap:7px;border-color:#aaa;background:#fff;white-space:nowrap}
+#civilRandomQuiz[hidden]{display:none!important}
+#civilRandomQuiz{position:fixed;inset:0;z-index:20000;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(20,20,20,.46);color:#202020;overscroll-behavior:contain}
+body.civil-random-quiz-open{overflow:hidden!important}
+#civilRandomQuiz *{box-sizing:border-box}
+#civilRandomQuiz .rq-dialog{width:min(780px,100%);max-height:calc(100dvh - 40px);display:flex;flex-direction:column;background:#fafafa;border:1px solid #d2d2d2;border-radius:22px;box-shadow:0 20px 70px rgba(0,0,0,.2);overflow:hidden;outline:none}
+#civilRandomQuiz .rq-header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0;padding:18px 22px;border-bottom:1px solid #dedede;background:#fff}
+#civilRandomQuiz .rq-heading{min-width:0}
+#civilRandomQuiz .rq-eyebrow{font-size:11px;font-weight:800;color:#777;letter-spacing:.7px;margin-bottom:4px}
+#civilRandomQuiz .rq-title{margin:0;font-size:21px;line-height:1.35;color:#181818;letter-spacing:-.5px}
+#civilRandomQuiz .rq-header-actions{display:flex;gap:6px;flex-shrink:0}
+#civilRandomQuiz button{min-height:42px;border:1px solid #bebebe;border-color:#bebebe!important;border-radius:11px;background:#fff!important;padding:10px 13px;font-size:14px;font-weight:800;line-height:1.35;touch-action:manipulation;white-space:normal;color:#222!important}
+#civilRandomQuiz button:hover{background:#ededed!important}
+#civilRandomQuiz button:disabled{cursor:default;opacity:.42;transform:none}
+#civilRandomQuiz button.rq-primary{background:#262626!important;color:#fff!important;border-color:#262626!important}
+#civilRandomQuiz button.rq-primary:hover{background:#424242!important;border-color:#424242!important}
+#civilRandomQuiz button.rq-quiet{border-color:transparent!important;background:transparent!important;color:#626262!important}
+#civilRandomQuiz button:focus-visible,#civilRandomQuiz select:focus-visible,#civilRandomQuiz textarea:focus-visible{outline:3px solid #333;outline-offset:3px}
+#civilRandomQuiz .rq-scroll{padding:22px;overflow-y:auto;overscroll-behavior:contain;min-height:0}
+#civilRandomQuiz .rq-intro{font-size:15px;line-height:1.75;margin:0 0 20px;color:#535353;word-break:keep-all}
+#civilRandomQuiz .rq-settings{display:grid;gap:18px}
+#civilRandomQuiz .rq-field{margin:0;padding:0;border:0;min-width:0}
+#civilRandomQuiz .rq-label{display:block;margin:0 0 8px;font-size:14px;font-weight:850;color:#252525}
+#civilRandomQuiz select{width:100%;min-height:48px;border:1px solid #bbb;border-color:#bbb!important;border-radius:11px;background:#fff!important;padding:10px 12px;font-size:15px;color:#222!important}
+#civilRandomQuiz .rq-hint{font-size:12px;line-height:1.65;color:#707070;margin:8px 0 0;word-break:keep-all}
+#civilRandomQuiz .rq-size-options{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
+#civilRandomQuiz .rq-size-options button[aria-pressed="true"]{background:#ededed!important;border:2px solid #404040;border-color:#404040!important;color:#111!important;padding:9px 12px}
+#civilRandomQuiz .rq-start{width:100%;min-height:49px;font-size:15px}
+#civilRandomQuiz .rq-resume{background:#fff;border:1px solid #d2d2d2;border-radius:13px;padding:14px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+#civilRandomQuiz .rq-resume-copy{font-size:14px;font-weight:800;line-height:1.6}
+#civilRandomQuiz .rq-resume-copy small{display:block;font-size:12px;font-weight:500;color:#737373}
+#civilRandomQuiz .rq-progress-top{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px;font-weight:800;line-height:1.5;margin-bottom:8px}
+#civilRandomQuiz .rq-progress-top span:last-child{font-size:12px;font-weight:600;color:#737373;text-align:right}
+#civilRandomQuiz .rq-track{height:5px;background:#dedede;border-radius:999px;overflow:hidden;margin-bottom:18px}
+#civilRandomQuiz .rq-fill{height:100%;background:#444;border-radius:999px}
+#civilRandomQuiz .rq-meta{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:10px}
+#civilRandomQuiz .rq-tag{font-size:12px;font-weight:750;padding:5px 9px;border:1px solid #ddd;background:#fff;border-radius:999px;color:#626262}
+#civilRandomQuiz .rq-question{margin:0;background:#fff;border:1px solid #d8d8d8;border-radius:15px;padding:19px;font-size:18px;line-height:1.85;white-space:pre-wrap;overflow-wrap:anywhere;word-break:keep-all;font-weight:650}
+#civilRandomQuiz .rq-input-section{margin-top:19px;min-width:0}
+#civilRandomQuiz .rq-input-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:11px}
+#civilRandomQuiz .rq-input-title{margin:0;font-size:15px;font-weight:850}
+#civilRandomQuiz .rq-autosave{font-size:11px;color:#777;white-space:nowrap}
+#civilRandomQuiz .rq-inputs{display:grid;grid-template-columns:minmax(0,1fr);gap:11px}
+#civilRandomQuiz .rq-input-item{min-width:0}
+#civilRandomQuiz .rq-input-label{display:block;margin:0 0 5px;font-size:14px;font-weight:800;line-height:1.65;white-space:pre-wrap;overflow-wrap:anywhere;word-break:keep-all}
+#civilRandomQuiz textarea.rq-answer-input{display:block;width:100%;min-width:0;min-height:48px;height:48px;max-height:220px;padding:10px 12px;border:1px solid #bbb;border-color:#bbb!important;border-radius:10px;background:#fff!important;color:#222!important;font:inherit;font-size:16px;line-height:1.6;resize:vertical;overflow-y:auto;box-shadow:none}
+#civilRandomQuiz .rq-input-actions{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;margin-top:13px}
+#civilRandomQuiz .rq-input-actions button{min-height:48px;font-size:15px}
+#civilRandomQuiz .rq-grade-result{margin-top:17px;padding:14px 15px;border:1px solid #bdbdbd;border-radius:13px;background:#fff;min-width:0}
+#civilRandomQuiz .rq-grade-summary{margin:0;font-size:15px;font-weight:900;line-height:1.65}
+#civilRandomQuiz .rq-grade-note{margin:5px 0 8px;font-size:12px;color:#666;line-height:1.65}
+#civilRandomQuiz .rq-grade-row{padding:10px 0;border-top:1px dashed #d0d0d0;min-width:0;font-size:14px;line-height:1.7}
+#civilRandomQuiz .rq-grade-head{display:flex;justify-content:space-between;align-items:flex-start;gap:9px;margin-bottom:3px;font-weight:800}
+#civilRandomQuiz .rq-grade-label{min-width:0;white-space:pre-wrap;overflow-wrap:anywhere}
+#civilRandomQuiz .rq-grade-status{flex-shrink:0;white-space:nowrap;font-size:12px;padding:1px 6px;background:#eee;border:1px solid #ccc;border-radius:5px}
+#civilRandomQuiz .rq-grade-mine,#civilRandomQuiz .rq-grade-expected,#civilRandomQuiz .rq-grade-reason{white-space:pre-wrap;overflow-wrap:anywhere;word-break:keep-all;min-width:0}
+#civilRandomQuiz .rq-grade-mine{color:#555}
+#civilRandomQuiz .rq-grade-expected{margin-top:4px;font-weight:800}
+#civilRandomQuiz .rq-grade-reason{margin-top:3px;font-size:12px;color:#666}
+#civilRandomQuiz .rq-answer{margin-top:18px;border:1px solid #bdbdbd;border-radius:14px;background:#f0f0f0;padding:15px 17px}
+#civilRandomQuiz .rq-answer-title{font-size:14px;font-weight:900;margin:0 0 10px;color:#222}
+#civilRandomQuiz .rq-answer-row{display:grid;grid-template-columns:minmax(0,28px) minmax(0,1fr);gap:8px;align-items:start;padding:9px 0;border-top:1px dashed #ccc;font-size:15px;line-height:1.75}
+#civilRandomQuiz .rq-answer-row.rq-labeled{grid-template-columns:minmax(0,30%) minmax(0,1fr)}
+#civilRandomQuiz .rq-answer-row:first-of-type{border-top:0;padding-top:0}
+#civilRandomQuiz .rq-answer-label{font-weight:850;white-space:pre-wrap;overflow-wrap:anywhere;min-width:0}
+#civilRandomQuiz .rq-answer-text{white-space:pre-wrap;overflow-wrap:anywhere;word-break:keep-all;min-width:0}
+#civilRandomQuiz .rq-answer-row.rq-stacked-label{display:block}
+#civilRandomQuiz .rq-stacked-label .rq-answer-label{display:block;margin-bottom:5px;word-break:keep-all}
+#civilRandomQuiz .rq-stacked-label .rq-answer-text{display:block}
+#civilRandomQuiz .rq-rate{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+#civilRandomQuiz .rq-rate button{min-height:50px;font-size:15px}
+#civilRandomQuiz .rq-footer{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:15px;border-top:1px solid #dfdfdf;padding-top:11px}
+#civilRandomQuiz .rq-footer p{margin:0;font-size:11px;color:#777;line-height:1.65;word-break:keep-all}
+#civilRandomQuiz .rq-footer button{flex-shrink:0;font-size:12px;min-height:36px;padding:8px 9px}
+#civilRandomQuiz .rq-summary-heading{margin:0 0 8px;font-size:23px;font-weight:850;letter-spacing:-.6px}
+#civilRandomQuiz .rq-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:20px 0}
+#civilRandomQuiz .rq-stat{padding:18px 9px;background:#fff;border:1px solid #d6d6d6;border-radius:13px;text-align:center}
+#civilRandomQuiz .rq-stat strong{display:block;font-size:28px;margin-bottom:5px;color:#272727}
+#civilRandomQuiz .rq-stat span{font-size:12px;font-weight:750;color:#666}
+#civilRandomQuiz .rq-summary-actions{display:grid;gap:8px;margin-top:20px}
+#civilRandomQuiz .rq-summary-actions button{min-height:48px}
+#civilRandomQuiz .rq-message{margin:12px 0 0;font-size:13px;line-height:1.6;font-weight:700;color:#555}
+#civilRandomQuiz .rq-message:empty{display:none}
+@media(max-width:560px){
+  #civilRandomQuiz{padding:0;align-items:stretch}
+  #civilRandomQuiz .rq-dialog{max-height:100dvh;height:100dvh;border:0;border-radius:0}
+  #civilRandomQuiz .rq-header{padding:14px 15px;gap:8px}
+  #civilRandomQuiz .rq-title{font-size:19px}
+  #civilRandomQuiz .rq-eyebrow{font-size:10px}
+  #civilRandomQuiz .rq-header-actions{gap:3px}
+  #civilRandomQuiz .rq-header-actions button{font-size:12px;padding:8px 10px;min-height:37px}
+  #civilRandomQuiz .rq-scroll{padding:18px 15px max(20px,env(safe-area-inset-bottom))}
+  #civilRandomQuiz .rq-question{font-size:16px;padding:16px;line-height:1.8}
+  #civilRandomQuiz .rq-input-section{margin-top:16px}
+  #civilRandomQuiz .rq-input-label{font-size:13px}
+  #civilRandomQuiz .rq-input-actions button{font-size:14px;padding:10px 8px}
+  #civilRandomQuiz .rq-grade-result{padding:12px}
+  #civilRandomQuiz .rq-grade-row{font-size:13px}
+  #civilRandomQuiz .rq-answer{padding:13px}
+  #civilRandomQuiz .rq-answer-row{font-size:14px;gap:7px;grid-template-columns:minmax(0,24px) minmax(0,1fr)}
+  #civilRandomQuiz .rq-answer-row.rq-labeled{grid-template-columns:minmax(0,30%) minmax(0,1fr)}
+  #civilRandomQuiz .rq-rate button{font-size:13px;padding:10px 8px}
+  #civilRandomQuiz .rq-resume{padding:12px;gap:8px}
+  #civilRandomQuiz .rq-resume button{font-size:12px;padding:8px 10px}
+  #civilRandomQuiz .rq-footer{align-items:flex-start}
+  #civilRandomQuiz .rq-progress-top{align-items:flex-start}
+}
+</style>
+<script id="civil-random-quiz-script">
+(()=>{
+  'use strict';
+  if(window.CivilRandomQuiz)return;
+  const byId=id=>document.getElementById(id);
+  const allowedScopes=new Set(['current','all','needsStudy']);
+  const allowedSizes=new Set(['10','20','30','all']);
+  const validIndex=i=>Number.isInteger(i)&&i>=0&&i<BANK.length;
+  const validChoice=c=>['known','retry','skip'].includes(c);
+  const cleanIndices=xs=>Array.isArray(xs)?[...new Set(xs.filter(validIndex))]:[];
+  // Legacy content signatures are used only to identify old full-bank saved
+  // sessions for repair. New quizzes always use every original question ID.
+  const legacySignatureCache=new Map();
+  const signatureText=value=>String(value??'').normalize('NFKC').toLowerCase().replace(/\s+/g,'');
+  function legacyQuestionSignature(index){
+    if(legacySignatureCache.has(index))return legacySignatureCache.get(index);
+    const q=BANK[index],spec=CivilGrader.schema(q);
+    const sections=spec.sections.map(section=>{
+      const options=section.options.map(option=>signatureText(option.aliases?.[0]||option.text));
+      // A list can be answered in any order; ordered construction steps retain order.
+      if(section.kind==='list')options.sort();
+      return {kind:section.kind,title:signatureText(section.title),required:section.required,options};
+    });
+    const key=JSON.stringify([signatureText(q.question),sections]);legacySignatureCache.set(index,key);return key;
+  }
+  function restoreLegacyFullBank(s,raw){
+    if(raw.version!==1||!s.queue.length||s.queue.length>=BANK.length)return;
+    const label=String(raw.scopeLabel||'');
+    const explicitFull=/^전체 범위 · 중복 제외 \d+문제$/.test(label);
+    const currentFull=label==='현재 학습 범위 · 전체 연도'&&!state.daily30Mode&&
+      (byId('mode')?.value||state.mode)==='all'&&activeYear()==='all'&&
+      !String(byId('search')?.value||'').trim()&&cleanIndices(view).length===BANK.length;
+    if(!explicitFull&&!currentFull)return;
+    const allSignatures=new Set([...BANK.keys()].map(legacyQuestionSignature));
+    const oldSignatures=new Set(s.queue.map(legacyQuestionSignature));
+    if(s.queue.length!==allSignatures.size||oldSignatures.size!==allSignatures.size||
+      [...allSignatures].some(key=>!oldSignatures.has(key)))return;
+    const used=new Set(s.queue),missing=shuffled([...BANK.keys()].filter(index=>!used.has(index)));
+    const wasComplete=s.cursor===s.queue.length;
+    s.queue.push(...missing);s.restoredOriginals=missing.length;s.completedAt=0;
+    if(wasComplete){s.revealed=false;if(s.screen!=='settings')s.screen='round'}
+  }
+  function inputValues(q,values){
+    const count=CivilGrader.schema(q).inputCount;
+    return Array.from({length:count},(_,i)=>typeof values?.[i]==='string'?values[i]:'');
+  }
+  function validGradeRecord(record,values){
+    if(!record||record.version!==CivilGrader.VERSION||!Array.isArray(record.values)||record.values.length!==values.length||record.values.some((value,i)=>value!==values[i]))return false;
+    const data=record.data;
+    return !!(data&&Number.isFinite(data.total)&&data.total>0&&['correctCount','partialCount','wrongCount','extraCount'].every(name=>Number.isFinite(data[name])&&data[name]>=0)&&typeof data.perfect==='boolean'&&Array.isArray(data.results)&&data.results.every(row=>row&&typeof row==='object'&&Number.isFinite(row.score)&&row.score>=0&&row.score<=1));
+  }
+  const fresh=()=>({version:3,open:false,screen:'settings',settings:{scope:'current',size:'20'},queue:[],cursor:0,revealed:false,results:[],answers:{},grades:{},scopeLabel:'',startedAt:0,completedAt:0,restoredOriginals:0});
+  function normalize(raw){
+    const base=fresh();
+    if(!raw||typeof raw!=='object'||![1,2,3].includes(raw.version))return base;
+    base.settings.scope=allowedScopes.has(raw.settings?.scope)?raw.settings.scope:'current';
+    base.settings.size=allowedSizes.has(String(raw.settings?.size))?String(raw.settings.size):'20';
+    base.open=raw.open===true;
+    const queue=cleanIndices(raw.queue),cursor=raw.cursor;
+    const results=Array.isArray(raw.results)?raw.results:[];
+    const coherent=queue.length&&queue.length===raw.queue?.length&&Number.isInteger(cursor)&&cursor>=0&&cursor<=queue.length&&results.length===cursor&&results.every((r,i)=>r&&r.index===queue[i]&&validChoice(r.choice));
+    if(coherent){
+      base.queue=queue;base.cursor=cursor;base.results=results.map(r=>({index:r.index,choice:r.choice,at:Number(r.at)||0}));
+      base.revealed=raw.revealed===true&&cursor<queue.length;
+      base.scopeLabel=typeof raw.scopeLabel==='string'?raw.scopeLabel:'';
+      base.startedAt=Number(raw.startedAt)||0;base.completedAt=Number(raw.completedAt)||0;
+      base.screen=raw.screen==='settings'?'settings':cursor===queue.length?'summary':'round';
+      base.restoredOriginals=raw.version>=2?Math.max(0,Math.min(Number(raw.restoredOriginals)||0,BANK.length)):0;
+      restoreLegacyFullBank(base,raw);
+      if(/^전체 범위 · 중복 제외 \d+문제$/.test(base.scopeLabel))base.scopeLabel=`전체 ${BANK.length}문제`;
+      if(raw.version===3){
+        for(const index of base.queue){
+          const q=BANK[index],key=qkey(q);
+          if(!Array.isArray(raw.answers?.[key]))continue;
+          const values=inputValues(q,raw.answers[key]);base.answers[key]=values;
+          const record=raw.grades?.[key];
+          if(validGradeRecord(record,values))base.grades[key]={version:record.version,values:[...record.values],data:record.data,at:Number(record.at)||0};
+        }
+      }
+    }
+    return base;
+  }
+  state.randomQuiz=normalize(state.randomQuiz);
+  const qs=()=>state.randomQuiz||(state.randomQuiz=fresh());
+  let opened=false,previousFocus=null,inertRecords=[],busy=false,lastStorageError=false,composingField=null;
+  const modal=document.createElement('div');
+  modal.id='civilRandomQuiz';modal.hidden=true;
+  modal.innerHTML='<section class="rq-dialog" role="dialog" aria-modal="true" aria-labelledby="rqTitle" aria-describedby="rqDialogDescription" tabindex="-1"><div class="rq-header"><div class="rq-heading"><div class="rq-eyebrow">토목기사 · 빠른 암기 확인</div><h2 class="rq-title" id="rqTitle">랜덤 퀴즈</h2></div><div class="rq-header-actions"><button type="button" id="rqSettingsButton">범위 설정</button><button type="button" id="rqCloseButton" aria-label="랜덤 퀴즈 닫기">닫기</button></div></div><div class="rq-scroll" id="rqScreen"></div></section>';
+  document.body.append(modal);
+  const dialog=modal.querySelector('.rq-dialog'),screen=byId('rqScreen');
+  const launcher=document.createElement('button');
+  launcher.type='button';launcher.id='randomQuizLaunch';launcher.textContent='랜덤 퀴즈';launcher.setAttribute('aria-haspopup','dialog');launcher.setAttribute('aria-controls',modal.id);
+  let launchHost=byId('quickStudyTools');
+  if(!launchHost){
+    launchHost=document.createElement('div');launchHost.id='randomQuizStandaloneTools';
+    launchHost.style.cssText='display:flex;justify-content:flex-end;gap:7px;margin:7px 0';
+    const anchor=document.querySelector('.app header');
+    if(anchor)anchor.after(launchHost);else document.querySelector('.app')?.prepend(launchHost);
+    if(!launchHost.isConnected)document.body.insertBefore(launchHost,modal);
+  }
+  launchHost.append(launcher);
+  function el(tag,className,text){const n=document.createElement(tag);if(className)n.className=className;if(text!=null)n.textContent=String(text);return n}
+  function button(text,handler,className=''){const n=el('button',className,text);n.type='button';n.addEventListener('click',handler);return n}
+  function persist(){
+    try{save();lastStorageError=false}catch(e){lastStorageError=true}
+    updateLauncher();
+  }
+  function updateLauncher(){
+    const s=qs(),pending=s.queue.length&&s.cursor<s.queue.length;
+    launcher.title=pending?`저장된 랜덤 퀴즈 이어풀기 · ${s.cursor+1}/${s.queue.length}`:'답안을 직접 입력해 채점하거나 정답을 확인하며 학습합니다.';
+  }
+  function message(text){
+    let box=byId('rqMessage');
+    if(!box){box=el('p','rq-message');box.id='rqMessage';box.setAttribute('role','status');screen.append(box)}
+    box.textContent=text||'';
+  }
+  function describeScope(scope){
+    if(scope==='all')return `전체 ${BANK.length}문제`;
+    if(scope==='current'&&state.daily30Mode)return '오늘 30문제 · 남은 배정 문제';
+    const yr=typeof yearName==='function'?yearName(activeYear()):'현재 연도';
+    const search=String(byId('search')?.value||'').trim();
+    return scope==='needsStudy'?`암기 못함 · ${yr}${search?' · 검색 적용':''}`:`현재 학습 범위 · ${yr}${search?' · 검색 적용':''}`;
+  }
+  function candidates(scope){
+    if(scope==='all')return [...BANK.keys()];
+    const term=norm(byId('search')?.value||'');
+    if(scope==='needsStudy')return cleanIndices(filteredIndices('needsStudy',term));
+    if(state.daily30Mode){
+      const assigned=window.CivilDaily30?.session?.()?.assigned||state.daily30Session?.assigned||[];
+      return cleanIndices(assigned).filter(index=>state.status[qkey(BANK[index])]!=='mastered');
+    }
+    const mode=byId('mode')?.value||state.mode||'all';
+    const eligible=new Set(filteredIndices(mode,term));
+    return cleanIndices(view).filter(index=>eligible.has(index));
+  }
+  function shuffled(input){const a=cleanIndices(input);for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+  function totals(){return qs().results.reduce((a,r)=>{a[r.choice]++;return a},{known:0,retry:0,skip:0})}
+  function focusFirst(selector){requestAnimationFrame(()=>{if(!opened)return;const target=selector?screen.querySelector(selector):null;(target||dialog).focus({preventScroll:true})})}
+  function drawSettings(){
+    const s=qs();
+    const intro=el('p','rq-intro','답안칸에 직접 써서 채점하거나, 정답을 확인하며 풀 수 있습니다. 채점과 정답 확인 후에도 현재 문제를 유지하며, 다음 버튼을 눌러야 넘어갑니다.');
+    intro.id='rqDialogDescription';screen.append(intro);
+    if(s.queue.length&&s.cursor<s.queue.length){
+      const resume=el('div','rq-resume'),copy=el('div','rq-resume-copy',`이전 퀴즈 이어풀기 · ${s.cursor+1} / ${s.queue.length}`);
+      copy.append(el('small','',`${s.cursor}문제 확인 · 순서와 진행 위치 저장됨`));
+      resume.append(copy,button('이어서 풀기',()=>{s.screen='round';persist();draw()}));screen.append(resume);
+    }
+    const form=el('div','rq-settings');
+    const scopeField=el('div','rq-field'),label=el('label','rq-label','출제 범위');label.htmlFor='rqScope';
+    const select=el('select');select.id='rqScope';
+    [['current',`현재 학습 범위 (${candidates('current').length}문제)`],['all',`전체 ${BANK.length}문제`],['needsStudy',`암기 못함 (${candidates('needsStudy').length}문제)`]].forEach(([value,name])=>{const option=el('option','',name);option.value=value;select.append(option)});
+    select.value=s.settings.scope;
+    const scopeHint=el('p','rq-hint');scopeHint.id='rqScopeHint';select.setAttribute('aria-describedby',scopeHint.id);
+    scopeField.append(label,select,scopeHint);
+    const sizeField=el('fieldset','rq-field'),legend=el('legend','rq-label','이번에 풀 문제 수'),sizes=el('div','rq-size-options');
+    ['10','20','30','all'].forEach(size=>{const b=button(size==='all'?'모두':`${size}문제`,()=>{s.settings.size=size;persist();updateOptions()});b.dataset.rqSize=size;b.setAttribute('aria-pressed',String(s.settings.size===size));sizes.append(b)});
+    sizeField.append(legend,sizes);
+    const start=button('',()=>beginRound(candidates(s.settings.scope),describeScope(s.settings.scope),s.settings.size),'rq-primary rq-start');start.id='rqStart';
+    const note=el('p','rq-hint',`원문 ${BANK.length}문제를 모두 포함합니다. 내용이 같아도 원문 번호가 다르면 각각 출제하며, 같은 원문 번호는 한 회차에 한 번만 나옵니다. ‘암기 못함’에는 아직 분류하지 않은 문제도 포함되며, 현재 연도와 검색 조건을 적용합니다.`);
+    form.append(scopeField,sizeField,start,note);screen.append(form);
+    function updateOptions(){
+      const count=candidates(s.settings.scope).length,requested=s.settings.size==='all'?count:Number(s.settings.size),n=Math.min(count,requested);
+      const unfinished=s.queue.length&&s.cursor<s.queue.length;
+      start.textContent=count?`${unfinished?'새로 ':''}랜덤 ${n}문제 시작`:'선택한 범위에 문제가 없습니다';start.disabled=!count;
+      scopeHint.textContent=describeScope(s.settings.scope)+(count<requested?` · ${count}문제로 진행합니다.`:'');
+      sizes.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.rqSize===s.settings.size)));
+    }
+    select.addEventListener('change',()=>{s.settings.scope=select.value;persist();updateOptions()});
+    updateOptions();focusFirst(s.queue.length&&s.cursor<s.queue.length?'.rq-resume button':'#rqScope');
+  }
+  function beginRound(indices,scopeLabel,size){
+    const pool=shuffled(indices);
+    const requested=size==='all'?pool.length:Number(size)||20;
+    const queue=pool.slice(0,Math.min(requested,pool.length));
+    if(!queue.length){message('이 범위에는 출제할 문제가 없습니다. 다른 범위를 선택하세요.');return}
+    const s=qs();Object.assign(s,{queue,cursor:0,revealed:false,results:[],answers:{},grades:{},screen:'round',scopeLabel,startedAt:Date.now(),completedAt:0,restoredOriginals:0});
+    persist();draw();
+  }
+  function currentGrade(q){
+    const s=qs(),key=qkey(q),record=s.grades[key];
+    return validGradeRecord(record,inputValues(q,s.answers[key]))?record:null;
+  }
+  function captureInputs(index,invalidate=false){
+    const s=qs();
+    if(s.screen!=='round'||s.queue[s.cursor]!==index||!BANK[index])return null;
+    const q=BANK[index],key=qkey(q),inputs=[...screen.querySelectorAll('#rqInputs .rq-answer-input')];
+    if(inputs.length!==CivilGrader.schema(q).inputCount)return null;
+    const values=inputs.map(input=>input.value);s.answers[key]=values;
+    if(invalidate||(s.grades[key]&&!validGradeRecord(s.grades[key],values)))delete s.grades[key];
+    return values;
+  }
+  function growQuizInput(input){
+    input.style.height='48px';
+    input.style.height=`${Math.max(48,Math.min(220,input.scrollHeight+2))}px`;
+  }
+  function drawInputSection(index,q){
+    const key=qkey(q),spec=CivilGrader.schema(q),values=inputValues(q,qs().answers[key]);
+    const section=el('section','rq-input-section');section.setAttribute('aria-labelledby','rqInputTitle');
+    const heading=el('div','rq-input-heading'),title=el('h3','rq-input-title','답안 작성');title.id='rqInputTitle';
+    heading.append(title,el('span','rq-autosave','자동 저장'));
+    const inputs=el('div','rq-inputs');inputs.id='rqInputs';
+    values.forEach((value,i)=>{
+      const row=el('div','rq-input-item');
+      const label=el('label','rq-input-label',q.inputLabels?.[i]||`${i+1}.`);
+      const input=el('textarea','rq-answer-input');input.id=`rqAnswer-${q.id}-${i}`;input.rows=1;input.value=value;
+      label.htmlFor=input.id;input.placeholder=`${i+1}번 답 입력`;input.setAttribute('autocomplete','off');input.setAttribute('aria-describedby','rqInputHelp');
+      if(spec.sections.some(group=>group.kind==='list'&&group.required>1&&group.indexes.length===1&&group.indexes[0]===i))input.placeholder='여러 답은 줄바꿈으로 구분해 입력';
+      input.addEventListener('compositionstart',()=>{composingField=input});
+      input.addEventListener('compositionend',()=>{if(composingField===input)composingField=null});
+      input.addEventListener('input',()=>{
+        if(qs().screen!=='round'||qs().queue[qs().cursor]!==index)return;
+        const hadGrade=!!qs().grades[key];captureInputs(index,true);growQuizInput(input);persist();
+        if(hadGrade){renderRoundDetails(index);byId('rqInputHelp').textContent='답안을 수정했습니다. 채점 또는 Ctrl + Enter를 눌러 다시 채점하세요.'}
+      });
+      row.append(label,input);inputs.append(row);
+      requestAnimationFrame(()=>{if(input.isConnected)growQuizInput(input)});
+    });
+    const actions=el('div','rq-input-actions');
+    const check=button('채점',gradeCurrent,'rq-primary');check.id='rqCheck';check.title='입력한 답안 채점 · Ctrl + Enter';
+    const reveal=button('정답 확인',()=>{
+      if(!opened||qs().screen!=='round'||qs().queue[qs().cursor]!==index)return;
+      captureInputs(index);qs().revealed=!qs().revealed;persist();renderRoundDetails(index);
+    });
+    reveal.id='rqReveal';reveal.setAttribute('aria-controls','rqOfficial');reveal.setAttribute('aria-expanded',String(qs().revealed));
+    actions.append(check,reveal);
+    const help=el('p','rq-hint','Ctrl + Enter: 채점 · Enter: 줄바꿈 · 채점과 정답 확인 후에도 현재 문제를 유지합니다.');help.id='rqInputHelp';
+    section.append(heading,inputs,actions,help);
+    if(spec.sections.some(group=>group.kind==='list'&&group.required>1))section.append(el('p','rq-hint rq-order-help','나열형 답안은 같은 항목 안에서 보기 번호와 입력 순서가 달라도 정답으로 인정합니다.'));
+    screen.append(section);
+    const details=el('div');details.id='rqRoundDetails';screen.append(details);
+    renderRoundDetails(index);
+  }
+  function renderRoundDetails(index){
+    const s=qs(),q=BANK[index],details=byId('rqRoundDetails');
+    if(!q||!details||s.screen!=='round'||s.queue[s.cursor]!==index)return;
+    details.replaceChildren();
+    const record=currentGrade(q);
+    byId('rqCheck').textContent=record?'다시 채점':'채점';
+    byId('rqReveal').textContent=s.revealed?'정답 숨기기':'정답 확인';
+    byId('rqReveal').setAttribute('aria-expanded',String(s.revealed));
+    if(record){
+      const data=record.data,box=el('section','rq-grade-result');box.id='rqGradeResult';box.setAttribute('aria-label','입력 답안 채점 결과');box.setAttribute('aria-live','polite');
+      const summary=el('h3','rq-grade-summary',`${data.perfect?'모두 정답':'채점 결과'} · 정답 ${data.correctCount} / ${data.total}${data.partialCount?` · 부분정답 ${data.partialCount}`:''}`);
+      box.append(summary,el('p','rq-grade-note',data.perfect?'입력한 답안을 모두 맞혔습니다. 다음 문제로 이동하려면 아래에서 선택하세요.':'빈칸은 미작성으로 판정합니다. 답안을 고친 뒤 다시 채점할 수 있습니다.'));
+      data.results.forEach((result,i)=>{
+        const row=el('div','rq-grade-row');
+        const entered=String(result.entered||''),empty=!entered.trim(),status=result.score===1?'정답':result.score>0?'부분정답':empty?'미작성':'오답';
+        row.dataset.result=result.score===1?'correct':result.score>0?'partial':empty?'missing':'wrong';
+        const head=el('div','rq-grade-head');head.append(el('span','rq-grade-label',result.label||`${i+1}번 답안`),el('span','rq-grade-status',status));
+        row.append(head,el('div','rq-grade-mine',`내 답: ${empty?'미작성':entered}`));
+        if(result.score!==1&&result.expected)row.append(el('div','rq-grade-expected',`정답: ${result.expected}`));
+        if(result.score!==1&&result.reason)row.append(el('div','rq-grade-reason',result.reason));
+        box.append(row);
+      });
+      details.append(box);
+    }
+    if(s.revealed){
+      const answer=el('section','rq-answer');answer.id='rqOfficial';answer.setAttribute('aria-label','등록된 모범답');
+      answer.append(el('h3','rq-answer-title','모범답'));
+      CivilGrader.officialRows(q).forEach(item=>{const row=el('div','rq-answer-row');if(!/^\s*\d+\.\s*$/.test(String(item.label)))row.classList.add('rq-labeled');if(String(item.label).length>18)row.classList.add('rq-stacked-label');row.append(el('span','rq-answer-label',item.label),el('span','rq-answer-text',item.text));answer.append(row)});
+      details.append(answer);
+    }
+    if(s.revealed||record){
+      const rating=el('div','rq-rate');
+      const known=button('알고 있음 · 다음',()=>rate(index,'known'),'rq-primary');known.id='rqKnown';
+      const retry=button('다시 풀기 · 다음',()=>rate(index,'retry'));retry.id='rqRetry';
+      rating.append(known,retry);details.append(rating,el('p','rq-hint','알고 있음 → 암기 완료 · 다시 풀기 → 암기 못함으로 저장하고 다음 문제로 이동합니다.'));
+    }
+  }
+  function gradeCurrent(){
+    const s=qs();
+    if(!opened||busy||s.screen!=='round'||composingField?.isConnected)return false;
+    const index=s.queue[s.cursor],q=BANK[index];if(!q)return false;
+    const values=captureInputs(index);if(!values)return false;
+    try{
+      const data=CivilGrader.grade(q,values);
+      // Quiz answers and grades never write the main study's answers/attempts.
+      s.grades[qkey(q)]={version:CivilGrader.VERSION,values:[...values],data,at:Date.now()};
+      persist();renderRoundDetails(index);
+      byId('rqInputHelp').textContent='Ctrl + Enter: 다시 채점 · Enter: 줄바꿈 · 다음 문제로 이동하려면 아래에서 선택하세요.';
+      if(lastStorageError)message('브라우저 저장에 실패해 이번 진행은 현재 창에서만 유지됩니다.');
+      return true;
+    }catch(error){message('답안을 채점하지 못했습니다. 입력 내용을 확인한 뒤 다시 채점해 주세요.');return false}
+  }
+  function drawRound(){
+    const s=qs(),index=s.queue[s.cursor],q=BANK[index];
+    if(!q){s.screen='summary';persist();drawSummary();return}
+    const t=totals(),progress=el('div','rq-progress-top');
+    progress.append(el('span','',`${s.cursor+1} / ${s.queue.length} 문제`),el('span','',`알고 있음 ${t.known} · 다시 풀기 ${t.retry} · 건너뜀 ${t.skip}`));
+    const track=el('div','rq-track');track.setAttribute('role','progressbar');track.setAttribute('aria-label','확인한 문제 수');track.setAttribute('aria-valuemin','0');track.setAttribute('aria-valuemax',String(s.queue.length));track.setAttribute('aria-valuenow',String(s.cursor));
+    const fill=el('div','rq-fill');fill.style.width=`${s.cursor/s.queue.length*100}%`;track.append(fill);
+    const meta=el('div','rq-meta');meta.append(el('span','rq-tag',`원문 ${q.number}번`),el('span','rq-tag',`출제 ${q.label}`));
+    const question=el('p','rq-question',q.question);question.id='rqDialogDescription';
+    screen.append(progress,track,meta,question);
+    drawInputSection(index,q);
+    const footer=el('div','rq-footer');
+    footer.append(el('p','',`${s.scopeLabel}\n닫아도 진행 위치는 저장됩니다.`),button('건너뛰기',()=>rate(index,'skip'),'rq-quiet'));screen.append(footer);
+    focusFirst('#rqInputs .rq-answer-input');
+  }
+  function rate(index,choice){
+    const s=qs();
+    if(!opened||busy||s.screen!=='round'||s.queue[s.cursor]!==index||!validChoice(choice)||(choice!=='skip'&&!s.revealed&&!currentGrade(BANK[index])))return;
+    busy=true;
+    try{
+      captureInputs(index);
+      if(choice==='known'){
+        if(typeof window.CivilQuickStudy?.markKnown!=='function')throw new Error('암기 저장 기능을 찾을 수 없습니다.');
+        const ok=window.CivilQuickStudy.markKnown(index,'random-quiz');if(ok===false)throw new Error('암기 기록을 저장하지 못했습니다.');
+      }else if(choice==='retry'){
+        if(typeof window.CivilQuickStudy?.markRetry!=='function')throw new Error('암기 저장 기능을 찾을 수 없습니다.');
+        const ok=window.CivilQuickStudy.markRetry(index,'random-quiz');if(ok===false)throw new Error('암기 기록을 저장하지 못했습니다.');
+      }
+      s.results.push({index,choice,at:Date.now()});s.cursor++;s.revealed=false;
+      if(s.cursor>=s.queue.length){s.screen='summary';s.completedAt=Date.now()}
+      persist();draw();
+    }catch(e){message(e?.message||'처리하지 못했습니다. 다시 시도해 주세요.')}
+    finally{requestAnimationFrame(()=>{busy=false})}
+  }
+  function drawSummary(){
+    const s=qs(),t=totals();
+    screen.append(el('h3','rq-summary-heading','이번 퀴즈를 마쳤어요'));
+    const description=el('p','rq-intro',`${s.queue.length}문제의 자가 확인 기록입니다. 알고 있는 문제는 암기 완료로 저장했습니다.`);description.id='rqDialogDescription';screen.append(description);
+    const stats=el('div','rq-stats');
+    [[t.known,'알고 있음'],[t.retry,'다시 풀기'],[t.skip,'건너뜀']].forEach(([n,label])=>{const tile=el('div','rq-stat');tile.append(el('strong','',n),el('span','',label));stats.append(tile)});
+    screen.append(stats,el('p','rq-hint','위 숫자는 직접 선택한 암기 상태입니다. 답안을 입력해 채점한 점수와는 별도로 기록합니다.'));
+    const actions=el('div','rq-summary-actions');
+    const retryIndices=s.results.filter(r=>r.choice==='retry').map(r=>r.index);
+    const retry=button(`다시 풀기만 퀴즈 (${retryIndices.length}문제)`,()=>beginRound(retryIndices,'직전 퀴즈에서 다시 풀기로 선택한 문제','all'),'rq-primary');retry.disabled=!retryIndices.length;
+    const again=button('범위 선택하고 새 퀴즈',()=>{s.screen='settings';persist();draw()});again.id='rqNewQuiz';
+    actions.append(retry,again,button('기존 학습으로 돌아가기',close,'rq-quiet'));screen.append(actions);
+    focusFirst(retryIndices.length?'.rq-primary':'#rqNewQuiz');
+  }
+  function draw(){
+    if(!opened)return;
+    screen.replaceChildren();screen.scrollTop=0;
+    const s=qs();
+    byId('rqSettingsButton').hidden=s.screen==='settings';
+    if(s.screen==='round'&&s.cursor<s.queue.length)drawRound();
+    else if(s.queue.length&&s.cursor>=s.queue.length&&s.screen!=='settings')drawSummary();
+    else drawSettings();
+    if(s.restoredOriginals){message(`이전 풀이 기록을 유지하고 빠졌던 ${s.restoredOriginals}문제를 추가했습니다. 전체 ${BANK.length}문제입니다.`);s.restoredOriginals=0;persist()}
+    if(lastStorageError)message('브라우저 저장에 실패해 이번 진행은 현재 창에서만 유지됩니다.');
+  }
+  function focusable(){return [...modal.querySelectorAll('button:not([disabled]),select:not([disabled]),input:not([disabled]),textarea:not([disabled]),[tabindex="0"]')].filter(n=>!n.hidden&&n.getClientRects().length)}
+  function lockBackground(){
+    inertRecords=[];
+    for(const node of [...document.body.children]){
+      if(node===modal||['SCRIPT','STYLE','LINK'].includes(node.tagName))continue;
+      inertRecords.push({node,inert:node.inert,hidden:node.getAttribute('aria-hidden')});
+      node.inert=true;node.setAttribute('aria-hidden','true');
+    }
+    document.body.classList.add('civil-random-quiz-open');
+  }
+  function unlockBackground(){
+    for(const item of inertRecords){item.node.inert=item.inert;if(item.hidden===null)item.node.removeAttribute('aria-hidden');else item.node.setAttribute('aria-hidden',item.hidden)}
+    inertRecords=[];document.body.classList.remove('civil-random-quiz-open');
+  }
+  function open(){
+    if(opened)return;
+    previousFocus=document.activeElement;opened=true;qs().open=true;modal.hidden=false;
+    lockBackground();persist();draw();
+  }
+  function close(){
+    if(!opened)return;
+    captureInputs(qs().queue[qs().cursor]);
+    opened=false;qs().open=false;modal.hidden=true;unlockBackground();
+    window.CivilQuickStudy?.updateCounters?.();persist();
+    const target=previousFocus?.isConnected&&!previousFocus.closest('[inert]')?previousFocus:launcher;
+    if(target?.getClientRects().length)target.focus({preventScroll:true});else launcher.focus({preventScroll:true});
+    previousFocus=null;
+  }
+  function reset(){
+    if(opened){opened=false;modal.hidden=true;unlockBackground()}
+    state.randomQuiz=fresh();busy=false;composingField=null;persist();previousFocus=null;
+  }
+  launcher.addEventListener('click',open);byId('rqCloseButton').addEventListener('click',close);
+  byId('resetConfirmYes')?.addEventListener('click',reset);
+  byId('rqSettingsButton').addEventListener('click',()=>{captureInputs(qs().queue[qs().cursor]);qs().screen='settings';persist();draw()});
+  // Capture prevents legacy document-level Enter/arrow handlers from changing the hidden study view.
+  // Root also gates its earlier window-capture Ctrl+Enter handler while this modal is open.
+  window.addEventListener('keydown',e=>{
+    if(!opened)return;
+    e.stopImmediatePropagation();
+    // Native Korean composition and ordinary textarea Enter keep their defaults.
+    if(e.isComposing||e.keyCode===229||composingField?.isConnected)return;
+    if(e.key==='Escape'){e.preventDefault();close();return}
+    if(e.key==='Tab'){
+      const nodes=focusable(),first=nodes[0],last=nodes[nodes.length-1],active=document.activeElement;
+      if(!first){e.preventDefault();dialog.focus();return}
+      if(e.shiftKey&&(active===first||!nodes.includes(active))){e.preventDefault();last.focus()}
+      else if(!e.shiftKey&&(active===last||!nodes.includes(active))){e.preventDefault();first.focus()}
+      return;
+    }
+    if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)&&!e.shiftKey&&!e.altKey){
+      e.preventDefault();if(!e.repeat&&qs().screen==='round')gradeCurrent();return;
+    }
+    const typing=e.target?.matches?.('textarea.rq-answer-input');
+    if(!typing&&(e.key==='Enter'||e.key===' ')&&(e.repeat||e.ctrlKey||e.metaKey||e.altKey))e.preventDefault();
+    if(!modal.contains(e.target)){e.preventDefault();dialog.focus({preventScroll:true})}
+  },true);
+  document.addEventListener('focusin',e=>{if(opened&&!modal.contains(e.target))dialog.focus({preventScroll:true})},true);
+  window.CivilRandomQuiz={isOpen:()=>opened,open,close,reset,gradeCurrent};
+  updateLauncher();
+  if(qs().open)requestAnimationFrame(open);
+})();
+</script>
+
+<!-- quick-known-and-random-quiz-2026-10-19 -->
 </body>
 </html>
 <!-- github-mobile-unmastered-filter-fix-2026-08-07 -->
