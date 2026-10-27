@@ -498,6 +498,17 @@ button.good,
 .taltal-dup .similar,.year-dup .similar{font-weight:800;color:#555}
 .taltal-source{font-size:11px;color:#666;font-weight:800;margin:0 0 5px}
 .taltal-problem-img,.taltal-solution-img{display:block;width:auto;max-width:100%;height:auto!important;max-height:none!important;object-fit:contain;margin:5px auto 8px;filter:none!important}
+/* Compact scans: contain the whole original image without cropping. */
+.taltal-problem-img{max-width:min(40.8%,408px)}
+.taltal-solution-img{max-width:min(70%,640px)}
+@media(max-width:700px){
+  .taltal-problem-img{max-width:48%}
+  .taltal-solution-img{max-width:82%}
+}
+@media(max-width:480px){
+  .taltal-problem-img{max-width:57.6%}
+  .taltal-solution-img{max-width:94%}
+}
 .taltal-manual-note{font-size:11px;color:#666;margin:4px 0 7px;line-height:1.5}
 </style>
 
@@ -507,7 +518,7 @@ button.good,
 <header>
   <div class="title-row">
     <div>
-      <h1>서술형 작성 + 탈탈 <span style="font-size:11px;color:#666;font-weight:800">V2 · 답란전체수정</span></h1>
+    <h1>서술형 작성 + 탈탈 <span style="font-size:11px;color:#666;font-weight:800">V7 · 상단 공간 최소화</span></h1>
       <div class="progress-track" aria-label="학습 진행률"><div id="progressBar" class="progress-bar"></div></div>
     </div>
     <div class="header-actions">
@@ -974,8 +985,14 @@ const CivilGrader=(()=>{
   function schema(q){return specs.get(q.id)||compile(q)}
   function grade(q,values){
     const spec=schema(q),results=[];let correct=0,partial=0;const sectionPass=[];
-    for(let si=0;si<spec.sections.length;si++){
-      const s=spec.sections[si];
+    // Ordinary list answers can be entered in ANY field of the same question.
+    // Keep ordered sequences and fixed sub-answers separate.
+    const sections=spec.sections.every(s=>s.kind==='list')&&spec.sections.length>1
+      ? [{kind:'list',title:'',indexes:spec.sections.flatMap(s=>s.indexes),
+          options:spec.sections.flatMap(s=>s.options),required:spec.total}]
+      : spec.sections;
+    for(let si=0;si<sections.length;si++){
+      const s=sections[si];
       if(s.kind==='fixed'){
         const entered=String(values[s.indexes[0]]||'').trim(),opt=s.options[0];
         let r=match(entered,opt);if(r.score!==1&&entered){const pieces=splitAnswer(entered,[opt]);if(pieces.length>1&&pieces.every(p=>match(p,opt).score===1))r={score:1,quality:1,reason:'등록된 대체 답안 — 한 항목으로 인정'}}results.push({...r,entered,label:s.title,expected:opt.text,section:si,field:s.indexes[0]});
@@ -1519,7 +1536,7 @@ if(q.manualGrade){
   }else{
     const dup=document.createElement('div');dup.className='taltal-dup';dup.textContent='과년도 445문항과 확인된 중복 없음';questionBox.append(dup);
   }
-  (q.questionImages||[]).forEach(src=>{const img=document.createElement('img');img.className='taltal-problem-img';img.src=src;img.alt='탈탈 문제';questionBox.append(img);});
+  (q.questionImages||[]).forEach(src=>{const img=document.createElement('img');img.className='taltal-problem-img';img.src=src;img.alt='탈탈 문제';img.style.setProperty('width',window.matchMedia('(max-width:480px)').matches?'57.6%':window.matchMedia('(max-width:700px)').matches?'48%':'40.8%','important');img.style.setProperty('max-width','408px','important');img.style.setProperty('height','auto','important');questionBox.append(img);});
 }else if(q.taltalDuplicates?.length){
   const dup=document.createElement('div');dup.className='year-dup';
   dup.innerHTML='<b>♻ 탈탈에 있음</b> · '+q.taltalDuplicates.map(x=>`<span class="${x.kind==='동일'?'same':'similar'}">${x.kind}: 원본 계산형 ${x.taltalIndex}번</span>`).join(' · ');
@@ -1581,7 +1598,7 @@ $('#check').addEventListener('click',()=>{
   summary.className='result-summary';
   summary.textContent=perfect
     ? `정답입니다. (${correctCount}/${grade.total})`
-    : `채점 결과: 정답 ${correctCount}/${grade.total}개${partialCount?`, 부분정답 ${partialCount}개`:''}, 오답·누락 ${wrongCount}개${grade.extraCount?`, 추가·중복 입력 ${grade.extraCount}개`:''}`;
+    : `채점 결과: 정답 ${correctCount}/${grade.total}개${partialCount?`, 부분정답 ${partialCount}개`:''}, 오답·누락 ${wrongCount}개${grade.extraCount?`, 추가·중복 입력 ${grade.extraCount}개`:''} · 답안 전체 초기화`;
   resultBox.append(summary);
 
   results.forEach((r,i)=>{
@@ -1610,6 +1627,14 @@ $('#check').addEventListener('click',()=>{
     row.append(symbol,detail,status);
     resultBox.append(row);
   });
+
+  // Keep the graded attempt for review/history; reset every visible answer
+  // field only after ALL fields have been graded and any answer was wrong.
+  if(!perfect){
+    inputs.forEach(input=>{input.value='';input.classList.remove('auto-corrected');autoGrow(input)});
+    state.answers[key]=Array(inputs.length).fill('');
+    delete state.corrections[key];
+  }
 
   const btn=$('#check');
   const original=btn.textContent;
@@ -1679,6 +1704,8 @@ function setStatus(name){
   const k=qkey(q),next=name==='mastered'?'mastered':'unmastered';
   state.status[k]=next;state.memoryUpdated||={};state.memoryUpdated[k]=Date.now();scheduleReview(k,next);
   if(next==='mastered'){
+    // The memory-complete button also fills the original individual fields.
+    if(!q.manualGrade){window.CivilQuickStudy?.fillAnswer?.()}
     state.answers[k]=[...document.querySelectorAll('.answer-input')].map(x=>x.value);
     state.memoryVerify[k]={pending:true,due:localDateKey(),source:'manual',reason:'typing',marked:localDateKey()};
   }else{
@@ -2977,6 +3004,30 @@ body.civil-random-quiz-open{overflow:hidden!important}
 </script>
 
 <!-- quick-known-and-random-quiz-2026-10-19 -->
+<style id="compact-header-inline-placement-v7">
+/* When compact, put the restore button beside the question status and remove
+   the now-empty sticky header instead of reserving a separate top row. */
+body.header-collapsed header{display:none!important}
+.meta-tools #headerCompactToggle{display:inline-flex!important;align-items:center;justify-content:center;min-height:30px;height:30px;padding:3px 8px;border-radius:8px;font-size:11px;white-space:nowrap;flex-shrink:0}
+@media(max-width:560px){.meta-tools{gap:4px}.meta-tools #headerCompactToggle{min-height:27px;height:27px;padding:2px 5px;font-size:10px}}
+</style>
+<script id="compact-header-inline-placement-v7-script">
+(()=>{
+  const button=document.getElementById('headerCompactToggle');
+  const headerActions=document.querySelector('header .header-actions');
+  const questionTools=document.querySelector('main .meta-tools');
+  if(!button||!headerActions||!questionTools)return;
+  function placeToggle(){
+    if(document.body.classList.contains('header-collapsed')){
+      if(button.parentElement!==questionTools)questionTools.prepend(button);
+    }else if(button.parentElement!==headerActions){
+      headerActions.prepend(button);
+    }
+  }
+  placeToggle();
+  button.addEventListener('click',placeToggle);
+})();
+</script>
 </body>
 </html>
 <!-- github-mobile-unmastered-filter-fix-2026-08-07 -->
