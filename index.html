@@ -498,16 +498,13 @@ button.good,
 .taltal-dup .similar,.year-dup .similar{font-weight:800;color:#555}
 .taltal-source{font-size:11px;color:#666;font-weight:800;margin:0 0 5px}
 .taltal-problem-img,.taltal-solution-img{display:block;width:auto;max-width:100%;height:auto!important;max-height:none!important;object-fit:contain;margin:5px auto 8px;filter:none!important}
-/* Compact scans: contain the whole original image without cropping. */
-.taltal-problem-img{max-width:min(40.8%,408px)}
-.taltal-solution-img{max-width:min(70%,640px)}
+/* Problem and answer scans share one visual width. Problem = V7 x 1.2. */
+.taltal-problem-img,.taltal-solution-img{max-width:min(48.96%,490px)}
 @media(max-width:700px){
-  .taltal-problem-img{max-width:48%}
-  .taltal-solution-img{max-width:82%}
+  .taltal-problem-img,.taltal-solution-img{max-width:57.6%}
 }
 @media(max-width:480px){
-  .taltal-problem-img{max-width:57.6%}
-  .taltal-solution-img{max-width:94%}
+  .taltal-problem-img,.taltal-solution-img{max-width:69.12%}
 }
 .taltal-manual-note{font-size:11px;color:#666;margin:4px 0 7px;line-height:1.5}
 </style>
@@ -518,7 +515,7 @@ button.good,
 <header>
   <div class="title-row">
     <div>
-    <h1>서술형 작성 + 탈탈 <span style="font-size:11px;color:#666;font-weight:800">V7 · 상단 공간 최소화</span></h1>
+    <h1>서술형 작성 + 탈탈 <span style="font-size:11px;color:#666;font-weight:800">V8 · 이미지 1.2배·정답 크기 통일</span></h1>
       <div class="progress-track" aria-label="학습 진행률"><div id="progressBar" class="progress-bar"></div></div>
     </div>
     <div class="header-actions">
@@ -1528,19 +1525,7 @@ function renderEmptyStudyState(){
 }
 function render(){window.CivilQuickStudy?.clearNotice?.();const q=current();if(!q){renderEmptyStudyState();return}document.body.classList.remove('study-empty');['prev','next','check','reveal','markMastered','markUnmastered','favoriteToggle','quickAnswer','quickNext'].forEach(id=>{const el=document.getElementById(id);if(el)el.disabled=false});const key=qkey(q),saved=state.status[key]==='mastered'?(state.answers[key]||[]):[];const reviewOption=$('#mode')?.querySelector('option[value="review"]');if(reviewOption)reviewOption.textContent=`오늘 복습 (${todayReviewCount()})`;updateStatusCounts();updateQuickFilterButtons();$('#number').textContent=q.number;$('#label').textContent=q.label;const freq=Math.max(1,Number(q.frequency)||1);$('#frequency').textContent='★'.repeat(Math.min(5,freq))+` (${freq}회)`;const favBtn=$('#favoriteToggle');favBtn.textContent=state.fav[key]?'★':'☆';favBtn.classList.toggle('active',!!state.fav[key]);favBtn.title=state.fav[key]?'즐겨찾기 해제':'즐겨찾기 추가';favBtn.setAttribute('aria-label',favBtn.title);const questionBox=$('#question');questionBox.textContent=q.question;
 if(q.manualGrade){
-  if(q.sourceYears){const src=document.createElement('div');src.className='taltal-source';src.textContent='출제 회차: '+q.sourceYears;questionBox.append(src);}
-  if(q.duplicateRefs?.length){
-    const dup=document.createElement('div');dup.className='taltal-dup';
-    dup.innerHTML='<b>♻ 과년도 중복/유사</b> · '+q.duplicateRefs.map(x=>`<span class="${x.kind==='동일'?'same':'similar'}">${x.kind}: ${x.label} / ${x.number}번</span>`).join(' · ');
-    questionBox.append(dup);
-  }else{
-    const dup=document.createElement('div');dup.className='taltal-dup';dup.textContent='과년도 445문항과 확인된 중복 없음';questionBox.append(dup);
-  }
-  (q.questionImages||[]).forEach(src=>{const img=document.createElement('img');img.className='taltal-problem-img';img.src=src;img.alt='탈탈 문제';img.style.setProperty('width',window.matchMedia('(max-width:480px)').matches?'57.6%':window.matchMedia('(max-width:700px)').matches?'48%':'40.8%','important');img.style.setProperty('max-width','408px','important');img.style.setProperty('height','auto','important');questionBox.append(img);});
-}else if(q.taltalDuplicates?.length){
-  const dup=document.createElement('div');dup.className='year-dup';
-  dup.innerHTML='<b>♻ 탈탈에 있음</b> · '+q.taltalDuplicates.map(x=>`<span class="${x.kind==='동일'?'same':'similar'}">${x.kind}: 원본 계산형 ${x.taltalIndex}번</span>`).join(' · ');
-  questionBox.prepend(dup);
+  (q.questionImages||[]).forEach(src=>{const img=document.createElement('img');img.className='taltal-problem-img';img.src=src;img.alt='탈탈 문제';img.style.setProperty('width',window.matchMedia('(max-width:480px)').matches?'69.12%':window.matchMedia('(max-width:700px)').matches?'57.6%':'48.96%','important');img.style.setProperty('max-width','490px','important');img.style.setProperty('height','auto','important');questionBox.append(img);});
 }
 $('#answers').innerHTML='';
 const renderLabels=q.manualGrade
@@ -1549,7 +1534,6 @@ const renderLabels=q.manualGrade
 renderLabels.forEach((label,i)=>{const wrap=document.createElement('div');wrap.className='answer-item';const lab=document.createElement('label');lab.className='answer-label';lab.textContent=label||`${i+1}.`;const ta=document.createElement('textarea');ta.className='answer-input';ta.id=`answer-${q.id}-${i}`;lab.htmlFor=ta.id;ta.value=saved[i]||'';ta.placeholder=`${i+1}번 답 입력`;ta.setAttribute('aria-label',`${i+1}번 답안`);if(state.corrections[key]?.[i])ta.classList.add('auto-corrected');ta.addEventListener('input',()=>{autoGrow(ta);ta.classList.remove('auto-corrected');if(state.corrections[key]){state.corrections[key][i]=false;if(!state.corrections[key].some(Boolean))delete state.corrections[key]}const currentVals=[...document.querySelectorAll('.answer-input')].map(x=>x.value);state.answers[key]=currentVals;state.attempts[key]=[...currentVals];save()});wrap.append(lab,ta);$('#answers').append(wrap);requestAnimationFrame(()=>autoGrow(ta))});$('#result').className='result';$('#result').innerHTML='';$('#official').className='official';$('#officialContent').innerHTML='';$('#reveal').textContent='정답';$('#reveal').setAttribute('aria-expanded','false');updateCurrentMemoryUI(key);const pct=view.length?((pos+1)/view.length*100):0;$('#progress').textContent=`${pos+1} / ${view.length}`;$('#score').textContent=`진행 ${pct.toFixed(1)}%`;$('#wrongCount').textContent=`오답 ${scopedWrongCount()}`;$('#progressBar').style.width=`${pct}%`;save();window.scrollTo(0,0)}
 function showOfficial(){const q=current(),box=$('#officialContent');box.innerHTML='';
 if(q.manualGrade&&q.solutionImages?.length){
-  const note=document.createElement('div');note.className='taltal-manual-note';note.textContent='원본 정답·해설과 비교하세요.';box.append(note);
   q.solutionImages.forEach(src=>{const img=document.createElement('img');img.className='taltal-solution-img';img.src=src;img.alt='탈탈 정답 해설';box.append(img);});
 }else CivilGrader.officialRows(q).forEach(item=>{const div=document.createElement('div');div.className='official-group';const b=document.createElement('b');b.textContent=item.label+' ';const span=document.createElement('span');span.textContent=item.text;div.append(b,span);box.append(div)});const memo=q.manualGrade?null:mnemonicFor(q);if(memo){const div=document.createElement('div');div.className='mnemonic';div.innerHTML=`<div class="mnemonic-title">암기 팁</div><div class="mnemonic-code">${memo.code}</div>${memo.scene?`<div class="mnemonic-scene">“${memo.scene}”</div>`:''}<div class="mnemonic-note">${memo.note}</div>`;box.append(div)}$('#official').classList.add('show');$('#reveal').textContent='닫기';$('#reveal').setAttribute('aria-expanded','true')}
 $('#check').addEventListener('click',()=>{
