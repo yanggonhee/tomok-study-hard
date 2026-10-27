@@ -507,6 +507,11 @@ button.good,
   .taltal-problem-img,.taltal-solution-img{max-width:69.12%}
 }
 .taltal-manual-note{font-size:11px;color:#666;margin:4px 0 7px;line-height:1.5}
+/* V9: both sources have exactly the same rendered width, independent of
+   their different parent panels and the intrinsic image dimensions. */
+.taltal-media{display:block;margin:6px auto 9px;max-width:100%;padding:0}
+.taltal-media .taltal-problem-img,.taltal-media .taltal-solution-img{display:block;width:100%!important;max-width:100%!important;height:auto!important;max-height:none!important;margin:0!important;object-fit:contain}
+.taltal-dup,.year-dup,.taltal-source{display:none!important}
 </style>
 
 </head>
@@ -515,7 +520,7 @@ button.good,
 <header>
   <div class="title-row">
     <div>
-    <h1>서술형 작성 + 탈탈 <span style="font-size:11px;color:#666;font-weight:800">V8 · 이미지 1.2배·정답 크기 통일</span></h1>
+    <h1>서술형 작성 + 탈탈 <span style="font-size:11px;color:#666;font-weight:800">V9 · 이미지 확대 및 참고표시 제거</span></h1>
       <div class="progress-track" aria-label="학습 진행률"><div id="progressBar" class="progress-bar"></div></div>
     </div>
     <div class="header-actions">
@@ -1523,9 +1528,26 @@ function renderEmptyStudyState(){
   $('#memoryStateBadge').textContent='학습 완료';
   save();
 }
+function taltalImagePixels(){
+  const card=document.querySelector('main.card');
+  const base=Math.max(120,(card?.clientWidth||window.innerWidth)-30);
+  const ratio=window.matchMedia('(max-width:480px)').matches ? 0.6912 : (window.matchMedia('(max-width:700px)').matches ? 0.576 : 0.4896);
+  return Math.min(490,Math.round(base*ratio));
+}
+function appendTaltalImage(parent,src,kind){
+  const frame=document.createElement('div');frame.className='taltal-media';
+  frame.style.width=taltalImagePixels()+'px';
+  const img=document.createElement('img');img.className=kind==='problem'?'taltal-problem-img':'taltal-solution-img';
+  img.src=src;img.alt=kind==='problem'?'탈탈 문제':'탈탈 정답 해설';
+  frame.append(img);parent.append(frame);
+}
+window.addEventListener('resize',()=>{
+  const width=taltalImagePixels()+'px';
+  document.querySelectorAll('.taltal-media').forEach(el=>{el.style.width=width});
+});
 function render(){window.CivilQuickStudy?.clearNotice?.();const q=current();if(!q){renderEmptyStudyState();return}document.body.classList.remove('study-empty');['prev','next','check','reveal','markMastered','markUnmastered','favoriteToggle','quickAnswer','quickNext'].forEach(id=>{const el=document.getElementById(id);if(el)el.disabled=false});const key=qkey(q),saved=state.status[key]==='mastered'?(state.answers[key]||[]):[];const reviewOption=$('#mode')?.querySelector('option[value="review"]');if(reviewOption)reviewOption.textContent=`오늘 복습 (${todayReviewCount()})`;updateStatusCounts();updateQuickFilterButtons();$('#number').textContent=q.number;$('#label').textContent=q.label;const freq=Math.max(1,Number(q.frequency)||1);$('#frequency').textContent='★'.repeat(Math.min(5,freq))+` (${freq}회)`;const favBtn=$('#favoriteToggle');favBtn.textContent=state.fav[key]?'★':'☆';favBtn.classList.toggle('active',!!state.fav[key]);favBtn.title=state.fav[key]?'즐겨찾기 해제':'즐겨찾기 추가';favBtn.setAttribute('aria-label',favBtn.title);const questionBox=$('#question');questionBox.textContent=q.question;
 if(q.manualGrade){
-  (q.questionImages||[]).forEach(src=>{const img=document.createElement('img');img.className='taltal-problem-img';img.src=src;img.alt='탈탈 문제';img.style.setProperty('width',window.matchMedia('(max-width:480px)').matches?'69.12%':window.matchMedia('(max-width:700px)').matches?'57.6%':'48.96%','important');img.style.setProperty('max-width','490px','important');img.style.setProperty('height','auto','important');questionBox.append(img);});
+  (q.questionImages||[]).forEach(src=>appendTaltalImage(questionBox,src,'problem'));
 }
 $('#answers').innerHTML='';
 const renderLabels=q.manualGrade
@@ -1534,7 +1556,7 @@ const renderLabels=q.manualGrade
 renderLabels.forEach((label,i)=>{const wrap=document.createElement('div');wrap.className='answer-item';const lab=document.createElement('label');lab.className='answer-label';lab.textContent=label||`${i+1}.`;const ta=document.createElement('textarea');ta.className='answer-input';ta.id=`answer-${q.id}-${i}`;lab.htmlFor=ta.id;ta.value=saved[i]||'';ta.placeholder=`${i+1}번 답 입력`;ta.setAttribute('aria-label',`${i+1}번 답안`);if(state.corrections[key]?.[i])ta.classList.add('auto-corrected');ta.addEventListener('input',()=>{autoGrow(ta);ta.classList.remove('auto-corrected');if(state.corrections[key]){state.corrections[key][i]=false;if(!state.corrections[key].some(Boolean))delete state.corrections[key]}const currentVals=[...document.querySelectorAll('.answer-input')].map(x=>x.value);state.answers[key]=currentVals;state.attempts[key]=[...currentVals];save()});wrap.append(lab,ta);$('#answers').append(wrap);requestAnimationFrame(()=>autoGrow(ta))});$('#result').className='result';$('#result').innerHTML='';$('#official').className='official';$('#officialContent').innerHTML='';$('#reveal').textContent='정답';$('#reveal').setAttribute('aria-expanded','false');updateCurrentMemoryUI(key);const pct=view.length?((pos+1)/view.length*100):0;$('#progress').textContent=`${pos+1} / ${view.length}`;$('#score').textContent=`진행 ${pct.toFixed(1)}%`;$('#wrongCount').textContent=`오답 ${scopedWrongCount()}`;$('#progressBar').style.width=`${pct}%`;save();window.scrollTo(0,0)}
 function showOfficial(){const q=current(),box=$('#officialContent');box.innerHTML='';
 if(q.manualGrade&&q.solutionImages?.length){
-  q.solutionImages.forEach(src=>{const img=document.createElement('img');img.className='taltal-solution-img';img.src=src;img.alt='탈탈 정답 해설';box.append(img);});
+  q.solutionImages.forEach(src=>appendTaltalImage(box,src,'solution'));
 }else CivilGrader.officialRows(q).forEach(item=>{const div=document.createElement('div');div.className='official-group';const b=document.createElement('b');b.textContent=item.label+' ';const span=document.createElement('span');span.textContent=item.text;div.append(b,span);box.append(div)});const memo=q.manualGrade?null:mnemonicFor(q);if(memo){const div=document.createElement('div');div.className='mnemonic';div.innerHTML=`<div class="mnemonic-title">암기 팁</div><div class="mnemonic-code">${memo.code}</div>${memo.scene?`<div class="mnemonic-scene">“${memo.scene}”</div>`:''}<div class="mnemonic-note">${memo.note}</div>`;box.append(div)}$('#official').classList.add('show');$('#reveal').textContent='닫기';$('#reveal').setAttribute('aria-expanded','true')}
 $('#check').addEventListener('click',()=>{
   const q=current();
