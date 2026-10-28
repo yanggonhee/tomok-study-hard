@@ -563,7 +563,7 @@ main.card:has(#question.taltal-structured-question)>.meta>.meta-tools{margin-lef
 <header>
   <div class="title-row">
     <div>
-    <h1>서술형 작성 + 탈탈 <span style="font-size:11px;color:#666;font-weight:800">V13 · 답안 번호 중복 수정</span></h1>
+    <h1>서술형 작성 + 탈탈 <span style="font-size:11px;color:#666;font-weight:800">V14 · 버튼 위치 복원</span></h1>
       <div class="progress-track" aria-label="학습 진행률"><div id="progressBar" class="progress-bar"></div></div>
     </div>
     <div class="header-actions">
@@ -3297,36 +3297,6 @@ body.header-collapsed header{display:none!important}
 })();
 </script>
 
-<style id="taltal-visible-actions-v12">
-/* The original four controls stay reachable on long illustrated questions. */
-body:has(#question.taltal-structured-question):not(.flashcard-mode):not(.study-empty):not(.civil-random-quiz-open){
-  padding-bottom:calc(76px + env(safe-area-inset-bottom))!important;
-}
-body:has(#question.taltal-structured-question):not(.flashcard-mode):not(.study-empty):not(.civil-random-quiz-open) main.card>.inline-actions{
-  position:fixed!important;
-  left:50%!important;
-  right:auto!important;
-  bottom:0!important;
-  transform:translateX(-50%)!important;
-  width:min(calc(100% - 16px),744px)!important;
-  z-index:100;
-  margin:0!important;
-  padding:8px 8px calc(8px + env(safe-area-inset-bottom))!important;
-  border:1px solid #bcbcbc!important;
-  border-bottom:0!important;
-  border-radius:10px 10px 0 0;
-  background:#fff!important;
-  box-shadow:0 -3px 12px rgba(0,0,0,.08)!important;
-}
-body:has(#question.taltal-structured-question):not(.flashcard-mode):not(.study-empty):not(.civil-random-quiz-open) main.card>.inline-actions button{
-  height:44px!important;
-  min-height:44px!important;
-  font-size:13px!important;
-}
-#question.taltal-structured-question~.answer-section .answer-input{
-  scroll-margin-bottom:calc(86px + env(safe-area-inset-bottom));
-}
-</style>
 
 </body>
 </html>
