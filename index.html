@@ -2181,8 +2181,8 @@ function moveWithinActiveView(delta){
   const oldQ=current();
   if(!oldQ)return;
   if(activeMode==='needsStudy'){
-    // Save the old position BEFORE filtering out a newly mastered question.
-    // This also preserves the successor of a removed item in shuffled order.
+    // 과년도 + 미암기에서도 현재 필터 범위만 유지한 채 끝에서 처음으로 순환한다.
+    // 암기 완료로 현재 문항이 목록에서 빠져도 다음 미암기 문항을 이어서 찾는다.
     const previousOrder=[...view],currentIndex=view[pos];
     clearCurrentUnlessMastered();
     const eligible=filteredIndices('needsStudy',norm($('#search')?.value||''));
@@ -2192,13 +2192,17 @@ function moveWithinActiveView(delta){
     render();
     return;
   }
-  // Other filters keep their existing non-circular navigation.
   const oldId=oldQ.id;
   clearCurrentUnlessMastered();
   if(!syncViewToActiveFilter())return;
   const sameCurrent=current()?.id===oldId;
-  const target=sameCurrent?pos+delta:(delta>0?pos:pos-1);
-  if(target<0||target>=view.length)return;
+  let target=sameCurrent?pos+delta:(delta>0?pos:pos-1);
+  // 과년도를 선택한 학습은 마지막/첫 문제에서 멈추지 않고 같은 연도·같은 필터 안에서 반복한다.
+  if(activeYear()!=='all'&&view.length){
+    target=((target%view.length)+view.length)%view.length;
+  }else if(target<0||target>=view.length){
+    return;
+  }
   pos=target;render();
 }
 $('#prev').addEventListener('click',()=>moveWithinActiveView(-1));$('#next').addEventListener('click',()=>moveWithinActiveView(1));
