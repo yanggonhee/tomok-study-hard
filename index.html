@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
-<title>서술</title>
+<title>웹 학습서 · 애매 3칸</title>
 <meta name="theme-color" content="#333333">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="서술">
@@ -706,6 +706,23 @@ body.study-empty #flashCard{cursor:default}
 .acrostic-mnemonic .context-memory-code{font-weight:600!important;overflow-wrap:anywhere}
 .acrostic-mnemonic .context-memory-meaning{font-weight:400!important}
 </style>
+<style id="memory-three-step-ui">
+.memory-three-help{margin:3px 1px 5px;font-size:11px;line-height:1.4;font-weight:400;color:#555}
+body.flashcard-mode .memory-three-help,body.study-empty .memory-three-help{display:none!important}
+
+/* The three choices share the same row in typing and flashcard modes. */
+.status-row.inline-status,.flash-ratings{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+.status-row.inline-status>button,.flash-ratings>button{min-width:0;min-height:42px!important;height:auto!important;padding:5px 4px!important;line-height:1.35;white-space:normal;font-size:12px!important;color:#222!important}
+#markMastered,#markUncertain,#markUnmastered,.flash-ratings>button{font-weight:500!important}
+#markUncertain,.flash-ratings [data-rate="uncertain"]{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:5px}
+.memory-squares{display:inline-flex;align-items:center;gap:3px;flex:none;pointer-events:none}
+.memory-square{display:block;width:9px;height:9px;box-sizing:border-box;border:1px solid #777;background:transparent!important}
+.memory-square.filled{background:#777!important}
+.inline-status #markUncertain.active,.flash-ratings button.active{background:#e9e9e9!important;color:#222!important;border-color:#a6a6a6!important}
+.memory-state-badge.uncertain{background:#efefef!important;color:#333!important;border-color:#b8b8b8!important;font-weight:500}
+@media(max-width:400px){.status-row.inline-status>button,.flash-ratings>button{font-size:11px!important;padding:5px 2px!important}.memory-squares{gap:2px}.memory-square{width:8px;height:8px}#markUncertain,.flash-ratings [data-rate="uncertain"]{gap:4px}}
+</style>
+
 </head>
 <body>
 <div class="app">
@@ -790,9 +807,11 @@ body.study-empty #flashCard{cursor:default}
     <div id="answers"></div>
   </section>
   <div class="status-row inline-status" aria-label="암기 상태">
-    <button id="markMastered">암기 완료</button>
-    <button id="markUnmastered">암기 못함</button>
+    <button id="markMastered" type="button">암기 완료</button>
+    <button id="markUncertain" type="button" aria-label="애매 0/3, 누를 때마다 한 칸, 세 칸이면 암기 완료" title="누를 때마다 한 칸씩 채워집니다. 세 칸이면 암기 완료입니다."><span>애매</span><span class="memory-squares" aria-hidden="true"><span class="memory-square"></span><span class="memory-square"></span><span class="memory-square"></span></span></button>
+    <button id="markUnmastered" type="button">암기 못함</button>
   </div>
+  <p class="memory-three-help">애매를 누를 때마다 한 칸씩 · 세 칸이면 암기 완료</p>
   <nav class="answer-actions inline-actions" aria-label="문제 조작">
     <button id="prev">이전</button>
     <button id="check" class="primary">채점</button>
@@ -811,7 +830,7 @@ body.study-empty #flashCard{cursor:default}
   <div class="reset-confirm-backdrop" data-reset-close="true"></div>
   <div class="reset-confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="resetConfirmTitle" aria-describedby="resetConfirmDesc">
     <div id="resetConfirmTitle" class="reset-confirm-title">학습 기록을 초기화할까요?</div>
-    <div id="resetConfirmDesc" class="reset-confirm-desc">암기 완료·암기 못함, 오답, 즐겨찾기, 복습 기록이 모두 삭제됩니다.</div>
+    <div id="resetConfirmDesc" class="reset-confirm-desc">암기 완료·애매 네모·암기 못함, 오답, 즐겨찾기, 복습 기록이 모두 삭제됩니다.</div>
     <div class="reset-confirm-actions">
       <button id="resetConfirmNo" type="button">취소</button>
       <button id="resetConfirmYes" type="button">초기화</button>
@@ -1516,7 +1535,7 @@ function initYearPicker(){
 
 function createInitialState(){
   const firstId=BANK[studyChronologicalIndices([...BANK.keys()])[0]]?.id||1;
-  return {answers:{},fav:{},wrong:{},status:{},corrections:{},attempts:{},review:{},wrongMeta:{},flashStats:{},memoryVerify:{},flashMode:false,headerCollapsed:true,index:0,currentId:firstId,allReturnId:firstId,view:[],mode:'all',search:'',yearFilter:'all',pastScope:false,taltalScope:false,taltalSubcategory:'all',taltalBankVersion:'1111-20261028-v1',questionBankRevision:'taltal378-delete326to330-text324-20261104'};
+  return {answers:{},fav:{},wrong:{},status:{},corrections:{},attempts:{},review:{},wrongMeta:{},flashStats:{},memoryVerify:{},memoryUpdated:{},uncertainProgress:{},flashMode:false,headerCollapsed:true,index:0,currentId:firstId,allReturnId:firstId,view:[],mode:'all',search:'',yearFilter:'all',pastScope:false,taltalScope:false,taltalSubcategory:'all',taltalBankVersion:'1111-20261028-v1',questionBankRevision:'taltal378-delete326to330-text324-20261104'};
 }
 let state;
 try{state=JSON.parse(localStorage.getItem(STORAGE_KEY)||'null')}catch(e){state=null}
@@ -1604,7 +1623,7 @@ if(state.gradingVersion!==CivilGrader.VERSION){
     if(at>=0)state.index=at;
   }
   state.allReturnId=successorId(state.allReturnId);
-  const records=['answers','fav','wrong','status','corrections','attempts','review','wrongMeta','flashStats','memoryVerify','memoryUpdated','memoryJudgments'];
+  const records=['answers','fav','wrong','status','corrections','attempts','review','wrongMeta','flashStats','memoryVerify','memoryUpdated','memoryJudgments','uncertainProgress'];
   for(const name of records){
     const map=state[name];if(map&&typeof map==='object')for(const id of retired)delete map[id];
   }
@@ -1645,6 +1664,8 @@ if(state.gradingVersion!==CivilGrader.VERSION){
   }
   state.questionBankRevision=revision;
 })();
+
+normalizeUncertainProgress(state);
 
 const savedView=Array.isArray(state.view)&&state.view.length&&state.view.every(i=>Number.isInteger(i)&&i>=0&&i<BANK.length)?state.view:null;
 let view=savedView?(savedView.every((i,p)=>p===0||savedView[p-1]<i)?studyChronologicalIndices(savedView):[...savedView]):studyChronologicalIndices([...BANK.keys()]);
@@ -1779,12 +1800,55 @@ function updateStatusCounts(){
   if($('#memorizedCount'))$('#memorizedCount').textContent=`암기 완료 ${done}`;
   if($('#needsStudyCount'))$('#needsStudyCount').textContent=`암기 못함 ${need}`;
 }
+// Saved by question ID. Progress 1/2 stays in the existing needs-study pool.
+// The explicit mastered flag remains authoritative for legacy and imported data.
+function normalizeUncertainProgress(target){
+  const raw=target.uncertainProgress;
+  const previous=raw&&typeof raw==='object'&&!Array.isArray(raw)?raw:{};
+  const progress={};
+  for(const q of BANK){
+    const key=String(q.id),n=previous[key];
+    if(target.status?.[key]==='mastered')progress[key]=3;
+    else if(Number.isInteger(n)&&n>0&&n<3)progress[key]=n;
+  }
+  target.uncertainProgress=progress;
+}
+function memoryProgress(key){
+  if(state.status[key]==='mastered')return 3;
+  const n=state.uncertainProgress?.[key];
+  return Number.isInteger(n)&&n>0&&n<3?n:0;
+}
+function storeMemoryProgress(key,progress){
+  state.uncertainProgress||={};
+  if(progress===1||progress===2||progress===3)state.uncertainProgress[key]=progress;
+  else delete state.uncertainProgress[key];
+}
+function writeMemoryState(key,status,progress=status==='mastered'?3:0){
+  state.status[key]=status==='mastered'?'mastered':'unmastered';
+  storeMemoryProgress(key,status==='mastered'?3:(progress===1||progress===2?progress:0));
+  state.memoryUpdated||={};
+  // Every deliberate click has a distinct revision, even within one millisecond.
+  state.memoryUpdated[key]=Math.max(Date.now(),(Number(state.memoryUpdated[key])||0)+1);
+}
+function paintMemorySquares(button,progress){
+  if(!button)return;
+  button.querySelectorAll('.memory-square').forEach((square,i)=>square.classList.toggle('filled',i<progress));
+  button.setAttribute('aria-label',`애매 ${progress}/3, 누를 때마다 한 칸, 세 칸이면 암기 완료`);
+  button.title=progress===3?'세 칸 완료 · 다시 누르면 애매 한 칸부터 시작합니다.':`${progress}/3칸 · 누를 때마다 한 칸씩 채워집니다. 세 칸이면 암기 완료입니다.`;
+}
 function updateCurrentMemoryUI(key){
-  const done=state.status[key]==='mastered';
-  document.querySelectorAll('.status-row button').forEach(b=>b.classList.remove('active'));
-  (done?$('#markMastered'):$('#markUnmastered'))?.classList.add('active');
+  const progress=memoryProgress(key),done=state.status[key]==='mastered',uncertain=!done&&progress>0;
+  document.querySelectorAll('.status-row button').forEach(b=>{b.classList.remove('active');b.setAttribute('aria-pressed','false')});
+  const selected=done?$('#markMastered'):(uncertain?$('#markUncertain'):$('#markUnmastered'));
+  if(selected){selected.classList.add('active');selected.setAttribute('aria-pressed','true')}
+  paintMemorySquares($('#markUncertain'),progress);
+  document.querySelectorAll('.flash-ratings [data-rate]').forEach(button=>{
+    const selected=button.dataset.rate===(done?'mastered':uncertain?'uncertain':'unmastered');
+    button.classList.toggle('active',selected);button.setAttribute('aria-pressed',String(selected));
+    if(button.dataset.rate==='uncertain')paintMemorySquares(button,progress);
+  });
   const badge=$('#memoryStateBadge');
-  if(badge){badge.textContent=done?'암기 완료':'암기 못함';badge.classList.toggle('done',done);badge.classList.toggle('need',!done)}
+  if(badge){badge.textContent=done?'암기 완료':uncertain?`애매 ${progress}/3`:'암기 못함';badge.classList.toggle('done',done);badge.classList.toggle('uncertain',uncertain);badge.classList.toggle('need',!done&&!uncertain)}
 }
 function updateQuickFilterButtons(){
   const mode=$('#mode')?.value||state.mode||'all';
@@ -1798,7 +1862,7 @@ function updateQuickFilterButtons(){
 function autoGrow(el){el.style.height='36px';el.style.height=Math.min(180,Math.max(36,el.scrollHeight))+'px';el.style.overflowY=el.scrollHeight>180?'auto':'hidden'}
 function renderEmptyStudyState(){
   document.body.classList.add('study-empty');
-  ['prev','next','check','reveal','markMastered','markUnmastered','favoriteToggle','quickAnswer','quickPrev','quickNext'].forEach(id=>{const el=document.getElementById(id);if(el)el.disabled=true});
+  ['prev','next','check','reveal','markMastered','markUncertain','markUnmastered','favoriteToggle','quickAnswer','quickPrev','quickNext'].forEach(id=>{const el=document.getElementById(id);if(el)el.disabled=true});
   updateStatusCounts();updateQuickFilterButtons();
   $('#number').textContent='완료';$('#label').textContent='';$('#frequency').textContent='';
   const mode=$('#mode')?.value||state.mode||'all';
@@ -1813,6 +1877,7 @@ function renderEmptyStudyState(){
   $('#progress').textContent='0 / 0';$('#score').textContent='학습 완료';$('#wrongCount').textContent=`오답 ${scopedWrongCount()}`;
   $('#progressBar').style.width='100%';
   $('#memoryStateBadge').textContent='학습 완료';
+  paintMemorySquares($('#markUncertain'),0);
   save();
 }
 function taltalImagePixels(){
@@ -2017,7 +2082,7 @@ function appendStudySolutionExtras(parent,q){
   appendStructuredStudyImages(parent,studyMedia(q,'solution'),'solution');
 }
 
-function render(){window.CivilQuickStudy?.clearNotice?.();const q=current();if(!q){renderEmptyStudyState();return}document.body.classList.remove('study-empty');['prev','next','check','reveal','markMastered','markUnmastered','favoriteToggle','quickAnswer','quickPrev','quickNext'].forEach(id=>{const el=document.getElementById(id);if(el)el.disabled=false});const key=qkey(q),saved=state.status[key]==='mastered'?(state.answers[key]||[]):[];const reviewOption=$('#mode')?.querySelector('option[value="review"]');if(reviewOption)reviewOption.textContent=`오늘 복습 (${todayReviewCount()})`;updateStatusCounts();updateQuickFilterButtons();$('#number').textContent=q.number;$('#label').textContent=q.label;const freq=Math.max(1,Number(q.frequency)||1);$('#frequency').textContent='★'.repeat(Math.min(5,freq))+` (${freq}회)`;const favBtn=$('#favoriteToggle');favBtn.textContent=state.fav[key]?'★':'☆';favBtn.classList.toggle('active',!!state.fav[key]);favBtn.title=state.fav[key]?'즐겨찾기 해제':'즐겨찾기 추가';favBtn.setAttribute('aria-label',favBtn.title);const questionBox=$('#question');renderStudyQuestion(questionBox,q);
+function render(){window.CivilQuickStudy?.clearNotice?.();const q=current();if(!q){renderEmptyStudyState();return}document.body.classList.remove('study-empty');['prev','next','check','reveal','markMastered','markUncertain','markUnmastered','favoriteToggle','quickAnswer','quickPrev','quickNext'].forEach(id=>{const el=document.getElementById(id);if(el)el.disabled=false});const key=qkey(q),saved=state.status[key]==='mastered'?(state.answers[key]||[]):[];const reviewOption=$('#mode')?.querySelector('option[value="review"]');if(reviewOption)reviewOption.textContent=`오늘 복습 (${todayReviewCount()})`;updateStatusCounts();updateQuickFilterButtons();$('#number').textContent=q.number;$('#label').textContent=q.label;const freq=Math.max(1,Number(q.frequency)||1);$('#frequency').textContent='★'.repeat(Math.min(5,freq))+` (${freq}회)`;const favBtn=$('#favoriteToggle');favBtn.textContent=state.fav[key]?'★':'☆';favBtn.classList.toggle('active',!!state.fav[key]);favBtn.title=state.fav[key]?'즐겨찾기 해제':'즐겨찾기 추가';favBtn.setAttribute('aria-label',favBtn.title);const questionBox=$('#question');renderStudyQuestion(questionBox,q);
 
 $('#answers').innerHTML='';
 const renderLabels=q.manualGrade
@@ -2035,7 +2100,7 @@ $('#check').addEventListener('click',()=>{
     const vals=[...document.querySelectorAll('.answer-input')].map(x=>x.value);
     state.attempts[key]=[...vals];state.answers[key]=[...vals];save();
     const resultBox=$('#result');resultBox.className='result show';
-    resultBox.innerHTML='<div class="result-summary">답안을 저장했습니다. 정답·해설과 비교한 뒤 암기 완료/암기 못함을 선택하세요.</div>';
+    resultBox.innerHTML='<div class="result-summary">답안을 저장했습니다. 정답·해설과 비교한 뒤 암기 완료/애매/암기 못함을 선택하세요.</div>';
     showOfficial();
     return;
   }
@@ -2057,7 +2122,7 @@ $('#check').addEventListener('click',()=>{
   }else{
     delete state.wrong[key];
   }
-  state.status[key]=perfect?'mastered':'unmastered';
+  writeMemoryState(key,perfect?'mastered':'unmastered');
   scheduleFromGrade(key,perfect);
   updateStatusCounts();
   updateQuickFilterButtons();
@@ -2178,22 +2243,35 @@ function moveWithinActiveView(delta){
   pos=target;render();
 }
 $('#prev').addEventListener('click',()=>moveWithinActiveView(-1));$('#next').addEventListener('click',()=>moveWithinActiveView(1));
-function setStatus(name){
+function setStatus(name,options={}){
   const q=current();if(!q)return;
-  const k=qkey(q),next=name==='mastered'?'mastered':'unmastered';
-  state.status[k]=next;state.memoryUpdated||={};state.memoryUpdated[k]=Date.now();scheduleReview(k,next);
+  const k=qkey(q),wasMastered=state.status[k]==='mastered',next=name==='mastered'?'mastered':'unmastered';
+  writeMemoryState(k,next,options.progress);scheduleReview(k,next);
   if(next==='mastered'){
-    // The memory-complete button also fills the original individual fields.
-    if(!q.manualGrade){window.CivilQuickStudy?.fillAnswer?.()}
-    state.answers[k]=[...document.querySelectorAll('.answer-input')].map(x=>x.value);
-    state.memoryVerify[k]={pending:true,due:localDateKey(),source:'manual',reason:'typing',marked:localDateKey()};
+    // The third square uses the same completion action as the left button.
+    if(options.source!=='flashcard'){
+      if(!q.manualGrade){window.CivilQuickStudy?.fillAnswer?.()}
+      state.answers[k]=[...document.querySelectorAll('.answer-input')].map(x=>x.value);
+    }
+    state.memoryVerify[k]={pending:true,due:localDateKey(),source:options.source||'manual',reason:'typing',marked:localDateKey()};
   }else{
-    delete state.memoryVerify[k];delete state.answers[k];delete state.corrections[k];delete state.attempts[k];
+    delete state.memoryVerify[k];
+    if(!options.preserveAnswer||wasMastered){
+      delete state.answers[k];delete state.corrections[k];delete state.attempts[k];
+      // Reclassifying a completed question removes its auto-filled answer.
+      if(wasMastered)document.querySelectorAll('.answer-input').forEach(input=>{input.value='';input.classList.remove('auto-corrected');autoGrow(input)});
+    }
   }
   $('#result')?.querySelector('.study-cycle-complete')?.remove();
   updateStatusCounts();updateQuickFilterButtons();updateCurrentMemoryUI(k);save();
 }
-$('#markMastered').onclick=()=>setStatus('mastered');$('#markUnmastered').onclick=()=>setStatus('unmastered');function applyHeaderCollapsed(collapsed){state.headerCollapsed=!!collapsed;document.body.classList.toggle('header-collapsed',state.headerCollapsed);const btn=$('#headerCompactToggle');if(btn){btn.textContent=state.headerCollapsed?'상단 펼치기':'상단 최소화';btn.setAttribute('aria-pressed',state.headerCollapsed?'true':'false');btn.title=state.headerCollapsed?'숨긴 상단 영역 다시 보기':'상단 영역 최소화';btn.setAttribute('aria-label',btn.title)}const p=$('#managePanel');if(state.headerCollapsed&&p){closeYearPanel();p.classList.remove('open');$('#manageToggle')?.setAttribute('aria-expanded','false')}}applyHeaderCollapsed(state.headerCollapsed);$('#headerCompactToggle').onclick=()=>{applyHeaderCollapsed(!state.headerCollapsed);save()};$('#manageToggle').onclick=()=>{const p=$('#managePanel');p.classList.toggle('open');$('#manageToggle').setAttribute('aria-expanded',p.classList.contains('open'))};
+function markUncertain(source='manual'){
+  const q=current();if(!q)return 0;
+  const previous=memoryProgress(qkey(q)),progress=previous===3?1:previous+1;
+  setStatus(progress===3?'mastered':'unmastered',{progress,preserveAnswer:true,source});
+  return progress;
+}
+$('#markMastered').onclick=()=>setStatus('mastered');$('#markUncertain').onclick=()=>markUncertain();$('#markUnmastered').onclick=()=>setStatus('unmastered');function applyHeaderCollapsed(collapsed){state.headerCollapsed=!!collapsed;document.body.classList.toggle('header-collapsed',state.headerCollapsed);const btn=$('#headerCompactToggle');if(btn){btn.textContent=state.headerCollapsed?'상단 펼치기':'상단 최소화';btn.setAttribute('aria-pressed',state.headerCollapsed?'true':'false');btn.title=state.headerCollapsed?'숨긴 상단 영역 다시 보기':'상단 영역 최소화';btn.setAttribute('aria-label',btn.title)}const p=$('#managePanel');if(state.headerCollapsed&&p){closeYearPanel();p.classList.remove('open');$('#manageToggle')?.setAttribute('aria-expanded','false')}}applyHeaderCollapsed(state.headerCollapsed);$('#headerCompactToggle').onclick=()=>{applyHeaderCollapsed(!state.headerCollapsed);save()};$('#manageToggle').onclick=()=>{const p=$('#managePanel');p.classList.toggle('open');$('#manageToggle').setAttribute('aria-expanded',p.classList.contains('open'))};
 function daysBetween(a,b){const A=new Date(a+'T12:00:00'),B=new Date(b+'T12:00:00');return Math.round((B-A)/86400000)}
 function hasAttempt(k){return Array.isArray(state.attempts[k])&&state.attempts[k].some(v=>String(v||'').trim())}
 function filteredIndices(mode,term){return BANK.map((q,i)=>({q,i})).filter(({q})=>{if(!matchesQuestionYear(q))return false;const k=qkey(q),wm=state.wrongMeta[k]||{};if(mode==='wrong'&&!state.wrong[k])return false;if(mode==='frequentWrong'&&!(wm.count>=2))return false;if(mode==='recentWrong'&&!(wm.last&&daysBetween(wm.last,localDateKey())<=7))return false;if(mode==='unanswered'&&hasAttempt(k))return false;if(mode==='favorite'&&!state.fav[k])return false;if(mode==='mastered'&&state.status[k]!=='mastered')return false;if(mode==='needsStudy'&&state.status[k]==='mastered')return false;if(mode==='review'&&!isDueToday(k))return false;if(mode==='taltal'&&q.chapter!=='탈탈')return false;if(mode==='past'&&q.chapter==='탈탈')return false;if(term&&!norm(`${q.number} ${q.label} ${q.question} ${q.sourceNumber||''} ${q.sourceId||''} ${q.sourceChapter||''} ${q.subcategory||''} ${(q.studySections||[]).map(s=>s.title+' '+(s.prompt||'')).join(' ')}`).includes(term))return false;return true}).map(x=>x.i).sort(studyDisplayIndexCompare)}
@@ -2396,7 +2474,7 @@ body.flashcard-mode .flashcard-panel{display:block}
     <div id="flashAnswer" class="flash-answer"><div id="flashAnswerText"></div><div id="flashTip" class="flash-tip"></div></div>
   </div>
   <div class="flash-nav" aria-label="앱카드 문제 이동"><button id="flashPrev" type="button">이전</button><button id="flashNext" type="button">다음</button></div>
-  <div class="flash-ratings" aria-label="암기 상태"><button data-rate="unmastered">암기 못함</button><button data-rate="mastered">암기 완료</button></div>
+  <div class="flash-ratings" aria-label="암기 상태"><button type="button" data-rate="mastered">암기 완료</button><button type="button" data-rate="uncertain"><span>애매</span><span class="memory-squares" aria-hidden="true"><span class="memory-square"></span><span class="memory-square"></span><span class="memory-square"></span></span></button><button type="button" data-rate="unmastered">암기 못함</button></div>
   <div id="flashDue" class="flash-due"></div>`;
   document.querySelector('.inline-actions').insertAdjacentElement('afterend',panel);
 
@@ -2448,23 +2526,21 @@ body.flashcard-mode .flashcard-panel{display:block}
   function rate(kind){
     if(!current())return;
     const k=qkey(current());
-    if(kind==='mastered'){
-      state.status[k]='mastered';
-      scheduleReview(k,'mastered');
-      // 앱카드의 자기평가는 화면상 완료로 표시하되, 실제 암기 검증은 타이핑으로 한 번 더 한다.
-      state.memoryVerify[k]={pending:true,due:localDateKey(),source:'flashcard',reason:'typing',marked:localDateKey()};
-    }else{
-      state.status[k]='unmastered';
-      scheduleReview(k,'unmastered');
-      delete state.memoryVerify[k];
-    }
+    if(kind==='uncertain')markUncertain('flashcard');
+    else setStatus(kind,{source:'flashcard',preserveAnswer:true});
     const fs=state.flashStats[k]||{count:0};
     fs.count++;
     fs.last=localDateKey();
     fs.rating=kind;
     state.flashStats[k]=fs;
     save();
-    moveWithinActiveView(1);
+    // Keep the filled squares visible; Previous/Next remains under user control.
+    if(kind!=='uncertain')moveWithinActiveView(1);
+    else{
+      const due=state.review[k]?.due;
+      document.querySelector('#flashDue').textContent=memoryProgress(k)===3?'네모 3칸 완료 · 암기 완료':`애매 ${memoryProgress(k)}/3 · 한 번 더 누르면 다음 칸이 채워집니다.${due?' · 다음 복습: '+due:''}`;
+      window.CivilDaily30?.refreshPanel?.();
+    }
   }
   const originalRender=render;
   render=function(){originalRender();renderFlash()};
@@ -2642,6 +2718,7 @@ body.daily30-mode #yearToggle,body.daily30-mode #shuffle,body.daily30-mode #sear
   $('#prev').addEventListener('click',e=>{if(state.daily30Mode){e.preventDefault();e.stopImmediatePropagation();moveDaily(-1)}},true);
   $('#markMastered').addEventListener('click',()=>{if(state.daily30Mode)setTimeout(()=>syncDailyAfterChange(1),0)});
   $('#markUnmastered').addEventListener('click',()=>{if(state.daily30Mode){ensureToday();updatePanel();save()}});
+  $('#markUncertain').addEventListener('click',()=>{if(!state.daily30Mode)return;const q=current();if(q&&state.status[qkey(q)]==='mastered')setTimeout(()=>syncDailyAfterChange(1),0);else{ensureToday();updatePanel();save()}});
   $('#resetConfirmYes')?.addEventListener('click',()=>{state.daily30Mode=false;state.daily30Session=null;session=null;document.body.classList.remove('daily30-mode');setToggle()});
   window.addEventListener('focus',()=>{if(!window.CivilRandomQuiz?.isOpen?.()&&state.daily30Mode&&session?.date!==today()){ensureToday();view=activeAssigned();pos=0;render()}});
   window.CivilDaily30={active:()=>!!state.daily30Mode,session:()=>{ensureToday();return session},refreshPanel:updatePanel,refresh:()=>{ensureToday();if(!window.CivilRandomQuiz?.isOpen?.())render()}};
@@ -2777,18 +2854,25 @@ body.daily30-mode #yearToggle,body.daily30-mode #shuffle,body.daily30-mode #sear
   function snapshot(){
     const memorized={},unmemorized={};
     for(const q of BANK){const k=qkey(q);if(state.status[k]==='mastered')memorized[k]=true;else if(state.status[k]==='unmastered')unmemorized[k]=true}
-    return {version:1,memorized,unmemorized,memoryUpdated:{...state.memoryUpdated},daily30:webDaily()};
+    return {version:1,memorized,unmemorized,uncertainProgress:{...state.uncertainProgress},memoryUpdated:{...state.memoryUpdated},daily30:webDaily()};
   }
   function applyMemory(remote){
     let changed=false;
-    const rm=remote?.memorized||{},ru=remote?.unmemorized||{},rt=remote?.memoryUpdated||{};
+    const rm=remote?.memorized||{},ru=remote?.unmemorized||{},rp=remote?.uncertainProgress||{},rt=remote?.memoryUpdated||{};
     for(const q of BANK){
       const k=qkey(q),incoming=rm[k]?'mastered':(ru[k]?'unmastered':null);if(!incoming)continue;
       const iu=Number(rt[k])||0,lu=Number(state.memoryUpdated[k])||0,local=state.status[k];
       if(iu<lu)continue;
       if(iu===lu&&iu>0)continue;
       if(iu===0&&lu===0&&local==='mastered'&&incoming!=='mastered')continue;
-      if(local!==incoming){state.status[k]=incoming;changed=true;if(incoming==='unmastered'){delete state.memoryVerify?.[k];delete state.answers?.[k];delete state.corrections?.[k];delete state.attempts?.[k]}}
+      const incomingProgress=incoming==='mastered'?3:((rp[k]===1||rp[k]===2)?rp[k]:0);
+      if(local!==incoming||memoryProgress(k)!==incomingProgress){
+        state.status[k]=incoming;storeMemoryProgress(k,incomingProgress);changed=true;
+        if(incoming==='unmastered'){
+          delete state.memoryVerify?.[k];
+          if(incomingProgress===0||local==='mastered'){delete state.answers?.[k];delete state.corrections?.[k];delete state.attempts?.[k]}
+        }
+      }
       state.memoryUpdated[k]=iu||Date.now();
     }
     return changed;
@@ -2813,7 +2897,7 @@ body.daily30-mode #yearToggle,body.daily30-mode #shuffle,body.daily30-mode #sear
   async function pushMemoryChanges(){
     if(!connected)return;
     for(const q of BANK){const k=qkey(q),u=Number(state.memoryUpdated[k])||0;if(!u||lastSentMemory[k]===u)continue;const v=state.status[k];if(v!=='mastered'&&v!=='unmastered')continue;
-      lastSentMemory[k]=u;try{await api('/memory',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:q.id,mastered:v==='mastered',updated:u})})}catch(e){delete lastSentMemory[k];break}
+      lastSentMemory[k]=u;try{await api('/memory',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:q.id,mastered:v==='mastered',uncertainProgress:memoryProgress(k),updated:u})})}catch(e){delete lastSentMemory[k];break}
     }
   }
   async function pushDailyChange(){
@@ -2881,8 +2965,7 @@ body.study-empty #question{display:block!important;padding:22px 5px;text-align:c
   function recordChoice(index,known,source){
     if(!validIndex(index))return false;
     const q=BANK[index],key=qkey(q),now=Date.now();
-    state.status[key]=known?'mastered':'unmastered';
-    state.memoryUpdated||={};state.memoryUpdated[key]=now;
+    writeMemoryState(key,known?'mastered':'unmastered');
     state.memoryJudgments||={};
     state.memoryJudgments[key]={source:source||'quick-fill',kind:'self-check',known,updated:now};
     scheduleReview(key,state.status[key]);
