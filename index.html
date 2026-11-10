@@ -848,7 +848,7 @@ body.flashcard-mode .memory-three-help,body.study-empty .memory-three-help{displ
   <div class="reset-confirm-backdrop" data-reset-close="true"></div>
   <div class="reset-confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="resetConfirmTitle" aria-describedby="resetConfirmDesc">
     <div id="resetConfirmTitle" class="reset-confirm-title">학습 기록을 초기화할까요?</div>
-    <div id="resetConfirmDesc" class="reset-confirm-desc">암기 완료·애매 네모·암기 못함, 오답, 즐겨찾기, 복습 기록이 모두 삭제됩니다.</div>
+    <div id="resetConfirmDesc" class="reset-confirm-desc">암기 완료·애매 네모·암기 못함·오늘15·누적복습이 회사 PC와 아이폰에서 모두 초기화됩니다.</div>
     <div class="reset-confirm-actions">
       <button id="resetConfirmNo" type="button">취소</button>
       <button id="resetConfirmYes" type="button">초기화</button>
@@ -1553,13 +1553,13 @@ function initYearPicker(){
 
 function createInitialState(){
   const firstId=BANK[studyChronologicalIndices([...BANK.keys()])[0]]?.id||1;
-  return {answers:{},fav:{},wrong:{},status:{},corrections:{},attempts:{},review:{},wrongMeta:{},flashStats:{},memoryVerify:{},memoryUpdated:{},uncertainProgress:{},flashMode:false,headerCollapsed:true,index:0,currentId:firstId,allReturnId:firstId,view:[],mode:'all',search:'',yearFilter:'all',pastScope:false,taltalScope:false,taltalSubcategory:'all',taltalBankVersion:'1111-20261028-v1',questionBankRevision:'taltal378-delete326to330-text324-20261104'};
+  return {answers:{},fav:{},wrong:{},status:{},corrections:{},attempts:{},review:{},wrongMeta:{},flashStats:{},memoryVerify:{},memoryUpdated:{},uncertainProgress:{},syncResetAt:0,flashMode:false,headerCollapsed:true,index:0,currentId:firstId,allReturnId:firstId,view:[],mode:'all',search:'',yearFilter:'all',pastScope:false,taltalScope:false,taltalSubcategory:'all',taltalBankVersion:'1111-20261028-v1',questionBankRevision:'taltal378-delete326to330-text324-20261104'};
 }
 let state;
 try{state=JSON.parse(localStorage.getItem(STORAGE_KEY)||'null')}catch(e){state=null}
 if(!state||typeof state!=='object')state=createInitialState();
 if(typeof state.pastScope!=='boolean')state.pastScope=!state.taltalScope&&!!state.yearFilter&&state.yearFilter!=='all';
-state.answers||={};state.fav||={};state.wrong||={};state.status||={};state.corrections||={};state.attempts||={};state.review||={};state.wrongMeta||={};state.flashStats||={};state.memoryVerify||={};state.memoryUpdated||={};if(!Number.isFinite(state.daily30Updated))state.daily30Updated=0;if(typeof state.headerCollapsed!=='boolean')state.headerCollapsed=true;Object.keys(state.status).forEach(k=>{if(state.status[k]==='uncertain')state.status[k]='unmastered'});if(state.mode==='uncertain'||state.mode==='unmastered')state.mode='needsStudy';if(state.allReturnId==null)state.allReturnId=(state.mode==='all'&&state.currentId!=null)?state.currentId:1;
+state.answers||={};state.fav||={};state.wrong||={};state.status||={};state.corrections||={};state.attempts||={};state.review||={};state.wrongMeta||={};state.flashStats||={};state.memoryVerify||={};state.memoryUpdated||={};if(!Number.isFinite(state.syncResetAt))state.syncResetAt=0;if(!Number.isFinite(state.daily30Updated))state.daily30Updated=0;if(typeof state.headerCollapsed!=='boolean')state.headerCollapsed=true;Object.keys(state.status).forEach(k=>{if(state.status[k]==='uncertain')state.status[k]='unmastered'});if(state.mode==='uncertain'||state.mode==='unmastered')state.mode='needsStudy';if(state.allReturnId==null)state.allReturnId=(state.mode==='all'&&state.currentId!=null)?state.currentId:1;
 
 // Keep the original essay IDs and records; replacement questions get new IDs.
 if(state.taltalBankVersion!=='1111-20261028-v1'){
@@ -2398,6 +2398,7 @@ function resetLearningRecords(){
   try{removeAppStorage(sessionStorage)}catch(e){}
 
   state=createInitialState();
+  state.syncResetAt=Date.now();
   state.gradingVersion=CivilGrader.VERSION;
   state.flashMode=keptFlashMode;
   state.headerCollapsed=keptHeaderCollapsed;
@@ -2415,6 +2416,7 @@ function resetLearningRecords(){
   save();
   render();
   applyHeaderCollapsed(state.headerCollapsed);
+  if(window.TomokCloud?.enabled?.())setTimeout(()=>window.TomokCloud.push(),50);
 
   const resetBtn=$('#reset');
   if(resetBtn){
@@ -3623,7 +3625,7 @@ function ensureDaily15(force=false){
 }
 function daily15Indices(){
   const d=ensureDaily15(),out=[],seen=new Set(),focusSet=new Set(d.focusIds.map(String));
-  const add=id=>{const k=String(id),i=byId.get(k);if(i!=null&&!seen.has(k)){seen.add(k);out.push(i)}};
+  const add=id=>{const k=String(id),i=byId.get(k);if(i!=null&&!seen.has(k)&&validPast(BANK[i])){seen.add(k);out.push(i)}};
   d.focusIds.forEach(add);
   d.introducedIds.forEach(id=>{const k=String(id);if(!focusSet.has(k)&&isMastered(k))add(id)});
   return out;
@@ -3635,7 +3637,7 @@ function updateDailyUI(){
   const on=activeDaily();btn.classList.toggle('active',on);btn.textContent=on?'오늘 학습 중':'오늘 15';sum.hidden=!on;if(!on)return;
   const c=dailyCounts(),q=current?.(),kind=q?(dailyState().focusIds.map(String).includes(String(q.id))?'오늘 집중':'누적 복습'):'';
   const sync=window.TomokCloud?.status?.()||{label:'연동 준비',on:false};
-  sum.innerHTML=`<span class="sync-dot ${sync.on?'on':''}"></span>${sync.label} · <strong>오늘 집중 ${c.focus}</strong> · 누적복습 ${c.review} · 총 ${c.total}${kind?`<span class="daily15-kind">${kind}</span>`:''}`;
+  sum.innerHTML=`<span class="sync-dot ${sync.on?'on':''}"></span>${sync.label} · <strong>오늘 집중 ${c.focus}</strong> · 누적복습 ${c.review} · 총 ${c.total}<span class="daily15-kind">과년도 전용 · 탈탈 제외</span>${kind?`<span class="daily15-kind">${kind}</span>`:''}`;
 }
 function activateDaily15(){
   ensureDaily15();state.daily15Active=true;state.pastScope=false;state.taltalScope=false;state.yearFilter='all';state.taltalSubcategory='all';
@@ -3658,11 +3660,15 @@ function syncEnabled(){return /^https:\/\//.test(String(cfg.url||''))&&apiKey().
 function syncStatus(){return cloudState==='on'?{on:true,label:'동기화됨'}:cloudState==='error'?{on:false,label:'동기화 재시도'}:syncEnabled()?{on:false,label:'동기화 대기'}:{on:false,label:'연동 준비'}}
 function headers(extra={}){return {'apikey':apiKey(),'Content-Type':'application/json',...extra}}
 function memoryPayload(){const memory={};for(const q of BANK){const k=qkey(q),status=state.status?.[k],updated=Number(state.memoryUpdated?.[k])||0;if(status==='mastered'||status==='unmastered')memory[k]={status,progress:memoryProgress(k),updated}}return memory}
-function snapshot(){return{version:2,memory:memoryPayload(),daily15:{...dailyState(),focusIds:[...dailyState().focusIds],introducedIds:[...dailyState().introducedIds]},updatedAt:Date.now()}}
-function applyRemote(payload){if(!payload||typeof payload!=='object')return false;let changed=false;state.memoryUpdated||={};state.uncertainProgress||={};
-  for(const [k,row] of Object.entries(payload.memory||{})){if(!byId.has(String(k)))continue;const iu=Number(row?.updated)||0,lu=Number(state.memoryUpdated[k])||0,local=state.status[k];const st=row.status==='mastered'?'mastered':'unmastered',p=st==='mastered'?3:([1,2].includes(Number(row.progress))?Number(row.progress):0);if(iu<lu)continue;if(iu===lu){if(iu>0)continue;if(local==='mastered'&&st!=='mastered')continue;if(local===st&&memoryProgress(k)===p)continue;}state.status[k]=st;storeMemoryProgress(k,p);state.memoryUpdated[k]=iu;changed=true;if(st==='unmastered'){delete state.memoryVerify?.[k]}}
-  const rd=payload.daily15;const ld=dailyState();if(rd&&typeof rd==='object'&&((Number(rd.updated)||0)>(Number(ld.updated)||0)||((Number(rd.updated)||0)===(Number(ld.updated)||0)&&String(rd.date||'')>String(ld.date||'')))){state.daily15={date:String(rd.date||''),focusIds:uniqValid(rd.focusIds),introducedIds:uniqValid(rd.introducedIds),introCount:Number(rd.introCount)||0,updated:Number(rd.updated)||0};state.daily15Updated=state.daily15.updated;changed=true}
-  if(changed){originalSave();if(activeDaily()){view=daily15Indices();pos=Math.min(pos,Math.max(0,view.length-1));originalRender()}updateStatusCounts?.();updateQuickFilterButtons?.();updateDailyUI()}return changed}
+function snapshot(){return{version:3,memory:memoryPayload(),daily15:{...dailyState(),focusIds:[...dailyState().focusIds],introducedIds:[...dailyState().introducedIds]},resetAt:Number(state.syncResetAt)||0,updatedAt:Date.now()}}
+function clearSyncedLearningAfterReset(resetAt){
+  state.answers={};state.fav={};state.wrong={};state.status={};state.attempts={};state.review={};state.wrongMeta={};state.flashStats={};state.memoryVerify={};state.memoryUpdated={};state.memoryJudgments={};state.uncertainProgress={};state.daily15={date:'',focusIds:[],introducedIds:[],introCount:0,updated:0};state.daily15Updated=0;state.syncResetAt=resetAt;
+}
+function applyRemote(payload){if(!payload||typeof payload!=='object')return false;let changed=false;state.memoryUpdated||={};state.uncertainProgress||={};if(!Number.isFinite(state.syncResetAt))state.syncResetAt=0;
+  const remoteReset=Number(payload.resetAt)||0;if(remoteReset>state.syncResetAt){clearSyncedLearningAfterReset(remoteReset);changed=true}const resetAt=Math.max(Number(state.syncResetAt)||0,remoteReset);
+  for(const [k,row] of Object.entries(payload.memory||{})){if(!byId.has(String(k)))continue;const iu=Number(row?.updated)||0;if(iu<=resetAt)continue;const lu=Number(state.memoryUpdated[k])||0,local=state.status[k];const st=row.status==='mastered'?'mastered':'unmastered',p=st==='mastered'?3:([1,2].includes(Number(row.progress))?Number(row.progress):0);if(iu<lu)continue;if(iu===lu){if(iu>0)continue;if(local==='mastered'&&st!=='mastered')continue;if(local===st&&memoryProgress(k)===p)continue;}state.status[k]=st;storeMemoryProgress(k,p);state.memoryUpdated[k]=iu;changed=true;if(st==='unmastered'){delete state.memoryVerify?.[k]}}
+  const rd=payload.daily15;const ld=dailyState();const ru=Number(rd?.updated)||0;if(rd&&typeof rd==='object'&&ru>resetAt&&(ru>(Number(ld.updated)||0)||(ru===(Number(ld.updated)||0)&&String(rd.date||'')>String(ld.date||'')))){state.daily15={date:String(rd.date||''),focusIds:uniqValid(rd.focusIds),introducedIds:uniqValid(rd.introducedIds),introCount:Number(rd.introCount)||0,updated:ru};state.daily15Updated=state.daily15.updated;changed=true}
+  if(changed){originalSave();if(activeDaily()){view=daily15Indices();pos=Math.min(pos,Math.max(0,view.length-1));originalRender()}else originalRender();updateStatusCounts?.();updateQuickFilterButtons?.();updateDailyUI()}return changed}
 async function cloudPull(){if(!syncEnabled()||pulling)return false;pulling=true;try{const url=cfg.url.replace(/\/$/,'')+'/rest/v1/rpc/get_study_state';const r=await fetch(url,{method:'POST',headers:headers(),body:JSON.stringify({p_sync_code:currentSyncCode()}),cache:'no-store'});if(!r.ok)throw new Error(String(r.status));const payload=await r.json();if(payload)applyRemote(payload);cloudState='on';updateDailyUI();return true}catch(e){cloudState='error';updateDailyUI();return false}finally{pulling=false}}
 async function cloudPush(){if(!syncEnabled())return false;try{await cloudPull();const url=cfg.url.replace(/\/$/,'')+'/rest/v1/rpc/put_study_state';const r=await fetch(url,{method:'POST',headers:headers(),body:JSON.stringify({p_sync_code:currentSyncCode(),p_payload:snapshot()})});if(!r.ok)throw new Error(String(r.status));cloudState='on';updateDailyUI();return true}catch(e){cloudState='error';updateDailyUI();return false}}
 function schedulePush(){if(!syncEnabled())return;clearTimeout(pushTimer);pushTimer=setTimeout(cloudPush,1200)}
