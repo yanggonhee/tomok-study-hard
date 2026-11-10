@@ -3692,6 +3692,45 @@ if(syncEnabled()){cloudPull().then(()=>setTimeout(cloudPush,600));setInterval(cl
 updateDailyUI();
 })();
 </script>
+<script id="daily15-repeat-navigation-v2">
+(()=>{
+  'use strict';
+  const next=document.querySelector('#next');
+  const prev=document.querySelector('#prev');
+  if(!next||!prev)return;
+  function dailyActive(){return ($('#mode')?.value||state.mode)==='daily15'}
+  function needsStudyIndex(index){
+    const q=BANK[index];
+    return !!q&&state.status?.[qkey(q)]!=='mastered';
+  }
+  function moveDailyRepeat(delta){
+    if(!dailyActive()||!Array.isArray(view)||!view.length||!delta)return false;
+    clearCurrentUnlessMastered?.();
+    const direction=delta<0?-1:1, n=view.length, start=Math.max(0,Math.min(pos,n-1));
+    for(let step=1;step<=n;step++){
+      const at=((start+direction*step)%n+n)%n;
+      if(needsStudyIndex(view[at])){
+        pos=at;
+        render();
+        save();
+        return true;
+      }
+    }
+    // All questions in today's view are mastered. Keep the current screen.
+    updateDailyUI?.();
+    return false;
+  }
+  function intercept(delta,event){
+    if(!dailyActive())return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    moveDailyRepeat(delta);
+  }
+  next.addEventListener('click',event=>intercept(1,event),true);
+  prev.addEventListener('click',event=>intercept(-1,event),true);
+  window.CivilDaily15Repeat={move:moveDailyRepeat,active:dailyActive};
+})();
+</script>
 <script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}))}</script>
 </body>
 </html>
