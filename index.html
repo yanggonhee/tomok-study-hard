@@ -1818,19 +1818,22 @@ function scheduleFromGrade(key,isPerfect){const prev=state.review[key]||{};if(is
 function todayReviewCount(){return BANK.reduce((n,q)=>n+(matchesQuestionYear(q)&&isDueToday(qkey(q))?1:0),0)}
 function statusCount(name){return BANK.reduce((n,q)=>n+(matchesQuestionYear(q)&&state.status[qkey(q)]===name?1:0),0)}
 function memorizedCount(){return statusCount('mastered')}
+function uncertainCount(){return BANK.reduce((n,q)=>n+(matchesQuestionYear(q)&&state.status[qkey(q)]!=='mastered'&&[1,2].includes(memoryProgress(qkey(q)))?1:0),0)}
+function unmemorizedOnlyCount(){return Math.max(0,yearScopeCount()-memorizedCount()-uncertainCount())}
 function needsStudyCount(){return yearScopeCount()-memorizedCount()}
 function updateStatusCounts(){
   updateYearUI();
-  const done=memorizedCount(),need=needsStudyCount();
+  const done=memorizedCount(),uncertain=uncertainCount(),need=unmemorizedOnlyCount();
   const masteredOpt=$('#mode')?.querySelector('option[value="mastered"]');
   const needsOpt=$('#mode')?.querySelector('option[value="needsStudy"]');
   if(masteredOpt)masteredOpt.textContent=`암기 완료 (${done})`;
   if(needsOpt)needsOpt.textContent=`암기 못함 (${need})`;
-  const masteredBtn=$('#markMastered'),unmasteredBtn=$('#markUnmastered');
+  const masteredBtn=$('#markMastered'),uncertainLabel=$('#markUncertain > span:first-child'),unmasteredBtn=$('#markUnmastered');
   if(masteredBtn)masteredBtn.textContent=`암기 완료 (${done})`;
+  if(uncertainLabel)uncertainLabel.textContent=`애매 (${uncertain})`;
   if(unmasteredBtn)unmasteredBtn.textContent=`암기 못함 (${need})`;
   if($('#memorizedCount'))$('#memorizedCount').textContent=`암기 완료 ${done}`;
-  if($('#needsStudyCount'))$('#needsStudyCount').textContent=`암기 못함 ${need}`;
+  if($('#needsStudyCount'))$('#needsStudyCount').textContent=`암기 못함 ${need} · 애매 ${uncertain}`;
 }
 // Saved by question ID. Progress 1/2 stays in the existing needs-study pool.
 // The explicit mastered flag remains authoritative for legacy and imported data.
@@ -1884,7 +1887,7 @@ function updateCurrentMemoryUI(key){
 }
 function updateQuickFilterButtons(){
   const mode=$('#mode')?.value||state.mode||'all';
-  const labels={all:`전체 ${yearScopeCount()}`,mastered:`암기 완료 ${memorizedCount()}`,needsStudy:`암기 못함 ${needsStudyCount()}`};
+  const labels={all:`전체 ${yearScopeCount()}`,mastered:`암기 완료 ${memorizedCount()}`,needsStudy:`미암기+애매 ${needsStudyCount()}`};
   document.querySelectorAll('[data-status-filter]').forEach(btn=>{
     const value=btn.dataset.statusFilter;
     btn.textContent=labels[value]||btn.textContent;
@@ -2295,7 +2298,7 @@ function setStatus(name,options={}){
     }
   }
   $('#result')?.querySelector('.study-cycle-complete')?.remove();
-  updateStatusCounts();updateQuickFilterButtons();updateCurrentMemoryUI(k);save();
+  updateStatusCounts();updateQuickFilterButtons();updateCurrentMemoryUI(k);save();window.TomokCloud?.pushMemoryKey?.(k,{keepalive:true});
 }
 function markUncertain(source='manual'){
   const q=current();if(!q)return 0;
@@ -3663,14 +3666,21 @@ function activateDaily15(){
 const originalEligible=studyEligibleIndices;studyEligibleIndices=function(mode,term){if(mode===DAILY_MODE)return daily15Indices();return originalEligible(mode,term)};
 const originalRender=render;render=function(){originalRender();updateDailyUI()};
 const originalSave=save;
-function syncPositionSignature(){return [String(state.currentId??''),String($('#mode')?.value||state.mode||'all'),String(activeYear?.()??state.yearFilter??'all'),String(state.taltalSubcategory||'all')].join('|')}
+function currentLearningScope(){
+  if(activeDaily())return 'daily15';
+  if(state.taltalScope)return 'taltal';
+  if(state.pastScope&&activeYear()==='all')return 'past';
+  if(activeYear()!=='all')return 'year';
+  return 'all';
+}
+function syncPositionSignature(){return [String(state.currentId??''),String($('#mode')?.value||state.mode||'all'),currentLearningScope(),String(activeYear?.()??state.yearFilter??'all'),String(state.taltalSubcategory||'all')].join('|')}
 save=function(){state.daily15Active=activeDaily();const sig=syncPositionSignature();if(sig!==state.syncPositionKey){state.syncPositionKey=sig;state.syncPositionUpdated=Math.max(Date.now(),(Number(state.syncPositionUpdated)||0)+1);state.syncPositionSource='iphone'}originalSave();window.TomokCloud?.schedulePush?.()};
 $('#daily15Toggle')?.addEventListener('click',activateDaily15);
 $('#mode')?.addEventListener('change',()=>{state.daily15Active=$('#mode').value===DAILY_MODE;if(state.daily15Active)ensureDaily15();setTimeout(updateDailyUI,0)});
 if(state.daily15Active||state.mode===DAILY_MODE){$('#mode').value=DAILY_MODE;activateDaily15()}else updateDailyUI();
 
 // ---------- Supabase sync (inactive until sync-config.js is filled) ----------
-const cfg=window.TOMOK_SYNC||{};let cloudState='off',pushTimer=null,pulling=false;
+const cfg=window.TOMOK_SYNC||{};let cloudState='off',pushTimer=null,pulling=false,v2Available=null,serverMemoryCache={};const dirtyMemory=new Set();
 const apiKey=()=>String(cfg.publishableKey||cfg.anonKey||'').trim();
 function currentSyncCode(){return String(localStorage.getItem('tomok-sync-code')||cfg.syncCode||'').trim()}
 function syncEnabled(){return /^https:\/\//.test(String(cfg.url||''))&&apiKey().length>20&&currentSyncCode().length>=12}
@@ -3686,26 +3696,80 @@ function pickSide(aUpdated,aSource,bUpdated,bSource){
   if(isIPhoneSource(bSource)&&!isIPhoneSource(aSource))return'b';return'a';
 }
 function memoryPayload(){const memory={};state.memorySource||={};for(const q of BANK){const k=qkey(q),status=state.status?.[k],updated=Number(state.memoryUpdated?.[k])||0;if(status==='mastered'||status==='unmastered')memory[k]={status,progress:memoryProgress(k),updated,source:state.memorySource[k]||'iphone'}}return memory}
-function currentPositionPayload(){const mode=$('#mode')?.value||state.mode||'all';return{currentId:Number(state.currentId)||0,mode,year:Number(activeYear?.())||0,taltalSubcategory:String(state.taltalSubcategory||'all'),updated:Number(state.syncPositionUpdated)||0,source:state.syncPositionSource||'iphone'}}
+function currentPositionPayload(){const mode=$('#mode')?.value||state.mode||'all',scope=currentLearningScope(),yr=scope==='year'?Number(activeYear?.())||0:0;return{currentId:Number(state.currentId)||0,mode,scope,year:yr,taltalSubcategory:scope==='taltal'?String(state.taltalSubcategory||'all'):'all',updated:Number(state.syncPositionUpdated)||0,source:state.syncPositionSource||'iphone'}}
 function snapshot(){const d=dailyState();if(d.updated&&!d.source)d.source='iphone';return{version:4,memory:memoryPayload(),daily15:{...d,focusIds:[...d.focusIds],introducedIds:[...d.introducedIds],source:d.source||'iphone'},position:currentPositionPayload(),resetAt:Number(state.syncResetAt)||0,resetSource:state.syncResetSource||((Number(state.syncResetAt)||0)?'iphone':''),updatedAt:Date.now()}}
 function clearSyncedLearningAfterReset(resetAt,resetSource=''){
   state.answers={};state.fav={};state.wrong={};state.status={};state.attempts={};state.review={};state.wrongMeta={};state.flashStats={};state.memoryVerify={};state.memoryUpdated={};state.memorySource={};state.memoryJudgments={};state.uncertainProgress={};state.daily15={date:'',focusIds:[],introducedIds:[],introCount:0,updated:0,source:''};state.daily15Updated=0;state.syncResetAt=resetAt;state.syncResetSource=resetSource||'';
 }
-function applyRemote(payload){if(!payload||typeof payload!=='object')return false;let changed=false;state.memoryUpdated||={};state.memorySource||={};state.uncertainProgress||={};if(!Number.isFinite(state.syncResetAt))state.syncResetAt=0;if(typeof state.syncResetSource!=='string')state.syncResetSource='';
+function applyRemote(payload,{applyPosition=true}={}){if(!payload||typeof payload!=='object')return false;let changed=false;state.memoryUpdated||={};state.memorySource||={};state.uncertainProgress||={};if(!Number.isFinite(state.syncResetAt))state.syncResetAt=0;if(typeof state.syncResetSource!=='string')state.syncResetSource='';
   const remoteReset=Number(payload.resetAt)||0,remoteResetSource=String(payload.resetSource||'');const localReset=Number(state.syncResetAt)||0,localResetSource=String(state.syncResetSource||'');
   let resetAt=localReset,resetSource=localResetSource;
   if(remoteReset>0){const side=pickSide(localReset,localResetSource,remoteReset,remoteResetSource);if(side==='b'){resetAt=remoteReset;resetSource=remoteResetSource;if(remoteReset!==localReset){clearSyncedLearningAfterReset(remoteReset,remoteResetSource);changed=true}}}
   resetAt=Math.max(Number(state.syncResetAt)||0,resetAt);
   for(const [k,row] of Object.entries(payload.memory||{})){if(!byId.has(String(k)))continue;const iu=Number(row?.updated)||0;if(iu<=resetAt)continue;const lu=Number(state.memoryUpdated[k])||0,ls=String(state.memorySource[k]||'iphone'),rs=String(row?.source||'pc'),local=state.status[k];const st=row.status==='mastered'?'mastered':'unmastered',p=st==='mastered'?3:([1,2].includes(Number(row.progress))?Number(row.progress):0);if(local&&pickSide(lu,ls,iu,rs)==='a')continue;state.status[k]=st;storeMemoryProgress(k,p);state.memoryUpdated[k]=iu;state.memorySource[k]=rs;changed=true;if(st==='unmastered')delete state.memoryVerify?.[k]}
   const rd=payload.daily15,ld=dailyState();if(rd&&typeof rd==='object'){const ru=Number(rd.updated)||0,lu=Number(ld.updated)||0;if(ru>resetAt&&pickSide(lu,ld.source||'iphone',ru,rd.source||'pc')==='b'){state.daily15={date:String(rd.date||''),focusIds:uniqValid(rd.focusIds),introducedIds:uniqValid(rd.introducedIds),introCount:Number(rd.introCount)||0,updated:ru,source:String(rd.source||'pc')};state.daily15Updated=ru;changed=true}}
-  const rp=payload.position;if(rp&&typeof rp==='object'){const ru=Number(rp.updated)||0,lu=Number(state.syncPositionUpdated)||0;if(ru>resetAt&&pickSide(lu,state.syncPositionSource||'iphone',ru,rp.source||'pc')==='b'){const id=Number(rp.currentId)||0;if(byId.has(String(id)))state.currentId=id;if(rp.mode)state.mode=String(rp.mode);if(Number.isFinite(Number(rp.year)))state.yearFilter=Number(rp.year)||'all';if(rp.taltalSubcategory)state.taltalSubcategory=String(rp.taltalSubcategory);state.syncPositionUpdated=ru;state.syncPositionSource=String(rp.source||'pc');state.syncPositionKey=syncPositionSignature();changed=true}}
+  const rp=payload.position;if(applyPosition&&rp&&typeof rp==='object'){const ru=Number(rp.updated)||0,lu=Number(state.syncPositionUpdated)||0;if(ru>resetAt&&pickSide(lu,state.syncPositionSource||'iphone',ru,rp.source||'pc')==='b'){
+    const id=Number(rp.currentId)||0,scope=String(rp.scope||'');
+    if(byId.has(String(id)))state.currentId=id;
+    if(rp.mode)state.mode=String(rp.mode);
+    state.daily15Active=scope==='daily15'||state.mode===DAILY_MODE;
+    if(scope==='daily15'){state.mode=DAILY_MODE;state.pastScope=false;state.taltalScope=false;state.yearFilter='all';state.taltalSubcategory='all'}
+    else if(scope==='taltal'){state.pastScope=false;state.taltalScope=true;state.yearFilter='all';state.taltalSubcategory=String(rp.taltalSubcategory||'all')}
+    else if(scope==='past'){state.pastScope=true;state.taltalScope=false;state.yearFilter='all';state.taltalSubcategory='all'}
+    else if(scope==='year'){state.pastScope=true;state.taltalScope=false;state.yearFilter=validYearFilter(String(Number(rp.year)||'all'));state.taltalSubcategory='all'}
+    else{state.pastScope=false;state.taltalScope=false;state.yearFilter='all';state.taltalSubcategory='all'}
+    state.syncPositionUpdated=ru;state.syncPositionSource=String(rp.source||'pc');
+    const modeEl=$('#mode');if(modeEl&&[...modeEl.options].some(o=>o.value===state.mode))modeEl.value=state.mode;
+    state.syncPositionKey=syncPositionSignature();changed=true
+  }}
   if(changed){originalSave();if(activeDaily()){view=daily15Indices();const at=view.findIndex(i=>String(BANK[i]?.id)===String(state.currentId));pos=at>=0?at:Math.min(pos,Math.max(0,view.length-1));originalRender()}else{syncViewToActiveFilter?.();const at=view.findIndex(i=>String(BANK[i]?.id)===String(state.currentId));if(at>=0)pos=at;originalRender()}updateStatusCounts?.();updateQuickFilterButtons?.();updateDailyUI()}return changed}
-async function cloudPull(){if(!syncEnabled()||pulling)return false;pulling=true;try{const url=cfg.url.replace(/\/$/,'')+'/rest/v1/rpc/get_study_state';const r=await fetch(url,{method:'POST',headers:headers(),body:JSON.stringify({p_sync_code:currentSyncCode()}),cache:'no-store'});if(!r.ok)throw new Error(String(r.status));const payload=await r.json();if(payload)applyRemote(payload);cloudState='on';updateDailyUI();return true}catch(e){cloudState='error';updateDailyUI();return false}finally{pulling=false}}
-async function cloudPush(){if(!syncEnabled())return false;try{await cloudPull();const url=cfg.url.replace(/\/$/,'')+'/rest/v1/rpc/put_study_state';const r=await fetch(url,{method:'POST',headers:headers(),body:JSON.stringify({p_sync_code:currentSyncCode(),p_payload:snapshot()})});if(!r.ok)throw new Error(String(r.status));cloudState='on';updateDailyUI();return true}catch(e){cloudState='error';updateDailyUI();return false}}
-function schedulePush(){if(!syncEnabled())return;clearTimeout(pushTimer);pushTimer=setTimeout(cloudPush,1200)}
-const syncBtn=$('#syncSetupToggle');if(syncBtn){syncBtn.addEventListener('click',()=>{let cur=currentSyncCode();let suggestion=cur;if(!suggestion&&crypto?.randomUUID)suggestion=crypto.randomUUID().replace(/-/g,'');const code=prompt('회사 PC와 동일하게 사용할 연동코드입니다. 충돌 시 이 iPhone 기록이 우선됩니다. 20자 이상 권장합니다.\n이 값은 이 iPhone에만 저장되고 GitHub에는 올라가지 않습니다.',suggestion||'');if(code===null)return;const clean=String(code).trim();if(clean)localStorage.setItem('tomok-sync-code',clean);else localStorage.removeItem('tomok-sync-code');cloudState='off';updateDailyUI();if(syncEnabled())cloudPull().then(()=>cloudPush());alert(clean?'연동코드를 저장했습니다. 회사 PC의 sync_config.json에도 같은 코드를 입력하세요.':'연동코드를 지웠습니다.')})}
-window.TomokCloud={pull:cloudPull,push:cloudPush,schedulePush,status:syncStatus,enabled:syncEnabled};
-if(syncEnabled()){cloudPull().then(()=>setTimeout(cloudPush,600));setInterval(cloudPull,15000);window.addEventListener('focus',cloudPull);document.addEventListener('visibilitychange',()=>{if(!document.hidden)cloudPull()})}
+async function rpcCall(name,args,{keepalive=false}={}){
+  const url=cfg.url.replace(/\/$/,'')+'/rest/v1/rpc/'+name;
+  const r=await fetch(url,{method:'POST',headers:headers(),body:JSON.stringify(args),cache:'no-store',keepalive});
+  if(!r.ok)throw new Error(String(r.status));
+  const text=await r.text();return text?JSON.parse(text):null;
+}
+function localMemoryRow(k){const status=state.status?.[k],updated=Number(state.memoryUpdated?.[k])||0;if(status!=='mastered'&&status!=='unmastered')return null;return{status,progress:memoryProgress(k),updated,source:state.memorySource?.[k]||'iphone'}}
+function markLocalWinnersDirty(payload){const remote=payload?.memory||{};for(const q of BANK){const k=qkey(q),local=localMemoryRow(k);if(!local)continue;const rr=remote[k];if(!rr||pickSide(Number(rr.updated)||0,String(rr.source||'pc'),local.updated,local.source)==='b')dirtyMemory.add(k)}}
+function collectDirtyMemory(){const out={};for(const k of [...dirtyMemory]){const row=localMemoryRow(k);if(row)out[k]=row;else dirtyMemory.delete(k)}return out}
+async function cloudPull({applyPosition=false}={}){if(!syncEnabled()||pulling)return false;pulling=true;try{
+  let payload;
+  try{payload=await rpcCall('get_study_state_v2',{p_sync_code:currentSyncCode()});v2Available=true}
+  catch(e){payload=await rpcCall('get_study_state',{p_sync_code:currentSyncCode()});v2Available=false}
+  if(payload){markLocalWinnersDirty(payload);serverMemoryCache=payload.memory||{};applyRemote(payload,{applyPosition})}
+  cloudState='on';updateDailyUI();return true
+}catch(e){cloudState='error';updateDailyUI();return false}finally{pulling=false}}
+async function cloudPatchV2({memoryPatch={},includeMeta=true,positionOnly=false,keepalive=false}={}){
+  if(positionOnly){await rpcCall('patch_study_position_v2',{p_sync_code:currentSyncCode(),p_position:currentPositionPayload()},{keepalive});return true}
+  const d=dailyState();if(d.updated&&!d.source)d.source='iphone';
+  await rpcCall('patch_study_state_v2',{
+    p_sync_code:currentSyncCode(),p_memory_patch:memoryPatch,
+    p_daily15:includeMeta?{...d,focusIds:[...d.focusIds],introducedIds:[...d.introducedIds],source:d.source||'iphone'}:null,
+    p_position:includeMeta?currentPositionPayload():null,
+    p_reset_at:includeMeta?(Number(state.syncResetAt)||null):null,
+    p_reset_source:includeMeta?(state.syncResetSource||((Number(state.syncResetAt)||0)?'iphone':null)):null
+  },{keepalive});return true
+}
+async function cloudPush({keepalive=false}={}){if(!syncEnabled())return false;try{
+  if(v2Available===null)await cloudPull({applyPosition:false});
+  if(v2Available===false){const url=cfg.url.replace(/\/$/,'')+'/rest/v1/rpc/put_study_state';const r=await fetch(url,{method:'POST',headers:headers(),body:JSON.stringify({p_sync_code:currentSyncCode(),p_payload:snapshot()}),keepalive});if(!r.ok)throw new Error(String(r.status));cloudState='on';updateDailyUI();return true}
+  const patch=collectDirtyMemory();await cloudPatchV2({memoryPatch:patch,includeMeta:true,keepalive});for(const k of Object.keys(patch))dirtyMemory.delete(k);cloudState='on';updateDailyUI();return true
+}catch(e){cloudState='error';updateDailyUI();return false}}
+async function pushMemoryKey(k,{keepalive=false}={}){if(!syncEnabled())return false;dirtyMemory.add(String(k));const row=localMemoryRow(String(k));if(!row)return false;if(v2Available===false){schedulePush();return false}try{await cloudPatchV2({memoryPatch:{[String(k)]:row},includeMeta:false,keepalive});v2Available=true;dirtyMemory.delete(String(k));cloudState='on';updateDailyUI();return true}catch(e){if(v2Available===null)v2Available=false;cloudState='error';schedulePush();updateDailyUI();return false}}
+async function pushPositionOnly({keepalive=true}={}){if(!syncEnabled())return false;try{if(v2Available===false)return false;await cloudPatchV2({positionOnly:true,keepalive});v2Available=true;return true}catch(e){return false}}
+function schedulePush(){if(!syncEnabled())return;clearTimeout(pushTimer);pushTimer=setTimeout(()=>cloudPush(),250)}
+const syncBtn=$('#syncSetupToggle');if(syncBtn){syncBtn.addEventListener('click',()=>{let cur=currentSyncCode();let suggestion=cur;if(!suggestion&&crypto?.randomUUID)suggestion=crypto.randomUUID().replace(/-/g,'');const code=prompt('회사 PC와 동일하게 사용할 연동코드입니다. 충돌 시 이 iPhone 기록이 우선됩니다. 20자 이상 권장합니다.\n이 값은 이 iPhone에만 저장되고 GitHub에는 올라가지 않습니다.',suggestion||'');if(code===null)return;const clean=String(code).trim();if(clean)localStorage.setItem('tomok-sync-code',clean);else localStorage.removeItem('tomok-sync-code');cloudState='off';updateDailyUI();if(syncEnabled())cloudPull({applyPosition:true}).then(()=>cloudPush());alert(clean?'연동코드를 저장했습니다. 회사 PC의 sync_config.json에도 같은 코드를 입력하세요.':'연동코드를 지웠습니다.')})}
+window.TomokCloud={pull:cloudPull,push:cloudPush,pushMemoryKey,pushPositionOnly,schedulePush,status:syncStatus,enabled:syncEnabled};
+if(syncEnabled()){
+  cloudPull({applyPosition:true}).then(()=>setTimeout(()=>cloudPush(),300));
+  setInterval(()=>cloudPull({applyPosition:false}),15000);
+  window.addEventListener('focus',()=>cloudPull({applyPosition:false}));
+  document.addEventListener('visibilitychange',()=>{
+    if(document.hidden){try{save()}catch{};pushPositionOnly({keepalive:true})}
+    else cloudPull({applyPosition:true});
+  });
+  window.addEventListener('pagehide',()=>{try{save()}catch{};pushPositionOnly({keepalive:true})});
+}
 updateDailyUI();
 })();
 </script>
