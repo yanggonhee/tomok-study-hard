@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
-<title>웹 학습서 · 애매 3칸</title>
+<title>index</title>
 <meta name="theme-color" content="#333333">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="서술">
@@ -723,7 +723,21 @@ body.flashcard-mode .memory-three-help,body.study-empty .memory-three-help{displ
 @media(max-width:400px){.status-row.inline-status>button,.flash-ratings>button{font-size:11px!important;padding:5px 2px!important}.memory-squares{gap:2px}.memory-square{width:8px;height:8px}#markUncertain,.flash-ratings [data-rate="uncertain"]{gap:4px}}
 </style>
 
-</head>
+
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#efefef">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="토목기사15">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<script src="sync-config.js"></script>
+\n<style id="daily15-ui-style">
+#daily15Toggle{font-weight:850}#daily15Toggle.active{background:#dedede;border-color:#777}
+.daily15-summary{margin:4px 0 7px;padding:7px 9px;border:1px solid #bcbcbc;border-radius:8px;background:#f1f1f1;color:#333;font-size:12px;line-height:1.45}
+.daily15-summary strong{color:#111}.daily15-kind{display:inline-flex;margin-left:6px;padding:2px 6px;border:1px solid #bbb;border-radius:999px;background:#f5f5f5;color:#555;font-size:10px;font-weight:700}
+.sync-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#aaa;margin-right:5px}.sync-dot.on{background:#555}.sync-dot.err{background:#888}
+@media(max-width:560px){#daily15Toggle{font-size:9.6px!important}.daily15-summary{font-size:11px;padding:6px 7px;margin:3px 0 5px}}
+</style>\n</head>
 <body>
 <div class="app">
 <header>
@@ -734,6 +748,8 @@ body.flashcard-mode .memory-three-help,body.study-empty .memory-three-help{displ
     </div>
     <div class="header-actions">
       <button id="headerCompactToggle" class="ghost" type="button" aria-pressed="false">상단 최소화</button>
+      <button id="daily15Toggle" class="ghost" type="button">오늘 15</button>
+      <button id="syncSetupToggle" class="ghost" type="button">연동</button>
       <button id="manageToggle" class="ghost" aria-expanded="false">유형</button>
     </div>
   </div>
@@ -749,6 +765,7 @@ body.flashcard-mode .memory-three-help,body.study-empty .memory-three-help{displ
       <div class="mode-year-controls">
       <select id="mode" aria-label="문제 필터">
         <option value="all">전체 1037문항</option>
+        <option value="daily15">오늘 15 + 누적복습</option>
 <option value="past">과년도 659문항</option>
 <option value="taltal">탈탈 378문항</option>
         <optgroup label="복습">
@@ -795,6 +812,7 @@ body.flashcard-mode .memory-three-help,body.study-empty .memory-three-help{displ
     <span id="taltalCategoryActiveText" aria-live="polite"></span>
     <div class="taltal-category-summary-actions"><button id="taltalCategoryChange" type="button">소분류 변경</button><button id="taltalCategoryClear" type="button" hidden>탈탈 전체</button></div>
   </div>
+  <div id="daily15Summary" class="daily15-summary" hidden></div>
 </header>
 <main class="card">
   <div class="meta">
@@ -2836,82 +2854,6 @@ body.daily30-mode #yearToggle,body.daily30-mode #shuffle,body.daily30-mode #sear
 })();
 </script>
 
-<script id="quietmemo-sync-bridge-script">
-(()=>{
-  const BASE='http://127.0.0.1:17361/v1';
-  state.memoryUpdated||={};if(!Number.isFinite(state.daily30Updated))state.daily30Updated=0;
-  let connected=false,lastDailyDigest='',lastSentMemory={};
-  function setConnected(on){connected=!!on}
-  async function api(path,opt={}){
-    const c=new AbortController(),tm=setTimeout(()=>c.abort(),900);
-    try{const r=await fetch(BASE+path,{cache:'no-store',...opt,signal:c.signal});if(!r.ok)throw new Error(String(r.status));setConnected(true);return await r.json()}catch(e){setConnected(false);throw e}finally{clearTimeout(tm)}
-  }
-  function webDaily(){
-    const s=state.daily30Session;
-    if(!s||!Array.isArray(s.assigned)||!s.date)return {date:'',assigned:[],carryCount:0,updated:0};
-    return {date:s.date,assigned:[...new Set(s.assigned.filter(i=>Number.isInteger(i)&&i>=0&&i<BANK.length).map(i=>BANK[i].id))].slice(0,30),carryCount:Math.max(0,Math.min(Number(s.carryCount)||0,30)),updated:Number(state.daily30Updated)||0};
-  }
-  function snapshot(){
-    const memorized={},unmemorized={};
-    for(const q of BANK){const k=qkey(q);if(state.status[k]==='mastered')memorized[k]=true;else if(state.status[k]==='unmastered')unmemorized[k]=true}
-    return {version:1,memorized,unmemorized,uncertainProgress:{...state.uncertainProgress},memoryUpdated:{...state.memoryUpdated},daily30:webDaily()};
-  }
-  function applyMemory(remote){
-    let changed=false;
-    const rm=remote?.memorized||{},ru=remote?.unmemorized||{},rp=remote?.uncertainProgress||{},rt=remote?.memoryUpdated||{};
-    for(const q of BANK){
-      const k=qkey(q),incoming=rm[k]?'mastered':(ru[k]?'unmastered':null);if(!incoming)continue;
-      const iu=Number(rt[k])||0,lu=Number(state.memoryUpdated[k])||0,local=state.status[k];
-      if(iu<lu)continue;
-      if(iu===lu&&iu>0)continue;
-      if(iu===0&&lu===0&&local==='mastered'&&incoming!=='mastered')continue;
-      const incomingProgress=incoming==='mastered'?3:((rp[k]===1||rp[k]===2)?rp[k]:0);
-      if(local!==incoming||memoryProgress(k)!==incomingProgress){
-        state.status[k]=incoming;storeMemoryProgress(k,incomingProgress);changed=true;
-        if(incoming==='unmastered'){
-          delete state.memoryVerify?.[k];
-          if(incomingProgress===0||local==='mastered'){delete state.answers?.[k];delete state.corrections?.[k];delete state.attempts?.[k]}
-        }
-      }
-      state.memoryUpdated[k]=iu||Date.now();
-    }
-    return changed;
-  }
-  function applyDaily(d){
-    if(!d||!d.date||!Array.isArray(d.assigned))return false;
-    const local=state.daily30Session,lu=Number(state.daily30Updated)||0,iu=Number(d.updated)||0;
-    if(local?.date&&d.date<local.date)return false;
-    if(local?.date===d.date){if(iu<lu)return false;if(iu===lu&&iu>0)return false;if(iu===0&&lu===0&&Array.isArray(local.assigned)&&local.assigned.length)return false}
-    const inds=[];const seen=new Set();for(const id of d.assigned){const i=BANK.findIndex(q=>q.id===id);if(i>=0&&!seen.has(i)){seen.add(i);inds.push(i);if(inds.length===30)break}}
-    state.daily30Session={...(local||{}),date:d.date,assigned:inds,carryCount:Math.max(0,Math.min(Number(d.carryCount)||0,inds.length)),cursor:0};
-    state.daily30Updated=iu||Date.now();
-    if(window.CivilDaily30?.active?.())setTimeout(()=>window.CivilDaily30.refresh(),0);
-    return true;
-  }
-  async function pull(){
-    try{const remote=await api('/sync');const m=applyMemory(remote),d=applyDaily(remote.daily30);if(m||d){updateStatusCounts?.();updateQuickFilterButtons?.();const q=current?.();if(q)updateCurrentMemoryUI?.(qkey(q));save();if(window.CivilDaily30?.active?.())window.CivilDaily30.refresh()}}catch(e){}
-  }
-  async function initialMerge(){
-    try{await api('/sync',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(snapshot())});setTimeout(pull,180)}catch(e){}
-  }
-  async function pushMemoryChanges(){
-    if(!connected)return;
-    for(const q of BANK){const k=qkey(q),u=Number(state.memoryUpdated[k])||0;if(!u||lastSentMemory[k]===u)continue;const v=state.status[k];if(v!=='mastered'&&v!=='unmastered')continue;
-      lastSentMemory[k]=u;try{await api('/memory',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:q.id,mastered:v==='mastered',uncertainProgress:memoryProgress(k),updated:u})})}catch(e){delete lastSentMemory[k];break}
-    }
-  }
-  async function pushDailyChange(){
-    if(!connected)return;const d=webDaily(),digest=JSON.stringify([d.date,d.assigned,d.carryCount]);if(!d.date||digest===lastDailyDigest)return;
-    lastDailyDigest=digest;if(!state.daily30Updated){state.daily30Updated=Date.now();d.updated=state.daily30Updated;save()}else d.updated=state.daily30Updated;
-    try{await api('/daily30',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)})}catch(e){lastDailyDigest=''}
-  }
-  setInterval(()=>{pushMemoryChanges();pushDailyChange()},800);
-  setInterval(pull,2200);
-  window.addEventListener('focus',pull);
-  initialMerge();
-})();
-</script>
-<!-- quietmemo-local-sync-v1-2026-10-15 -->
 
 <style id="quick-study-style">
 .quick-study-wrap{margin:9px 0 14px;padding:10px;border:1px solid #b5b5b5;border-radius:10px;background:#f4f4f4}
@@ -3652,6 +3594,85 @@ body.header-collapsed header{display:none!important}
 @media(max-width:560px){.acrostic-mnemonic .context-memory-code{font-size:18px!important;padding:8px 9px!important}.acrostic-keyword-links{font-size:12px}.acrostic-token{max-width:130px}.acrostic-keyword-row{gap:4px}}
 
 </style>
+\n<script id="daily15-cloud-script">
+(()=>{
+'use strict';
+const DAILY_MODE='daily15', DAILY_TARGET=15;
+const byId=new Map(BANK.map((q,i)=>[String(q.id),i]));
+const isMastered=id=>state.status?.[String(id)]==='mastered';
+const validPast=q=>q&&q.chapter!=='탈탈'&&Number(questionYear(q))>=2008&&Number(questionYear(q))<=2026;
+const uniqValid=ids=>{const seen=new Set(),out=[];for(const raw of Array.isArray(ids)?ids:[]){const id=String(raw),i=byId.get(id);if(i==null||seen.has(id)||!validPast(BANK[i]))continue;seen.add(id);out.push(BANK[i].id)}return out};
+function dailyState(){
+  if(!state.daily15||typeof state.daily15!=='object')state.daily15={date:'',focusIds:[],introducedIds:[],introCount:0,updated:0};
+  const d=state.daily15;d.focusIds=uniqValid(d.focusIds);d.introducedIds=uniqValid(d.introducedIds);
+  d.introCount=Math.max(Number(d.introCount)||0,d.introducedIds.length);d.updated=Number(d.updated)||0;return d;
+}
+function bumpDailyUpdated(){const d=dailyState(),n=Date.now();d.updated=Math.max(n,d.updated+1);state.daily15Updated=d.updated}
+function ensureDaily15(force=false){
+  const d=dailyState(),today=localDateKey();
+  if(!force&&d.date===today&&d.focusIds.length)return d;
+  const introduced=new Set(d.introducedIds.map(String)),focus=[],focusSet=new Set();
+  const addNeed=id=>{id=String(id);const i=byId.get(id);if(focus.length>=DAILY_TARGET||i==null||focusSet.has(id)||!validPast(BANK[i])||isMastered(id))return;focusSet.add(id);focus.push(BANK[i].id)};
+  d.focusIds.forEach(addNeed);d.introducedIds.forEach(addNeed);
+  const old=[],recent=[];
+  studyChronologicalIndices([...BANK.keys()]).forEach(i=>{const q=BANK[i],id=String(q.id);if(!validPast(q)||introduced.has(id))return;const y=Number(questionYear(q));(y<=2020?old:recent).push(q.id)});
+  let oi=0,ri=0;
+  const take=wantOld=>{if(wantOld&&oi<old.length)return old[oi++];if(!wantOld&&ri<recent.length)return recent[ri++];if(oi<old.length)return old[oi++];if(ri<recent.length)return recent[ri++];return null};
+  while(focus.length<DAILY_TARGET){const id=take((d.introCount%15)<13);if(id==null)break;const k=String(id);if(introduced.has(k))continue;introduced.add(k);d.introducedIds.push(id);d.introCount++;focusSet.add(k);focus.push(id)}
+  d.date=today;d.focusIds=focus;bumpDailyUpdated();return d;
+}
+function daily15Indices(){
+  const d=ensureDaily15(),out=[],seen=new Set(),focusSet=new Set(d.focusIds.map(String));
+  const add=id=>{const k=String(id),i=byId.get(k);if(i!=null&&!seen.has(k)){seen.add(k);out.push(i)}};
+  d.focusIds.forEach(add);
+  d.introducedIds.forEach(id=>{const k=String(id);if(!focusSet.has(k)&&isMastered(k))add(id)});
+  return out;
+}
+function dailyCounts(){const d=ensureDaily15(),focusSet=new Set(d.focusIds.map(String));let review=0;for(const id of d.introducedIds)if(!focusSet.has(String(id))&&isMastered(id))review++;return{focus:d.focusIds.length,review,total:d.focusIds.length+review}}
+function activeDaily(){return ($('#mode')?.value||state.mode)===DAILY_MODE}
+function updateDailyUI(){
+  const btn=$('#daily15Toggle'),sum=$('#daily15Summary');if(!btn||!sum)return;
+  const on=activeDaily();btn.classList.toggle('active',on);btn.textContent=on?'오늘 학습 중':'오늘 15';sum.hidden=!on;if(!on)return;
+  const c=dailyCounts(),q=current?.(),kind=q?(dailyState().focusIds.map(String).includes(String(q.id))?'오늘 집중':'누적 복습'):'';
+  const sync=window.TomokCloud?.status?.()||{label:'연동 준비',on:false};
+  sum.innerHTML=`<span class="sync-dot ${sync.on?'on':''}"></span>${sync.label} · <strong>오늘 집중 ${c.focus}</strong> · 누적복습 ${c.review} · 총 ${c.total}${kind?`<span class="daily15-kind">${kind}</span>`:''}`;
+}
+function activateDaily15(){
+  ensureDaily15();state.daily15Active=true;state.pastScope=false;state.taltalScope=false;state.yearFilter='all';state.taltalSubcategory='all';
+  const mode=$('#mode');if(mode)mode.value=DAILY_MODE;const search=$('#search');if(search)search.value='';state.search='';state.mode=DAILY_MODE;
+  const oldId=current?.()?.id;view=daily15Indices();pos=Math.max(0,oldId!=null?view.findIndex(i=>String(BANK[i]?.id)===String(oldId)):-1);if(pos<0)pos=0;render();save();updateDailyUI();
+}
+// Extend the existing filter without disturbing every other mode.
+const originalEligible=studyEligibleIndices;studyEligibleIndices=function(mode,term){if(mode===DAILY_MODE)return daily15Indices();return originalEligible(mode,term)};
+const originalRender=render;render=function(){originalRender();updateDailyUI()};
+const originalSave=save;save=function(){state.daily15Active=activeDaily();originalSave();window.TomokCloud?.schedulePush?.()};
+$('#daily15Toggle')?.addEventListener('click',activateDaily15);
+$('#mode')?.addEventListener('change',()=>{state.daily15Active=$('#mode').value===DAILY_MODE;if(state.daily15Active)ensureDaily15();setTimeout(updateDailyUI,0)});
+if(state.daily15Active||state.mode===DAILY_MODE){$('#mode').value=DAILY_MODE;activateDaily15()}else updateDailyUI();
+
+// ---------- Supabase sync (inactive until sync-config.js is filled) ----------
+const cfg=window.TOMOK_SYNC||{};let cloudState='off',pushTimer=null,pulling=false;
+const apiKey=()=>String(cfg.publishableKey||cfg.anonKey||'').trim();
+function currentSyncCode(){return String(localStorage.getItem('tomok-sync-code')||cfg.syncCode||'').trim()}
+function syncEnabled(){return /^https:\/\//.test(String(cfg.url||''))&&apiKey().length>20&&currentSyncCode().length>=12}
+function syncStatus(){return cloudState==='on'?{on:true,label:'동기화됨'}:cloudState==='error'?{on:false,label:'동기화 재시도'}:syncEnabled()?{on:false,label:'동기화 대기'}:{on:false,label:'연동 준비'}}
+function headers(extra={}){return {'apikey':apiKey(),'Content-Type':'application/json',...extra}}
+function memoryPayload(){const memory={};for(const q of BANK){const k=qkey(q),status=state.status?.[k],updated=Number(state.memoryUpdated?.[k])||0;if(status==='mastered'||status==='unmastered')memory[k]={status,progress:memoryProgress(k),updated}}return memory}
+function snapshot(){return{version:2,memory:memoryPayload(),daily15:{...dailyState(),focusIds:[...dailyState().focusIds],introducedIds:[...dailyState().introducedIds]},updatedAt:Date.now()}}
+function applyRemote(payload){if(!payload||typeof payload!=='object')return false;let changed=false;state.memoryUpdated||={};state.uncertainProgress||={};
+  for(const [k,row] of Object.entries(payload.memory||{})){if(!byId.has(String(k)))continue;const iu=Number(row?.updated)||0,lu=Number(state.memoryUpdated[k])||0,local=state.status[k];const st=row.status==='mastered'?'mastered':'unmastered',p=st==='mastered'?3:([1,2].includes(Number(row.progress))?Number(row.progress):0);if(iu<lu)continue;if(iu===lu){if(iu>0)continue;if(local==='mastered'&&st!=='mastered')continue;if(local===st&&memoryProgress(k)===p)continue;}state.status[k]=st;storeMemoryProgress(k,p);state.memoryUpdated[k]=iu;changed=true;if(st==='unmastered'){delete state.memoryVerify?.[k]}}
+  const rd=payload.daily15;const ld=dailyState();if(rd&&typeof rd==='object'&&((Number(rd.updated)||0)>(Number(ld.updated)||0)||((Number(rd.updated)||0)===(Number(ld.updated)||0)&&String(rd.date||'')>String(ld.date||'')))){state.daily15={date:String(rd.date||''),focusIds:uniqValid(rd.focusIds),introducedIds:uniqValid(rd.introducedIds),introCount:Number(rd.introCount)||0,updated:Number(rd.updated)||0};state.daily15Updated=state.daily15.updated;changed=true}
+  if(changed){originalSave();if(activeDaily()){view=daily15Indices();pos=Math.min(pos,Math.max(0,view.length-1));originalRender()}updateStatusCounts?.();updateQuickFilterButtons?.();updateDailyUI()}return changed}
+async function cloudPull(){if(!syncEnabled()||pulling)return false;pulling=true;try{const url=cfg.url.replace(/\/$/,'')+'/rest/v1/rpc/get_study_state';const r=await fetch(url,{method:'POST',headers:headers(),body:JSON.stringify({p_sync_code:currentSyncCode()}),cache:'no-store'});if(!r.ok)throw new Error(String(r.status));const payload=await r.json();if(payload)applyRemote(payload);cloudState='on';updateDailyUI();return true}catch(e){cloudState='error';updateDailyUI();return false}finally{pulling=false}}
+async function cloudPush(){if(!syncEnabled())return false;try{await cloudPull();const url=cfg.url.replace(/\/$/,'')+'/rest/v1/rpc/put_study_state';const r=await fetch(url,{method:'POST',headers:headers(),body:JSON.stringify({p_sync_code:currentSyncCode(),p_payload:snapshot()})});if(!r.ok)throw new Error(String(r.status));cloudState='on';updateDailyUI();return true}catch(e){cloudState='error';updateDailyUI();return false}}
+function schedulePush(){if(!syncEnabled())return;clearTimeout(pushTimer);pushTimer=setTimeout(cloudPush,1200)}
+const syncBtn=$('#syncSetupToggle');if(syncBtn){syncBtn.addEventListener('click',()=>{let cur=currentSyncCode();let suggestion=cur;if(!suggestion&&crypto?.randomUUID)suggestion=crypto.randomUUID().replace(/-/g,'');const code=prompt('회사 PC와 동일하게 사용할 연동코드입니다. 20자 이상 권장합니다.\n이 값은 이 iPhone에만 저장되고 GitHub에는 올라가지 않습니다.',suggestion||'');if(code===null)return;const clean=String(code).trim();if(clean)localStorage.setItem('tomok-sync-code',clean);else localStorage.removeItem('tomok-sync-code');cloudState='off';updateDailyUI();if(syncEnabled())cloudPull().then(()=>cloudPush());alert(clean?'연동코드를 저장했습니다. 회사 PC의 sync_config.json에도 같은 코드를 입력하세요.':'연동코드를 지웠습니다.')})}
+window.TomokCloud={pull:cloudPull,push:cloudPush,schedulePush,status:syncStatus,enabled:syncEnabled};
+if(syncEnabled()){cloudPull().then(()=>setTimeout(cloudPush,600));setInterval(cloudPull,15000);window.addEventListener('focus',cloudPull);document.addEventListener('visibilitychange',()=>{if(!document.hidden)cloudPull()})}
+updateDailyUI();
+})();
+</script>\n
+<script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}))}</script>
 </body>
 </html>
 <!-- github-mobile-unmastered-filter-fix-2026-08-07 -->
