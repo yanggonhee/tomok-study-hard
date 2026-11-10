@@ -1567,13 +1567,13 @@ function initYearPicker(){
 
 function createInitialState(){
   const firstId=BANK[studyChronologicalIndices([...BANK.keys()])[0]]?.id||1;
-  return {answers:{},fav:{},wrong:{},status:{},corrections:{},attempts:{},review:{},wrongMeta:{},flashStats:{},memoryVerify:{},memoryUpdated:{},uncertainProgress:{},syncResetAt:0,flashMode:false,headerCollapsed:true,index:0,currentId:firstId,allReturnId:firstId,view:[],mode:'all',search:'',yearFilter:'all',pastScope:false,taltalScope:false,taltalSubcategory:'all',taltalBankVersion:'1111-20261028-v1',questionBankRevision:'taltal378-delete326to330-text324-20261104'};
+  return {answers:{},fav:{},wrong:{},status:{},corrections:{},attempts:{},review:{},wrongMeta:{},flashStats:{},memoryVerify:{},memoryUpdated:{},memorySource:{},uncertainProgress:{},syncResetAt:0,syncResetSource:'',syncPositionUpdated:0,syncPositionSource:'',syncPositionKey:'',flashMode:false,headerCollapsed:true,index:0,currentId:firstId,allReturnId:firstId,view:[],mode:'all',search:'',yearFilter:'all',pastScope:false,taltalScope:false,taltalSubcategory:'all',taltalBankVersion:'1111-20261028-v1',questionBankRevision:'taltal378-delete326to330-text324-20261104'};
 }
 let state;
 try{state=JSON.parse(localStorage.getItem(STORAGE_KEY)||'null')}catch(e){state=null}
 if(!state||typeof state!=='object')state=createInitialState();
 if(typeof state.pastScope!=='boolean')state.pastScope=!state.taltalScope&&!!state.yearFilter&&state.yearFilter!=='all';
-state.answers||={};state.fav||={};state.wrong||={};state.status||={};state.corrections||={};state.attempts||={};state.review||={};state.wrongMeta||={};state.flashStats||={};state.memoryVerify||={};state.memoryUpdated||={};if(!Number.isFinite(state.syncResetAt))state.syncResetAt=0;if(!Number.isFinite(state.daily30Updated))state.daily30Updated=0;if(typeof state.headerCollapsed!=='boolean')state.headerCollapsed=true;Object.keys(state.status).forEach(k=>{if(state.status[k]==='uncertain')state.status[k]='unmastered'});if(state.mode==='uncertain'||state.mode==='unmastered')state.mode='needsStudy';if(state.allReturnId==null)state.allReturnId=(state.mode==='all'&&state.currentId!=null)?state.currentId:1;
+state.answers||={};state.fav||={};state.wrong||={};state.status||={};state.corrections||={};state.attempts||={};state.review||={};state.wrongMeta||={};state.flashStats||={};state.memoryVerify||={};state.memoryUpdated||={};state.memorySource||={};if(!Number.isFinite(state.syncResetAt))state.syncResetAt=0;if(typeof state.syncResetSource!=='string')state.syncResetSource='';if(!Number.isFinite(state.syncPositionUpdated))state.syncPositionUpdated=0;if(typeof state.syncPositionSource!=='string')state.syncPositionSource='';if(typeof state.syncPositionKey!=='string')state.syncPositionKey='';if(!Number.isFinite(state.daily30Updated))state.daily30Updated=0;if(typeof state.headerCollapsed!=='boolean')state.headerCollapsed=true;Object.keys(state.status).forEach(k=>{if(state.status[k]==='uncertain')state.status[k]='unmastered'});if(state.mode==='uncertain'||state.mode==='unmastered')state.mode='needsStudy';if(state.allReturnId==null)state.allReturnId=(state.mode==='all'&&state.currentId!=null)?state.currentId:1;
 
 // Keep the original essay IDs and records; replacement questions get new IDs.
 if(state.taltalBankVersion!=='1111-20261028-v1'){
@@ -1860,7 +1860,7 @@ function writeMemoryState(key,status,progress=status==='mastered'?3:0){
   storeMemoryProgress(key,status==='mastered'?3:(progress===1||progress===2?progress:0));
   state.memoryUpdated||={};
   // Every deliberate click has a distinct revision, even within one millisecond.
-  state.memoryUpdated[key]=Math.max(Date.now(),(Number(state.memoryUpdated[key])||0)+1);
+  state.memoryUpdated[key]=Math.max(Date.now(),(Number(state.memoryUpdated[key])||0)+1);state.memorySource||={};state.memorySource[key]='iphone';
 }
 function paintMemorySquares(button,progress){
   if(!button)return;
@@ -2413,6 +2413,7 @@ function resetLearningRecords(){
 
   state=createInitialState();
   state.syncResetAt=Date.now();
+  state.syncResetSource='iphone';
   state.gradingVersion=CivilGrader.VERSION;
   state.flashMode=keptFlashMode;
   state.headerCollapsed=keptHeaderCollapsed;
@@ -3619,11 +3620,11 @@ const isMastered=id=>state.status?.[String(id)]==='mastered';
 const validPast=q=>q&&q.chapter!=='탈탈'&&Number(questionYear(q))>=2008&&Number(questionYear(q))<=2026;
 const uniqValid=ids=>{const seen=new Set(),out=[];for(const raw of Array.isArray(ids)?ids:[]){const id=String(raw),i=byId.get(id);if(i==null||seen.has(id)||!validPast(BANK[i]))continue;seen.add(id);out.push(BANK[i].id)}return out};
 function dailyState(){
-  if(!state.daily15||typeof state.daily15!=='object')state.daily15={date:'',focusIds:[],introducedIds:[],introCount:0,updated:0};
+  if(!state.daily15||typeof state.daily15!=='object')state.daily15={date:'',focusIds:[],introducedIds:[],introCount:0,updated:0,source:''};
   const d=state.daily15;d.focusIds=uniqValid(d.focusIds);d.introducedIds=uniqValid(d.introducedIds);
-  d.introCount=Math.max(Number(d.introCount)||0,d.introducedIds.length);d.updated=Number(d.updated)||0;return d;
+  d.introCount=Math.max(Number(d.introCount)||0,d.introducedIds.length);d.updated=Number(d.updated)||0;if(typeof d.source!=='string')d.source='';return d;
 }
-function bumpDailyUpdated(){const d=dailyState(),n=Date.now();d.updated=Math.max(n,d.updated+1);state.daily15Updated=d.updated}
+function bumpDailyUpdated(){const d=dailyState(),n=Date.now();d.updated=Math.max(n,d.updated+1);d.source='iphone';state.daily15Updated=d.updated}
 function ensureDaily15(force=false){
   const d=dailyState(),today=localDateKey();
   if(!force&&d.date===today&&d.focusIds.length)return d;
@@ -3661,7 +3662,9 @@ function activateDaily15(){
 // Extend the existing filter without disturbing every other mode.
 const originalEligible=studyEligibleIndices;studyEligibleIndices=function(mode,term){if(mode===DAILY_MODE)return daily15Indices();return originalEligible(mode,term)};
 const originalRender=render;render=function(){originalRender();updateDailyUI()};
-const originalSave=save;save=function(){state.daily15Active=activeDaily();originalSave();window.TomokCloud?.schedulePush?.()};
+const originalSave=save;
+function syncPositionSignature(){return [String(state.currentId??''),String($('#mode')?.value||state.mode||'all'),String(activeYear?.()??state.yearFilter??'all'),String(state.taltalSubcategory||'all')].join('|')}
+save=function(){state.daily15Active=activeDaily();const sig=syncPositionSignature();if(sig!==state.syncPositionKey){state.syncPositionKey=sig;state.syncPositionUpdated=Math.max(Date.now(),(Number(state.syncPositionUpdated)||0)+1);state.syncPositionSource='iphone'}originalSave();window.TomokCloud?.schedulePush?.()};
 $('#daily15Toggle')?.addEventListener('click',activateDaily15);
 $('#mode')?.addEventListener('change',()=>{state.daily15Active=$('#mode').value===DAILY_MODE;if(state.daily15Active)ensureDaily15();setTimeout(updateDailyUI,0)});
 if(state.daily15Active||state.mode===DAILY_MODE){$('#mode').value=DAILY_MODE;activateDaily15()}else updateDailyUI();
@@ -3673,20 +3676,34 @@ function currentSyncCode(){return String(localStorage.getItem('tomok-sync-code')
 function syncEnabled(){return /^https:\/\//.test(String(cfg.url||''))&&apiKey().length>20&&currentSyncCode().length>=12}
 function syncStatus(){return cloudState==='on'?{on:true,label:'동기화됨'}:cloudState==='error'?{on:false,label:'동기화 재시도'}:syncEnabled()?{on:false,label:'동기화 대기'}:{on:false,label:'연동 준비'}}
 function headers(extra={}){return {'apikey':apiKey(),'Content-Type':'application/json',...extra}}
-function memoryPayload(){const memory={};for(const q of BANK){const k=qkey(q),status=state.status?.[k],updated=Number(state.memoryUpdated?.[k])||0;if(status==='mastered'||status==='unmastered')memory[k]={status,progress:memoryProgress(k),updated}}return memory}
-function snapshot(){return{version:3,memory:memoryPayload(),daily15:{...dailyState(),focusIds:[...dailyState().focusIds],introducedIds:[...dailyState().introducedIds]},resetAt:Number(state.syncResetAt)||0,updatedAt:Date.now()}}
-function clearSyncedLearningAfterReset(resetAt){
-  state.answers={};state.fav={};state.wrong={};state.status={};state.attempts={};state.review={};state.wrongMeta={};state.flashStats={};state.memoryVerify={};state.memoryUpdated={};state.memoryJudgments={};state.uncertainProgress={};state.daily15={date:'',focusIds:[],introducedIds:[],introCount:0,updated:0};state.daily15Updated=0;state.syncResetAt=resetAt;
+const CONFLICT_WINDOW_MS=120000;
+const isIPhoneSource=s=>['iphone','ios','web'].includes(String(s||''));
+const absDiff=(a,b)=>Math.abs((Number(a)||0)-(Number(b)||0));
+function pickSide(aUpdated,aSource,bUpdated,bSource){
+  aUpdated=Number(aUpdated)||0;bUpdated=Number(bUpdated)||0;
+  if(absDiff(aUpdated,bUpdated)<=CONFLICT_WINDOW_MS&&isIPhoneSource(aSource)!==isIPhoneSource(bSource))return isIPhoneSource(aSource)?'a':'b';
+  if(bUpdated>aUpdated)return'b';if(aUpdated>bUpdated)return'a';
+  if(isIPhoneSource(bSource)&&!isIPhoneSource(aSource))return'b';return'a';
 }
-function applyRemote(payload){if(!payload||typeof payload!=='object')return false;let changed=false;state.memoryUpdated||={};state.uncertainProgress||={};if(!Number.isFinite(state.syncResetAt))state.syncResetAt=0;
-  const remoteReset=Number(payload.resetAt)||0;if(remoteReset>state.syncResetAt){clearSyncedLearningAfterReset(remoteReset);changed=true}const resetAt=Math.max(Number(state.syncResetAt)||0,remoteReset);
-  for(const [k,row] of Object.entries(payload.memory||{})){if(!byId.has(String(k)))continue;const iu=Number(row?.updated)||0;if(iu<=resetAt)continue;const lu=Number(state.memoryUpdated[k])||0,local=state.status[k];const st=row.status==='mastered'?'mastered':'unmastered',p=st==='mastered'?3:([1,2].includes(Number(row.progress))?Number(row.progress):0);if(iu<lu)continue;if(iu===lu){if(iu>0)continue;if(local==='mastered'&&st!=='mastered')continue;if(local===st&&memoryProgress(k)===p)continue;}state.status[k]=st;storeMemoryProgress(k,p);state.memoryUpdated[k]=iu;changed=true;if(st==='unmastered'){delete state.memoryVerify?.[k]}}
-  const rd=payload.daily15;const ld=dailyState();const ru=Number(rd?.updated)||0;if(rd&&typeof rd==='object'&&ru>resetAt&&(ru>(Number(ld.updated)||0)||(ru===(Number(ld.updated)||0)&&String(rd.date||'')>String(ld.date||'')))){state.daily15={date:String(rd.date||''),focusIds:uniqValid(rd.focusIds),introducedIds:uniqValid(rd.introducedIds),introCount:Number(rd.introCount)||0,updated:ru};state.daily15Updated=state.daily15.updated;changed=true}
-  if(changed){originalSave();if(activeDaily()){view=daily15Indices();pos=Math.min(pos,Math.max(0,view.length-1));originalRender()}else originalRender();updateStatusCounts?.();updateQuickFilterButtons?.();updateDailyUI()}return changed}
+function memoryPayload(){const memory={};state.memorySource||={};for(const q of BANK){const k=qkey(q),status=state.status?.[k],updated=Number(state.memoryUpdated?.[k])||0;if(status==='mastered'||status==='unmastered')memory[k]={status,progress:memoryProgress(k),updated,source:state.memorySource[k]||'iphone'}}return memory}
+function currentPositionPayload(){const mode=$('#mode')?.value||state.mode||'all';return{currentId:Number(state.currentId)||0,mode,year:Number(activeYear?.())||0,taltalSubcategory:String(state.taltalSubcategory||'all'),updated:Number(state.syncPositionUpdated)||0,source:state.syncPositionSource||'iphone'}}
+function snapshot(){const d=dailyState();if(d.updated&&!d.source)d.source='iphone';return{version:4,memory:memoryPayload(),daily15:{...d,focusIds:[...d.focusIds],introducedIds:[...d.introducedIds],source:d.source||'iphone'},position:currentPositionPayload(),resetAt:Number(state.syncResetAt)||0,resetSource:state.syncResetSource||((Number(state.syncResetAt)||0)?'iphone':''),updatedAt:Date.now()}}
+function clearSyncedLearningAfterReset(resetAt,resetSource=''){
+  state.answers={};state.fav={};state.wrong={};state.status={};state.attempts={};state.review={};state.wrongMeta={};state.flashStats={};state.memoryVerify={};state.memoryUpdated={};state.memorySource={};state.memoryJudgments={};state.uncertainProgress={};state.daily15={date:'',focusIds:[],introducedIds:[],introCount:0,updated:0,source:''};state.daily15Updated=0;state.syncResetAt=resetAt;state.syncResetSource=resetSource||'';
+}
+function applyRemote(payload){if(!payload||typeof payload!=='object')return false;let changed=false;state.memoryUpdated||={};state.memorySource||={};state.uncertainProgress||={};if(!Number.isFinite(state.syncResetAt))state.syncResetAt=0;if(typeof state.syncResetSource!=='string')state.syncResetSource='';
+  const remoteReset=Number(payload.resetAt)||0,remoteResetSource=String(payload.resetSource||'');const localReset=Number(state.syncResetAt)||0,localResetSource=String(state.syncResetSource||'');
+  let resetAt=localReset,resetSource=localResetSource;
+  if(remoteReset>0){const side=pickSide(localReset,localResetSource,remoteReset,remoteResetSource);if(side==='b'){resetAt=remoteReset;resetSource=remoteResetSource;if(remoteReset!==localReset){clearSyncedLearningAfterReset(remoteReset,remoteResetSource);changed=true}}}
+  resetAt=Math.max(Number(state.syncResetAt)||0,resetAt);
+  for(const [k,row] of Object.entries(payload.memory||{})){if(!byId.has(String(k)))continue;const iu=Number(row?.updated)||0;if(iu<=resetAt)continue;const lu=Number(state.memoryUpdated[k])||0,ls=String(state.memorySource[k]||'iphone'),rs=String(row?.source||'pc'),local=state.status[k];const st=row.status==='mastered'?'mastered':'unmastered',p=st==='mastered'?3:([1,2].includes(Number(row.progress))?Number(row.progress):0);if(local&&pickSide(lu,ls,iu,rs)==='a')continue;state.status[k]=st;storeMemoryProgress(k,p);state.memoryUpdated[k]=iu;state.memorySource[k]=rs;changed=true;if(st==='unmastered')delete state.memoryVerify?.[k]}
+  const rd=payload.daily15,ld=dailyState();if(rd&&typeof rd==='object'){const ru=Number(rd.updated)||0,lu=Number(ld.updated)||0;if(ru>resetAt&&pickSide(lu,ld.source||'iphone',ru,rd.source||'pc')==='b'){state.daily15={date:String(rd.date||''),focusIds:uniqValid(rd.focusIds),introducedIds:uniqValid(rd.introducedIds),introCount:Number(rd.introCount)||0,updated:ru,source:String(rd.source||'pc')};state.daily15Updated=ru;changed=true}}
+  const rp=payload.position;if(rp&&typeof rp==='object'){const ru=Number(rp.updated)||0,lu=Number(state.syncPositionUpdated)||0;if(ru>resetAt&&pickSide(lu,state.syncPositionSource||'iphone',ru,rp.source||'pc')==='b'){const id=Number(rp.currentId)||0;if(byId.has(String(id)))state.currentId=id;if(rp.mode)state.mode=String(rp.mode);if(Number.isFinite(Number(rp.year)))state.yearFilter=Number(rp.year)||'all';if(rp.taltalSubcategory)state.taltalSubcategory=String(rp.taltalSubcategory);state.syncPositionUpdated=ru;state.syncPositionSource=String(rp.source||'pc');state.syncPositionKey=syncPositionSignature();changed=true}}
+  if(changed){originalSave();if(activeDaily()){view=daily15Indices();const at=view.findIndex(i=>String(BANK[i]?.id)===String(state.currentId));pos=at>=0?at:Math.min(pos,Math.max(0,view.length-1));originalRender()}else{syncViewToActiveFilter?.();const at=view.findIndex(i=>String(BANK[i]?.id)===String(state.currentId));if(at>=0)pos=at;originalRender()}updateStatusCounts?.();updateQuickFilterButtons?.();updateDailyUI()}return changed}
 async function cloudPull(){if(!syncEnabled()||pulling)return false;pulling=true;try{const url=cfg.url.replace(/\/$/,'')+'/rest/v1/rpc/get_study_state';const r=await fetch(url,{method:'POST',headers:headers(),body:JSON.stringify({p_sync_code:currentSyncCode()}),cache:'no-store'});if(!r.ok)throw new Error(String(r.status));const payload=await r.json();if(payload)applyRemote(payload);cloudState='on';updateDailyUI();return true}catch(e){cloudState='error';updateDailyUI();return false}finally{pulling=false}}
 async function cloudPush(){if(!syncEnabled())return false;try{await cloudPull();const url=cfg.url.replace(/\/$/,'')+'/rest/v1/rpc/put_study_state';const r=await fetch(url,{method:'POST',headers:headers(),body:JSON.stringify({p_sync_code:currentSyncCode(),p_payload:snapshot()})});if(!r.ok)throw new Error(String(r.status));cloudState='on';updateDailyUI();return true}catch(e){cloudState='error';updateDailyUI();return false}}
 function schedulePush(){if(!syncEnabled())return;clearTimeout(pushTimer);pushTimer=setTimeout(cloudPush,1200)}
-const syncBtn=$('#syncSetupToggle');if(syncBtn){syncBtn.addEventListener('click',()=>{let cur=currentSyncCode();let suggestion=cur;if(!suggestion&&crypto?.randomUUID)suggestion=crypto.randomUUID().replace(/-/g,'');const code=prompt('회사 PC와 동일하게 사용할 연동코드입니다. 20자 이상 권장합니다.\n이 값은 이 iPhone에만 저장되고 GitHub에는 올라가지 않습니다.',suggestion||'');if(code===null)return;const clean=String(code).trim();if(clean)localStorage.setItem('tomok-sync-code',clean);else localStorage.removeItem('tomok-sync-code');cloudState='off';updateDailyUI();if(syncEnabled())cloudPull().then(()=>cloudPush());alert(clean?'연동코드를 저장했습니다. 회사 PC의 sync_config.json에도 같은 코드를 입력하세요.':'연동코드를 지웠습니다.')})}
+const syncBtn=$('#syncSetupToggle');if(syncBtn){syncBtn.addEventListener('click',()=>{let cur=currentSyncCode();let suggestion=cur;if(!suggestion&&crypto?.randomUUID)suggestion=crypto.randomUUID().replace(/-/g,'');const code=prompt('회사 PC와 동일하게 사용할 연동코드입니다. 충돌 시 이 iPhone 기록이 우선됩니다. 20자 이상 권장합니다.\n이 값은 이 iPhone에만 저장되고 GitHub에는 올라가지 않습니다.',suggestion||'');if(code===null)return;const clean=String(code).trim();if(clean)localStorage.setItem('tomok-sync-code',clean);else localStorage.removeItem('tomok-sync-code');cloudState='off';updateDailyUI();if(syncEnabled())cloudPull().then(()=>cloudPush());alert(clean?'연동코드를 저장했습니다. 회사 PC의 sync_config.json에도 같은 코드를 입력하세요.':'연동코드를 지웠습니다.')})}
 window.TomokCloud={pull:cloudPull,push:cloudPush,schedulePush,status:syncStatus,enabled:syncEnabled};
 if(syncEnabled()){cloudPull().then(()=>setTimeout(cloudPush,600));setInterval(cloudPull,15000);window.addEventListener('focus',cloudPull);document.addEventListener('visibilitychange',()=>{if(!document.hidden)cloudPull()})}
 updateDailyUI();
