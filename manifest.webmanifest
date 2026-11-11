@@ -1,6 +1,6 @@
 {
-  "name": "index",
-  "short_name": "index",
+  "name": "서술",
+  "short_name": "서술",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
